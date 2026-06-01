@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v05";
+const STORAGE_KEY = "kanboard-static-v06";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -242,6 +242,7 @@ let draggedCard = null;
 let draftSubtasks = [];
 let draftComments = [];
 let draftActivity = [];
+let draftLinks = [];
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
 
 const els = {
@@ -257,6 +258,10 @@ const els = {
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
   swimlaneFilter: document.querySelector("#swimlaneFilter"),
+  viewButtons: [...document.querySelectorAll("#viewSwitcher [data-view]")],
+  cardModeSelect: document.querySelector("#cardModeSelect"),
+  showClosedInput: document.querySelector("#showClosedInput"),
+  columnVisibility: document.querySelector("#columnVisibility"),
   memberOptions: document.querySelector("#memberOptions"),
   categoryOptions: document.querySelector("#categoryOptions"),
   projectDialog: document.querySelector("#projectDialog"),
@@ -299,6 +304,17 @@ const els = {
   subtaskInput: document.querySelector("#subtaskInput"),
   addSubtaskBtn: document.querySelector("#addSubtaskBtn"),
   subtaskList: document.querySelector("#subtaskList"),
+  cardOperations: document.querySelector("#cardOperations"),
+  cardStatusText: document.querySelector("#cardStatusText"),
+  toggleCardClosedBtn: document.querySelector("#toggleCardClosedBtn"),
+  duplicateCardBtn: document.querySelector("#duplicateCardBtn"),
+  moveProjectInput: document.querySelector("#moveProjectInput"),
+  moveCardBtn: document.querySelector("#moveCardBtn"),
+  cardLinksSection: document.querySelector("#cardLinksSection"),
+  linkTypeInput: document.querySelector("#linkTypeInput"),
+  linkTaskInput: document.querySelector("#linkTaskInput"),
+  addLinkBtn: document.querySelector("#addLinkBtn"),
+  linkList: document.querySelector("#linkList"),
   commentInput: document.querySelector("#commentInput"),
   addCommentBtn: document.querySelector("#addCommentBtn"),
   commentList: document.querySelector("#commentList"),
@@ -317,6 +333,9 @@ els.searchInput.addEventListener("input", renderBoard);
 els.assigneeFilter.addEventListener("change", renderBoard);
 els.categoryFilter.addEventListener("change", renderBoard);
 els.swimlaneFilter.addEventListener("change", renderBoard);
+els.viewButtons.forEach((button) => button.addEventListener("click", () => setViewMode(button.dataset.view)));
+els.cardModeSelect.addEventListener("change", setCardMode);
+els.showClosedInput.addEventListener("change", toggleClosedVisibility);
 els.projectModeInputs.forEach((input) => input.addEventListener("change", renderProjectCreateOptions));
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
@@ -326,6 +345,10 @@ els.deleteSwimlaneBtn.addEventListener("click", deleteEditingSwimlane);
 els.cardForm.addEventListener("submit", saveCardFromDialog);
 els.deleteCardBtn.addEventListener("click", deleteEditingCard);
 els.addSubtaskBtn.addEventListener("click", addDraftSubtask);
+els.toggleCardClosedBtn.addEventListener("click", toggleEditingCardClosed);
+els.duplicateCardBtn.addEventListener("click", duplicateEditingCard);
+els.moveCardBtn.addEventListener("click", moveEditingCardToProject);
+els.addLinkBtn.addEventListener("click", addDraftLink);
 els.addCommentBtn.addEventListener("click", addDraftComment);
 
 normalizeState();
@@ -433,6 +456,8 @@ function makeCard(options) {
     dueDate: options.dueDate || "",
     estimate: options.estimate || "",
     swimlaneId: options.swimlaneId || "",
+    isClosed: Boolean(options.isClosed),
+    links: options.links || [],
     subtasks: (options.subtasks || []).map((task) => ({ id: uid("subtask"), title: task.title, done: Boolean(task.done) })),
     comments: options.comments || [],
     activity: [{ id: uid("activity"), text: "创建了任务", createdAt: now }],
@@ -443,7 +468,13 @@ function makeCard(options) {
 
 function normalizeState() {
   if (!state.projects?.length) state = createDemoState();
+  state.ui ||= {};
+  state.ui.viewMode ||= "board";
+  state.ui.cardMode ||= "expanded";
+  state.ui.showClosed ??= false;
+  state.ui.hiddenColumns ||= {};
   state.projects.forEach((project) => {
+    state.ui.hiddenColumns[project.id] ||= [];
     if (!project.swimlanes?.length) {
       project.swimlanes = [{ id: uid("lane"), title: "默认泳道", description: "默认任务分组" }];
     }
@@ -464,6 +495,8 @@ function normalizeState() {
         card.comments ||= [];
         card.activity ||= [];
         card.tags ||= [];
+        card.links ||= [];
+        card.isClosed ??= false;
       });
     });
   });
@@ -486,6 +519,7 @@ function render() {
   renderHeader();
   renderFilters();
   renderMetrics();
+  renderViewControls();
   renderBoard();
 }
 
@@ -545,18 +579,90 @@ function fillDatalist(list, values) {
 
 function renderMetrics() {
   const cards = allCards();
-  const doing = cards.filter((card) => ["进行中", "开发中", "处理中"].includes(card.columnTitle)).length;
-  const done = cards.filter((card) => ["已完成", "完成", "Done"].includes(card.columnTitle)).length;
-  const dueSoon = cards.filter((card) => isDueSoon(card.dueDate)).length;
+  const openCards = cards.filter((card) => !card.isClosed);
+  const doing = openCards.filter((card) => ["进行中", "开发中", "处理中", "学习中"].includes(card.columnTitle)).length;
+  const done = cards.filter((card) => card.isClosed || ["已完成", "完成", "Done", "已学完"].includes(card.columnTitle)).length;
+  const dueSoon = openCards.filter((card) => isDueSoon(card.dueDate)).length;
   els.metricCards.textContent = cards.length;
   els.metricDoing.textContent = doing;
   els.metricDue.textContent = dueSoon;
   els.metricDone.textContent = done;
 }
 
+function renderViewControls() {
+  els.viewButtons.forEach((button) => {
+    const isActive = button.dataset.view === state.ui.viewMode;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+  els.cardModeSelect.value = state.ui.cardMode;
+  els.showClosedInput.checked = state.ui.showClosed;
+
+  const project = activeProject();
+  const hiddenIds = hiddenColumnIds(project.id);
+  els.columnVisibility.innerHTML = project.columns.map((column) => `
+    <button class="${hiddenIds.has(column.id) ? "" : "active"}" type="button" data-column-id="${column.id}">
+      ${hiddenIds.has(column.id) ? "显示" : "隐藏"} ${escapeHtml(column.title)}
+    </button>
+  `).join("");
+  els.columnVisibility.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => toggleColumnVisibility(button.dataset.columnId));
+  });
+}
+
+function setViewMode(viewMode) {
+  state.ui.viewMode = viewMode;
+  persist();
+  render();
+}
+
+function setCardMode() {
+  state.ui.cardMode = els.cardModeSelect.value;
+  persist();
+  render();
+}
+
+function toggleClosedVisibility() {
+  state.ui.showClosed = els.showClosedInput.checked;
+  persist();
+  render();
+}
+
+function hiddenColumnIds(projectId = activeProject().id) {
+  return new Set(state.ui.hiddenColumns?.[projectId] || []);
+}
+
+function visibleColumns(project = activeProject()) {
+  const hiddenIds = hiddenColumnIds(project.id);
+  return project.columns.filter((column) => !hiddenIds.has(column.id));
+}
+
+function toggleColumnVisibility(columnId) {
+  const project = activeProject();
+  const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
+  if (hidden.has(columnId)) {
+    hidden.delete(columnId);
+  } else {
+    hidden.add(columnId);
+  }
+  state.ui.hiddenColumns[project.id] = [...hidden];
+  persist();
+  render();
+}
+
 function renderBoard() {
   const project = activeProject();
   els.board.innerHTML = "";
+  els.board.className = `board view-${state.ui.viewMode} card-mode-${state.ui.cardMode}`;
+  if (state.ui.viewMode === "list") {
+    renderListView(project);
+    return;
+  }
+  if (state.ui.viewMode === "overview") {
+    renderOverviewView(project);
+    return;
+  }
+
   const selectedLaneTitle = els.swimlaneFilter.value;
   const swimlanes = selectedLaneTitle
     ? project.swimlanes.filter((lane) => lane.title === selectedLaneTitle)
@@ -578,9 +684,116 @@ function renderBoard() {
 
     swimlaneEl.querySelector('[data-action="edit-swimlane"]').addEventListener("click", () => openSwimlaneDialog(lane.id));
     const laneBoard = swimlaneEl.querySelector(".swimlane-board");
-    project.columns.forEach((column) => laneBoard.appendChild(createColumnElement(column, lane)));
+    visibleColumns(project).forEach((column) => laneBoard.appendChild(createColumnElement(column, lane)));
     els.board.appendChild(swimlaneEl);
   });
+}
+
+function renderListView(project) {
+  const rows = allCards(project).filter((card) => {
+    const column = project.columns.find((item) => item.id === card.columnId);
+    const lane = project.swimlanes.find((item) => item.id === card.swimlaneId);
+    return !hiddenColumnIds(project.id).has(card.columnId) && cardMatchesFilters(card, column, lane);
+  });
+
+  const list = document.createElement("section");
+  list.className = "list-view";
+  list.innerHTML = `
+    <div class="list-header">
+      <strong>任务</strong>
+      <strong>状态</strong>
+      <strong>泳道</strong>
+      <strong>负责人</strong>
+      <strong>优先级</strong>
+      <strong>截止</strong>
+    </div>
+  `;
+
+  if (!rows.length) {
+    list.innerHTML += `<div class="empty-state">暂无匹配任务</div>`;
+  } else {
+    rows.forEach((card) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = `list-row ${card.isClosed ? "closed" : ""}`;
+      row.innerHTML = `
+        <span><strong>${escapeHtml(card.title)}</strong>${card.tags?.length ? `<em>${card.tags.map(escapeHtml).join(" / ")}</em>` : ""}</span>
+        <span>${escapeHtml(card.isClosed ? "已关闭" : card.columnTitle)}</span>
+        <span>${escapeHtml(project.swimlanes.find((lane) => lane.id === card.swimlaneId)?.title || "默认泳道")}</span>
+        <span>${escapeHtml(card.assignee || "-")}</span>
+        <span>${escapeHtml(card.priority || "-")}</span>
+        <span>${escapeHtml(card.dueDate || "-")}</span>
+      `;
+      row.addEventListener("click", () => openCardDialog(card.columnId, card.id, card.swimlaneId));
+      list.appendChild(row);
+    });
+  }
+  els.board.appendChild(list);
+}
+
+function renderOverviewView(project) {
+  const cards = allCards(project);
+  const openCards = cards.filter((card) => !card.isClosed);
+  const closedCards = cards.filter((card) => card.isClosed);
+  const byColumn = project.columns.map((column) => ({
+    title: column.title,
+    count: column.cards.filter((card) => !card.isClosed).length,
+    closed: column.cards.filter((card) => card.isClosed).length
+  }));
+  const byAssignee = groupCounts(openCards.map((card) => card.assignee || "未分配"));
+  const urgent = openCards.filter((card) => ["高", "紧急"].includes(card.priority)).slice(0, 6);
+
+  const overview = document.createElement("section");
+  overview.className = "overview-view";
+  overview.innerHTML = `
+    <article class="overview-panel">
+      <span>打开任务</span>
+      <strong>${openCards.length}</strong>
+    </article>
+    <article class="overview-panel">
+      <span>已关闭任务</span>
+      <strong>${closedCards.length}</strong>
+    </article>
+    <article class="overview-panel">
+      <span>临近截止</span>
+      <strong>${openCards.filter((card) => isDueSoon(card.dueDate)).length}</strong>
+    </article>
+    <article class="overview-panel">
+      <span>高优先级</span>
+      <strong>${urgent.length}</strong>
+    </article>
+    <article class="overview-panel wide">
+      <h3>列分布</h3>
+      ${byColumn.map((item) => `
+        <div class="overview-line">
+          <span>${escapeHtml(item.title)}</span>
+          <strong>${item.count} 打开${item.closed ? ` · ${item.closed} 关闭` : ""}</strong>
+        </div>
+      `).join("")}
+    </article>
+    <article class="overview-panel wide">
+      <h3>负责人分布</h3>
+      ${byAssignee.map((item) => `
+        <div class="overview-line">
+          <span>${escapeHtml(item.label)}</span>
+          <strong>${item.count}</strong>
+        </div>
+      `).join("") || `<div class="empty-state">暂无负责人数据</div>`}
+    </article>
+    <article class="overview-panel full">
+      <h3>高优先级任务</h3>
+      ${urgent.length ? urgent.map((card) => `
+        <button class="overview-task" type="button" data-column-id="${card.columnId}" data-card-id="${card.id}" data-swimlane-id="${card.swimlaneId}">
+          <strong>${escapeHtml(card.title)}</strong>
+          <span>${escapeHtml(card.columnTitle)} · ${escapeHtml(card.assignee || "未分配")} · ${escapeHtml(card.priority)}</span>
+        </button>
+      `).join("") : `<div class="empty-state">暂无高优先级任务</div>`}
+    </article>
+  `;
+  overview.querySelectorAll(".overview-task").forEach((button) => {
+    button.addEventListener("click", () => openCardDialog(button.dataset.columnId, button.dataset.cardId, button.dataset.swimlaneId));
+  });
+  els.board.appendChild(overview);
 }
 
 function createColumnElement(column, lane) {
@@ -590,7 +803,7 @@ function createColumnElement(column, lane) {
   columnEl.dataset.swimlaneId = lane.id;
 
   const cardsInLane = column.cards.filter((card) => card.swimlaneId === lane.id);
-  const visibleCards = cardsInLane.filter(cardMatchesFilters);
+  const visibleCards = cardsInLane.filter((card) => cardMatchesFilters(card, column, lane));
 
   columnEl.innerHTML = `
     <header class="column-header">
@@ -629,29 +842,34 @@ function createColumnElement(column, lane) {
 function createCardElement(card, columnId, swimlaneId) {
   const cardEl = document.createElement("article");
   const progress = getSubtaskProgress(card);
-  cardEl.className = `card color-${card.color || "blue"}`;
-  cardEl.draggable = true;
+  const isCollapsed = state.ui.cardMode === "collapsed";
+  const isCompact = state.ui.cardMode === "compact";
+  cardEl.className = `card color-${card.color || "blue"} ${card.isClosed ? "closed" : ""}`;
+  cardEl.draggable = !card.isClosed;
   cardEl.dataset.cardId = card.id;
   cardEl.dataset.columnId = columnId;
   cardEl.dataset.swimlaneId = swimlaneId;
   cardEl.innerHTML = `
     <div class="card-topline">
-      <h4>${escapeHtml(card.title)}</h4>
+      <h4>${escapeHtml(card.title)}${card.isClosed ? `<span class="closed-label">已关闭</span>` : ""}</h4>
       <div class="card-sort">
         <button class="mini-button" type="button" data-action="move-up" aria-label="上移">↑</button>
         <button class="mini-button" type="button" data-action="move-down" aria-label="下移">↓</button>
       </div>
     </div>
-    ${card.description ? `<p>${escapeHtml(card.description)}</p>` : ""}
-    <div class="card-meta">
-      ${card.assignee ? `<span class="pill">${escapeHtml(card.assignee)}</span>` : ""}
-      ${card.category ? `<span class="pill">${escapeHtml(card.category)}</span>` : ""}
-      ${card.priority ? `<span class="pill priority-${priorityClass(card.priority)}">${escapeHtml(card.priority)}</span>` : ""}
-      ${card.estimate ? `<span class="pill">${escapeHtml(card.estimate)}h</span>` : ""}
-      ${card.dueDate ? `<span class="pill ${isOverdue(card.dueDate) ? "overdue" : ""}">${escapeHtml(card.dueDate)}</span>` : ""}
-    </div>
-    ${card.tags?.length ? `<div class="tag-row">${card.tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
-    ${card.subtasks?.length ? `<div class="progress-bar" title="子任务 ${progress.done}/${progress.total}"><span style="width: ${progress.percent}%"></span></div>` : ""}
+    ${!isCollapsed && !isCompact && card.description ? `<p>${escapeHtml(card.description)}</p>` : ""}
+    ${!isCollapsed ? `
+      <div class="card-meta">
+        ${card.assignee ? `<span class="pill">${escapeHtml(card.assignee)}</span>` : ""}
+        ${card.category && !isCompact ? `<span class="pill">${escapeHtml(card.category)}</span>` : ""}
+        ${card.priority ? `<span class="pill priority-${priorityClass(card.priority)}">${escapeHtml(card.priority)}</span>` : ""}
+        ${card.estimate && !isCompact ? `<span class="pill">${escapeHtml(card.estimate)}h</span>` : ""}
+        ${card.links?.length && !isCompact ? `<span class="pill">${card.links.length} 链接</span>` : ""}
+        ${card.dueDate ? `<span class="pill ${isOverdue(card.dueDate) ? "overdue" : ""}">${escapeHtml(card.dueDate)}</span>` : ""}
+      </div>
+      ${card.tags?.length && !isCompact ? `<div class="tag-row">${card.tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
+      ${card.subtasks?.length ? `<div class="progress-bar" title="子任务 ${progress.done}/${progress.total}"><span style="width: ${progress.percent}%"></span></div>` : ""}
+    ` : ""}
   `;
 
   cardEl.querySelector('[data-action="move-up"]').addEventListener("click", (event) => {
@@ -677,12 +895,62 @@ function createCardElement(card, columnId, swimlaneId) {
   return cardEl;
 }
 
-function cardMatchesFilters(card) {
-  const query = els.searchInput.value.trim().toLowerCase();
+function cardMatchesFilters(card, column = null, lane = null) {
+  if (card.isClosed && !state.ui.showClosed) return false;
+  const query = parseSearchQuery(els.searchInput.value);
   const assignee = els.assigneeFilter.value;
   const category = els.categoryFilter.value;
-  const text = [card.title, card.description, card.assignee, card.category, ...(card.tags || [])].join(" ").toLowerCase();
-  return (!query || text.includes(query)) && (!assignee || card.assignee === assignee) && (!category || card.category === category);
+  const laneTitle = lane?.title || "";
+  const columnTitle = column?.title || "";
+  if (assignee && card.assignee !== assignee) return false;
+  if (category && card.category !== category) return false;
+  if (query.filters.assignee && card.assignee !== query.filters.assignee) return false;
+  if (query.filters.category && card.category !== query.filters.category) return false;
+  if (query.filters.priority && card.priority !== query.filters.priority) return false;
+  if (query.filters.column && !columnTitle.toLowerCase().includes(query.filters.column.toLowerCase())) return false;
+  if (query.filters.lane && !laneTitle.toLowerCase().includes(query.filters.lane.toLowerCase())) return false;
+  if (query.filters.tag && !(card.tags || []).some((tag) => tag.toLowerCase().includes(query.filters.tag.toLowerCase()))) return false;
+  if (query.filters.status === "closed" && !card.isClosed) return false;
+  if (query.filters.status === "open" && card.isClosed) return false;
+
+  const text = [
+    card.title,
+    card.description,
+    card.assignee,
+    card.category,
+    card.priority,
+    columnTitle,
+    laneTitle,
+    ...(card.tags || []),
+    ...(card.links || []).map((link) => `${link.type} ${link.targetTitle}`)
+  ].join(" ").toLowerCase();
+  return query.terms.every((term) => text.includes(term.toLowerCase()));
+}
+
+function parseSearchQuery(raw) {
+  const result = { terms: [], filters: {} };
+  raw.trim().split(/\s+/).filter(Boolean).forEach((token) => {
+    const match = token.match(/^([a-zA-Z]+):(.+)$/);
+    if (!match) {
+      result.terms.push(token);
+      return;
+    }
+    const keyMap = {
+      assignee: "assignee",
+      user: "assignee",
+      category: "category",
+      cat: "category",
+      tag: "tag",
+      priority: "priority",
+      column: "column",
+      lane: "lane",
+      swimlane: "lane",
+      status: "status"
+    };
+    const key = keyMap[match[1].toLowerCase()];
+    if (key) result.filters[key] = match[2];
+  });
+  return result;
 }
 
 function openProjectDialog(projectId = null) {
@@ -980,9 +1248,20 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   els.cardSwimlaneInput.innerHTML = project.swimlanes.map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`).join("");
   els.cardSwimlaneInput.value = laneId;
   els.deleteCardBtn.style.visibility = card ? "visible" : "hidden";
+  els.cardOperations.style.display = card ? "grid" : "none";
+  els.cardLinksSection.style.display = card ? "grid" : "none";
+  els.cardStatusText.textContent = card?.isClosed ? "已关闭" : "打开";
+  els.toggleCardClosedBtn.textContent = card?.isClosed ? "重新打开任务" : "关闭任务";
+  els.moveProjectInput.innerHTML = state.projects
+    .filter((item) => item.id !== project.id)
+    .map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`)
+    .join("");
+  els.moveCardBtn.disabled = !card || state.projects.length <= 1;
   draftSubtasks = clone(card?.subtasks || []);
   draftComments = clone(card?.comments || []);
   draftActivity = clone(card?.activity || []);
+  draftLinks = clone(card?.links || []);
+  renderCardLinkOptions(card?.id);
   renderCardDetails();
   els.cardDialog.showModal();
   els.cardTitleInput.focus();
@@ -1011,6 +1290,7 @@ function saveCardFromDialog(event) {
     swimlaneId: targetSwimlaneId,
     subtasks: draftSubtasks,
     comments: draftComments,
+    links: draftLinks,
     activity: draftActivity,
     updatedAt: new Date().toISOString()
   };
@@ -1043,6 +1323,64 @@ function deleteEditingCard() {
   render();
 }
 
+function toggleEditingCardClosed() {
+  const context = findCardContext(editingCard?.cardId);
+  if (!context) return;
+  context.card.isClosed = !context.card.isClosed;
+  context.card.updatedAt = new Date().toISOString();
+  context.card.activity = addActivity(context.card.activity || [], context.card.isClosed ? "关闭了任务" : "重新打开了任务");
+  draftActivity = clone(context.card.activity);
+  els.cardStatusText.textContent = context.card.isClosed ? "已关闭" : "打开";
+  els.toggleCardClosedBtn.textContent = context.card.isClosed ? "重新打开任务" : "关闭任务";
+  persist();
+  render();
+  renderCardDetails();
+}
+
+function duplicateEditingCard() {
+  const context = findCardContext(editingCard?.cardId);
+  if (!context) return;
+  const copy = cloneCardForCopy(context.card);
+  context.column.cards.push(copy);
+  persist();
+  render();
+  alert("已复制任务到当前列。");
+}
+
+function moveEditingCardToProject() {
+  const targetProjectId = els.moveProjectInput.value;
+  const context = findCardContext(editingCard?.cardId);
+  const targetProject = state.projects.find((project) => project.id === targetProjectId);
+  if (!context || !targetProject) return;
+
+  context.column.cards = context.column.cards.filter((card) => card.id !== context.card.id);
+  const targetColumn = targetProject.columns[0];
+  const targetLane = targetProject.swimlanes[0];
+  context.card.swimlaneId = targetLane.id;
+  context.card.updatedAt = new Date().toISOString();
+  context.card.activity = addActivity(context.card.activity || [], `移动到项目“${targetProject.name}”`);
+  targetColumn.cards.push(context.card);
+  state.activeProjectId = targetProject.id;
+  editingCard = null;
+  els.cardDialog.close();
+  persist();
+  render();
+}
+
+function addDraftLink() {
+  const targetCardId = els.linkTaskInput.value;
+  const target = allCards().find((card) => card.id === targetCardId);
+  if (!target || draftLinks.some((link) => link.targetCardId === targetCardId && link.type === els.linkTypeInput.value)) return;
+  draftLinks.push({
+    id: uid("link"),
+    type: els.linkTypeInput.value,
+    targetCardId,
+    targetTitle: target.title
+  });
+  draftActivity = addActivity(draftActivity, `添加了“${els.linkTypeInput.value}”任务链接`);
+  renderCardDetails();
+}
+
 function addDraftSubtask() {
   const title = els.subtaskInput.value.trim();
   if (!title) return;
@@ -1058,6 +1396,15 @@ function addDraftComment() {
   draftActivity = addActivity(draftActivity, "添加了评论");
   els.commentInput.value = "";
   renderCardDetails();
+}
+
+function renderCardLinkOptions(currentCardId) {
+  const options = allCards()
+    .filter((card) => card.id !== currentCardId)
+    .map((card) => `<option value="${card.id}">${escapeHtml(card.title)} · ${escapeHtml(card.columnTitle)}</option>`)
+    .join("");
+  els.linkTaskInput.innerHTML = options || `<option value="">暂无可链接任务</option>`;
+  els.addLinkBtn.disabled = !options;
 }
 
 function renderCardDetails() {
@@ -1096,6 +1443,23 @@ function renderCardDetails() {
       </div>
     `).join("")
     : `<div class="empty-state">暂无评论</div>`;
+
+  els.linkList.innerHTML = draftLinks.length
+    ? draftLinks.map((link) => `
+      <div class="link-item" data-id="${link.id}">
+        <p><strong>${escapeHtml(link.type)}</strong> ${escapeHtml(link.targetTitle)}</p>
+        <button class="mini-button" type="button" aria-label="删除链接">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无任务链接</div>`;
+
+  els.linkList.querySelectorAll(".link-item").forEach((row) => {
+    row.querySelector("button").addEventListener("click", () => {
+      draftLinks = draftLinks.filter((link) => link.id !== row.dataset.id);
+      draftActivity = addActivity(draftActivity, "删除了一个任务链接");
+      renderCardDetails();
+    });
+  });
 
   els.activityList.innerHTML = draftActivity.length
     ? draftActivity.slice(0, 8).map((item) => `
@@ -1170,6 +1534,41 @@ function getSubtaskProgress(card) {
 
 function addActivity(activity, text) {
   return [{ id: uid("activity"), text, createdAt: new Date().toISOString() }, ...(activity || [])];
+}
+
+function findCardContext(cardId, project = activeProject()) {
+  if (!cardId) return null;
+  for (const column of project.columns) {
+    const card = column.cards.find((item) => item.id === cardId);
+    if (card) return { project, column, card };
+  }
+  return null;
+}
+
+function cloneCardForCopy(card) {
+  const now = new Date().toISOString();
+  return {
+    ...clone(card),
+    id: uid("card"),
+    title: `${card.title} - 副本`,
+    isClosed: false,
+    subtasks: (card.subtasks || []).map((task) => ({ ...task, id: uid("subtask") })),
+    comments: clone(card.comments || []),
+    links: clone(card.links || []),
+    activity: [{ id: uid("activity"), text: "由复制任务生成", createdAt: now }],
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function groupCounts(values) {
+  const counts = values.reduce((map, value) => {
+    map.set(value, (map.get(value) || 0) + 1);
+    return map;
+  }, new Map());
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"));
 }
 
 function clone(value) {
