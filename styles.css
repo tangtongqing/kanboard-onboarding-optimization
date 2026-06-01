@@ -553,6 +553,145 @@ textarea:focus {
   justify-content: space-between;
 }
 
+.project-create-options {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.creation-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mode-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.mode-card:has(input:checked) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.10);
+}
+
+.mode-card input {
+  width: auto;
+  min-height: auto;
+  margin-top: 3px;
+}
+
+.mode-card strong {
+  display: block;
+  font-size: 14px;
+}
+
+.mode-card em {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.template-area {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.template-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.template-option {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.template-option.active,
+.template-option:hover {
+  border-color: var(--primary);
+}
+
+.template-option strong {
+  font-size: 14px;
+}
+
+.template-option span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.template-preview {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.template-preview h4 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.template-preview p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preview-box {
+  min-height: 72px;
+  padding: 9px;
+  background: #f3f7fb;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+}
+
+.preview-box strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.preview-box span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .detail-section {
   display: grid;
   gap: 10px;
@@ -666,6 +805,11 @@ textarea:focus {
   .toolbar,
   .metrics {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .template-area,
+  .creation-mode {
+    grid-template-columns: 1fr;
   }
 }
 

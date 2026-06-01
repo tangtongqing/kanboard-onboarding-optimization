@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard 静态复现</title>
+  <title>Kanboard V0.5 新手创建向导</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.4 静态复现版</p>
+          <p>V0.5 创建向导优化版</p>
         </div>
       </div>
 
@@ -87,7 +87,7 @@
     </main>
   </div>
 
-  <dialog id="projectDialog" class="modal">
+  <dialog id="projectDialog" class="modal wide">
     <form method="dialog" id="projectForm">
       <div class="modal-header">
         <h3 id="projectDialogTitle">新建项目</h3>
@@ -101,6 +101,32 @@
         <span>项目描述</span>
         <textarea id="projectDescInput" rows="3" maxlength="160"></textarea>
       </label>
+      <section class="project-create-options" id="projectCreateOptions">
+        <div class="detail-heading">
+          <h4>创建方式</h4>
+          <span>优化功能 V0.5</span>
+        </div>
+        <div class="creation-mode" role="radiogroup" aria-label="创建方式">
+          <label class="mode-card">
+            <input type="radio" name="projectMode" value="template" checked>
+            <span>
+              <strong>从模板开始</strong>
+              <em>选择场景，自动生成列、泳道和示例任务</em>
+            </span>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="projectMode" value="blank">
+            <span>
+              <strong>空白项目</strong>
+              <em>保留 Kanboard 原有的轻量创建方式</em>
+            </span>
+          </label>
+        </div>
+        <div class="template-area" id="templateArea">
+          <div class="template-list" id="templatePicker"></div>
+          <div class="template-preview" id="templatePreview"></div>
+        </div>
+      </section>
       <div class="modal-actions">
         <button class="secondary-button" value="cancel" type="submit">取消</button>
         <button class="primary-action compact" id="saveProjectBtn" type="submit">保存</button>

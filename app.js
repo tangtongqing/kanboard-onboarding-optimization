@@ -1,4 +1,237 @@
-const STORAGE_KEY = "kanboard-static-v04";
+const STORAGE_KEY = "kanboard-static-v05";
+const PROJECT_TEMPLATES = [
+  {
+    id: "learning",
+    name: "个人学习项目",
+    description: "适合课程学习、考试准备、作品集训练，把学习任务从“要做”推进到“已学完”。",
+    columns: [
+      { key: "todo", title: "待学", wipLimit: 0 },
+      { key: "doing", title: "学习中", wipLimit: 3 },
+      { key: "done", title: "已学完", wipLimit: 0 }
+    ],
+    swimlanes: [
+      { key: "main", title: "学习任务", description: "课程、练习和复盘任务" }
+    ],
+    cards: [
+      {
+        column: "todo",
+        swimlane: "main",
+        title: "学习英语词汇",
+        description: "每天完成一组高频词汇，并把不熟悉的词加入复习列表。",
+        assignee: "我",
+        category: "词汇",
+        priority: "中",
+        color: "blue",
+        tags: ["英语", "输入"],
+        estimate: "1.5",
+        subtasks: [
+          { title: "背诵 50 个高频词汇", done: false },
+          { title: "完成一次自测", done: false },
+          { title: "记录错误词汇", done: false }
+        ]
+      },
+      {
+        column: "doing",
+        swimlane: "main",
+        title: "完成两套英语试卷",
+        description: "记录错题原因，区分词汇、定位、长难句和选项陷阱。",
+        assignee: "我",
+        category: "刷题",
+        priority: "高",
+        color: "green",
+        tags: ["英语", "练习"],
+        estimate: "3",
+        subtasks: [
+          { title: "完成第一套试卷", done: false },
+          { title: "完成第二套试卷", done: false },
+          { title: "标注错题原因", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "main",
+        title: "复习之前做过的错题",
+        description: "把错题从“做过”转化为“真正掌握”。",
+        assignee: "我",
+        category: "复盘",
+        priority: "中",
+        color: "amber",
+        tags: ["错题", "复盘"],
+        estimate: "2",
+        subtasks: [
+          { title: "归类错题", done: false },
+          { title: "整理高频错误类型", done: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: "job",
+    name: "求职准备项目",
+    description: "适合 PM 实习/校招，把简历、作品集、投递和面试推进放到同一张看板里。",
+    columns: [
+      { key: "todo", title: "待准备", wipLimit: 0 },
+      { key: "doing", title: "进行中", wipLimit: 3 },
+      { key: "sent", title: "已投递", wipLimit: 0 },
+      { key: "interview", title: "面试中", wipLimit: 0 },
+      { key: "done", title: "已完成", wipLimit: 0 }
+    ],
+    swimlanes: [
+      { key: "materials", title: "材料准备", description: "简历、作品集和自我介绍" },
+      { key: "applications", title: "投递跟进", description: "岗位投递和面试状态" }
+    ],
+    cards: [
+      {
+        column: "todo",
+        swimlane: "materials",
+        title: "完善产品经理实习简历",
+        description: "突出 Kanboard 优化项目中的调研、原型和可运行 Demo。",
+        assignee: "我",
+        category: "简历",
+        priority: "高",
+        color: "blue",
+        tags: ["简历"],
+        estimate: "2",
+        subtasks: [
+          { title: "补充项目背景", done: false },
+          { title: "量化产出结果", done: false }
+        ]
+      },
+      {
+        column: "doing",
+        swimlane: "materials",
+        title: "整理 3 个作品集项目",
+        description: "每个项目保留问题、方案、过程、结果四段表达。",
+        assignee: "我",
+        category: "作品集",
+        priority: "高",
+        color: "green",
+        tags: ["作品集"],
+        estimate: "4"
+      },
+      {
+        column: "sent",
+        swimlane: "applications",
+        title: "投递 5 个目标岗位",
+        description: "记录公司、岗位、JD 关键词和下一步动作。",
+        assignee: "我",
+        category: "投递",
+        priority: "中",
+        color: "amber",
+        tags: ["投递"],
+        estimate: "1"
+      }
+    ]
+  },
+  {
+    id: "sprint",
+    name: "小团队迭代",
+    description: "适合 2-5 人小团队管理一轮需求，从需求池推进到发布验收。",
+    columns: [
+      { key: "backlog", title: "需求池", wipLimit: 0 },
+      { key: "design", title: "设计中", wipLimit: 2 },
+      { key: "dev", title: "开发中", wipLimit: 3 },
+      { key: "test", title: "测试中", wipLimit: 2 },
+      { key: "done", title: "已发布", wipLimit: 0 }
+    ],
+    swimlanes: [
+      { key: "product", title: "产品与设计", description: "需求、交互和验收标准" },
+      { key: "engineering", title: "研发与测试", description: "实现、联调和发布" }
+    ],
+    cards: [
+      {
+        column: "backlog",
+        swimlane: "product",
+        title: "定义新手创建向导 P0 范围",
+        description: "明确本轮只做模板选择、预览和生成项目。",
+        assignee: "PM",
+        category: "需求",
+        priority: "高",
+        color: "blue",
+        tags: ["P0"],
+        estimate: "2"
+      },
+      {
+        column: "design",
+        swimlane: "product",
+        title: "绘制创建向导低保真流程",
+        description: "空白项目 / 从模板开始 / 模板预览 / 创建完成。",
+        assignee: "设计",
+        category: "原型",
+        priority: "中",
+        color: "green",
+        tags: ["流程"],
+        estimate: "3"
+      },
+      {
+        column: "dev",
+        swimlane: "engineering",
+        title: "实现模板生成逻辑",
+        description: "从模板数据生成列、泳道和示例任务卡。",
+        assignee: "开发",
+        category: "实现",
+        priority: "高",
+        color: "rose",
+        tags: ["前端"],
+        estimate: "4"
+      }
+    ]
+  },
+  {
+    id: "bug",
+    name: "Bug 跟踪",
+    description: "适合个人开发者或小团队跟踪问题、修复、验证和关闭。",
+    columns: [
+      { key: "reported", title: "已报告", wipLimit: 0 },
+      { key: "triage", title: "待确认", wipLimit: 0 },
+      { key: "fixing", title: "修复中", wipLimit: 3 },
+      { key: "verify", title: "待验证", wipLimit: 0 },
+      { key: "closed", title: "已关闭", wipLimit: 0 }
+    ],
+    swimlanes: [
+      { key: "frontend", title: "前端问题", description: "页面、交互和样式问题" },
+      { key: "data", title: "数据问题", description: "保存、状态和字段问题" }
+    ],
+    cards: [
+      {
+        column: "reported",
+        swimlane: "frontend",
+        title: "拖拽后卡片状态未及时刷新",
+        description: "复现步骤：拖动任务到另一个列后，指标数字需要立即更新。",
+        assignee: "开发",
+        category: "交互",
+        priority: "高",
+        color: "rose",
+        tags: ["Bug"],
+        estimate: "1"
+      },
+      {
+        column: "triage",
+        swimlane: "data",
+        title: "刷新后评论是否正确保存",
+        description: "验证 localStorage 中评论、子任务、活动记录是否完整保存。",
+        assignee: "测试",
+        category: "数据",
+        priority: "中",
+        color: "amber",
+        tags: ["验证"],
+        estimate: "1.5"
+      },
+      {
+        column: "verify",
+        swimlane: "frontend",
+        title: "小屏下模板选择区域是否可用",
+        description: "验证移动端模板列表和预览是否纵向排列。",
+        assignee: "设计",
+        category: "响应式",
+        priority: "中",
+        color: "gray",
+        tags: ["UI"],
+        estimate: "1"
+      }
+    ]
+  }
+];
 
 let state = loadState();
 let editingProjectId = null;
@@ -9,6 +242,7 @@ let draggedCard = null;
 let draftSubtasks = [];
 let draftComments = [];
 let draftActivity = [];
+let selectedTemplateId = PROJECT_TEMPLATES[0].id;
 
 const els = {
   projectList: document.querySelector("#projectList"),
@@ -30,6 +264,12 @@ const els = {
   projectDialogTitle: document.querySelector("#projectDialogTitle"),
   projectNameInput: document.querySelector("#projectNameInput"),
   projectDescInput: document.querySelector("#projectDescInput"),
+  projectCreateOptions: document.querySelector("#projectCreateOptions"),
+  projectModeInputs: [...document.querySelectorAll('input[name="projectMode"]')],
+  templateArea: document.querySelector("#templateArea"),
+  templatePicker: document.querySelector("#templatePicker"),
+  templatePreview: document.querySelector("#templatePreview"),
+  saveProjectBtn: document.querySelector("#saveProjectBtn"),
   columnDialog: document.querySelector("#columnDialog"),
   columnForm: document.querySelector("#columnForm"),
   columnDialogTitle: document.querySelector("#columnDialogTitle"),
@@ -77,6 +317,7 @@ els.searchInput.addEventListener("input", renderBoard);
 els.assigneeFilter.addEventListener("change", renderBoard);
 els.categoryFilter.addEventListener("change", renderBoard);
 els.swimlaneFilter.addEventListener("change", renderBoard);
+els.projectModeInputs.forEach((input) => input.addEventListener("change", renderProjectCreateOptions));
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
@@ -450,8 +691,129 @@ function openProjectDialog(projectId = null) {
   els.projectDialogTitle.textContent = project ? "编辑项目" : "新建项目";
   els.projectNameInput.value = project?.name || "";
   els.projectDescInput.value = project?.description || "";
+  els.projectCreateOptions.style.display = project ? "none" : "grid";
+  els.saveProjectBtn.textContent = project ? "保存" : "创建项目";
+  if (!project) {
+    selectedTemplateId = PROJECT_TEMPLATES[0].id;
+    els.projectModeInputs.forEach((input) => {
+      input.checked = input.value === "template";
+    });
+    renderProjectCreateOptions();
+  }
   els.projectDialog.showModal();
   els.projectNameInput.focus();
+}
+
+function selectedProjectMode() {
+  return els.projectModeInputs.find((input) => input.checked)?.value || "template";
+}
+
+function renderProjectCreateOptions() {
+  const isTemplateMode = selectedProjectMode() === "template";
+  els.templateArea.style.display = isTemplateMode ? "grid" : "none";
+  if (!isTemplateMode) return;
+
+  renderTemplatePicker();
+  renderTemplatePreview();
+}
+
+function renderTemplatePicker() {
+  els.templatePicker.innerHTML = "";
+  PROJECT_TEMPLATES.forEach((template) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `template-option ${template.id === selectedTemplateId ? "active" : ""}`;
+    button.setAttribute("aria-pressed", template.id === selectedTemplateId ? "true" : "false");
+    button.innerHTML = `
+      <strong>${escapeHtml(template.name)}</strong>
+      <span>${template.columns.length} 列 · ${template.swimlanes.length} 泳道 · ${template.cards.length} 张示例卡</span>
+    `;
+    button.addEventListener("click", () => {
+      selectedTemplateId = template.id;
+      renderTemplatePicker();
+      renderTemplatePreview();
+    });
+    els.templatePicker.appendChild(button);
+  });
+}
+
+function renderTemplatePreview() {
+  const template = PROJECT_TEMPLATES.find((item) => item.id === selectedTemplateId) || PROJECT_TEMPLATES[0];
+  const columnPreview = template.columns.map((column) => column.title).join(" → ");
+  const lanePreview = template.swimlanes.map((lane) => lane.title).join(" / ");
+  const cardPreview = template.cards.slice(0, 4).map((card) => card.title).join(" / ");
+
+  els.templatePreview.innerHTML = `
+    <h4>${escapeHtml(template.name)}</h4>
+    <p>${escapeHtml(template.description)}</p>
+    <div class="preview-grid">
+      <div class="preview-box">
+        <strong>看板列</strong>
+        <span>${escapeHtml(columnPreview)}</span>
+      </div>
+      <div class="preview-box">
+        <strong>泳道</strong>
+        <span>${escapeHtml(lanePreview)}</span>
+      </div>
+      <div class="preview-box">
+        <strong>示例任务</strong>
+        <span>${escapeHtml(cardPreview)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function createBlankProject(name, description) {
+  const lane = { id: uid("lane"), title: "默认泳道", description: "默认任务分组" };
+  return {
+    id: uid("project"),
+    name,
+    description,
+    createdAt: new Date().toISOString(),
+    swimlanes: [lane],
+    columns: [
+      { id: uid("column"), title: "待办", wipLimit: 0, cards: [] },
+      { id: uid("column"), title: "进行中", wipLimit: 3, cards: [] },
+      { id: uid("column"), title: "已完成", wipLimit: 0, cards: [] }
+    ]
+  };
+}
+
+function createProjectFromTemplate(name, description, templateId) {
+  const template = PROJECT_TEMPLATES.find((item) => item.id === templateId) || PROJECT_TEMPLATES[0];
+  const lanes = template.swimlanes.map((lane) => ({
+    id: uid("lane"),
+    title: lane.title,
+    description: lane.description
+  }));
+  const laneByKey = new Map(template.swimlanes.map((lane, index) => [lane.key, lanes[index]]));
+  const columns = template.columns.map((column) => ({
+    id: uid("column"),
+    title: column.title,
+    wipLimit: column.wipLimit || 0,
+    cards: []
+  }));
+  const columnByKey = new Map(template.columns.map((column, index) => [column.key, columns[index]]));
+
+  template.cards.forEach((templateCard) => {
+    const column = columnByKey.get(templateCard.column) || columns[0];
+    const lane = laneByKey.get(templateCard.swimlane) || lanes[0];
+    const card = makeCard({
+      ...clone(templateCard),
+      swimlaneId: lane.id
+    });
+    card.activity = addActivity(card.activity, `由「${template.name}」模板生成`);
+    column.cards.push(card);
+  });
+
+  return {
+    id: uid("project"),
+    name,
+    description: description || template.description,
+    createdAt: new Date().toISOString(),
+    swimlanes: lanes,
+    columns
+  };
 }
 
 function saveProjectFromDialog(event) {
@@ -465,21 +827,12 @@ function saveProjectFromDialog(event) {
     project.name = name;
     project.description = els.projectDescInput.value.trim();
   } else {
-    const laneId = uid("lane");
-    const id = uid("project");
-    state.projects.push({
-      id,
-      name,
-      description: els.projectDescInput.value.trim(),
-      createdAt: new Date().toISOString(),
-      swimlanes: [{ id: laneId, title: "默认泳道", description: "默认任务分组" }],
-      columns: [
-        { id: uid("column"), title: "待办", wipLimit: 0, cards: [] },
-        { id: uid("column"), title: "进行中", wipLimit: 3, cards: [] },
-        { id: uid("column"), title: "已完成", wipLimit: 0, cards: [] }
-      ]
-    });
-    state.activeProjectId = id;
+    const mode = selectedProjectMode();
+    const project = mode === "template"
+      ? createProjectFromTemplate(name, els.projectDescInput.value.trim(), selectedTemplateId)
+      : createBlankProject(name, els.projectDescInput.value.trim());
+    state.projects.push(project);
+    state.activeProjectId = project.id;
   }
 
   editingProjectId = null;
