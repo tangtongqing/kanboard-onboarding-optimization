@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v06";
+const STORAGE_KEY = "kanboard-static-v07";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -243,6 +243,7 @@ let draftSubtasks = [];
 let draftComments = [];
 let draftActivity = [];
 let draftLinks = [];
+let draftProjectSettings = null;
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
 
 const els = {
@@ -258,6 +259,7 @@ const els = {
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
   swimlaneFilter: document.querySelector("#swimlaneFilter"),
+  customFilterSelect: document.querySelector("#customFilterSelect"),
   viewButtons: [...document.querySelectorAll("#viewSwitcher [data-view]")],
   cardModeSelect: document.querySelector("#cardModeSelect"),
   showClosedInput: document.querySelector("#showClosedInput"),
@@ -275,6 +277,25 @@ const els = {
   templatePicker: document.querySelector("#templatePicker"),
   templatePreview: document.querySelector("#templatePreview"),
   saveProjectBtn: document.querySelector("#saveProjectBtn"),
+  projectSettingsDialog: document.querySelector("#projectSettingsDialog"),
+  projectSettingsForm: document.querySelector("#projectSettingsForm"),
+  settingsProjectTypeInput: document.querySelector("#settingsProjectTypeInput"),
+  settingsDefaultSwimlaneInput: document.querySelector("#settingsDefaultSwimlaneInput"),
+  memberNameInput: document.querySelector("#memberNameInput"),
+  memberRoleInput: document.querySelector("#memberRoleInput"),
+  addMemberBtn: document.querySelector("#addMemberBtn"),
+  memberList: document.querySelector("#memberList"),
+  categoryNameInput: document.querySelector("#categoryNameInput"),
+  addCategoryBtn: document.querySelector("#addCategoryBtn"),
+  categoryList: document.querySelector("#categoryList"),
+  tagNameInput: document.querySelector("#tagNameInput"),
+  addTagBtn: document.querySelector("#addTagBtn"),
+  tagList: document.querySelector("#tagList"),
+  filterNameInput: document.querySelector("#filterNameInput"),
+  filterQueryInput: document.querySelector("#filterQueryInput"),
+  addFilterBtn: document.querySelector("#addFilterBtn"),
+  customFilterList: document.querySelector("#customFilterList"),
+  settingsSwimlaneList: document.querySelector("#settingsSwimlaneList"),
   columnDialog: document.querySelector("#columnDialog"),
   columnForm: document.querySelector("#columnForm"),
   columnDialogTitle: document.querySelector("#columnDialogTitle"),
@@ -324,6 +345,7 @@ const els = {
 
 document.querySelector("#newProjectBtn").addEventListener("click", () => openProjectDialog());
 document.querySelector("#editProjectBtn").addEventListener("click", () => openProjectDialog(activeProject().id));
+document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
 document.querySelector("#addColumnBtn").addEventListener("click", () => openColumnDialog());
 document.querySelector("#addSwimlaneBtn").addEventListener("click", () => openSwimlaneDialog());
@@ -333,11 +355,17 @@ els.searchInput.addEventListener("input", renderBoard);
 els.assigneeFilter.addEventListener("change", renderBoard);
 els.categoryFilter.addEventListener("change", renderBoard);
 els.swimlaneFilter.addEventListener("change", renderBoard);
+els.customFilterSelect.addEventListener("change", renderBoard);
 els.viewButtons.forEach((button) => button.addEventListener("click", () => setViewMode(button.dataset.view)));
 els.cardModeSelect.addEventListener("change", setCardMode);
 els.showClosedInput.addEventListener("change", toggleClosedVisibility);
 els.projectModeInputs.forEach((input) => input.addEventListener("change", renderProjectCreateOptions));
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
+els.projectSettingsForm.addEventListener("submit", saveProjectSettings);
+els.addMemberBtn.addEventListener("click", addDraftMember);
+els.addCategoryBtn.addEventListener("click", addDraftCategory);
+els.addTagBtn.addEventListener("click", addDraftTag);
+els.addFilterBtn.addEventListener("click", addDraftCustomFilter);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -478,6 +506,7 @@ function normalizeState() {
     if (!project.swimlanes?.length) {
       project.swimlanes = [{ id: uid("lane"), title: "默认泳道", description: "默认任务分组" }];
     }
+    project.settings = normalizeProjectSettings(project);
     const fallbackLaneId = project.swimlanes[0].id;
     project.columns ||= [];
     if (!project.columns.length) {
@@ -503,6 +532,30 @@ function normalizeState() {
   if (!state.projects.some((project) => project.id === state.activeProjectId)) {
     state.activeProjectId = state.projects[0].id;
   }
+}
+
+function normalizeProjectSettings(project) {
+  const cards = project.columns?.flatMap((column) => column.cards || []) || [];
+  const derivedMembers = unique(cards.map((card) => card.assignee).filter(Boolean));
+  const derivedCategories = unique(cards.map((card) => card.category).filter(Boolean));
+  const derivedTags = unique(cards.flatMap((card) => card.tags || []));
+  const settings = project.settings || {};
+  const defaultLaneId = project.swimlanes.some((lane) => lane.id === settings.defaultSwimlaneId)
+    ? settings.defaultSwimlaneId
+    : project.swimlanes[0].id;
+
+  return {
+    projectType: settings.projectType || "team",
+    defaultSwimlaneId: defaultLaneId,
+    disabledSwimlaneIds: (settings.disabledSwimlaneIds || []).filter((id) => project.swimlanes.some((lane) => lane.id === id)),
+    members: (settings.members?.length ? settings.members : derivedMembers.map((name) => ({ id: uid("member"), name, role: name === "PM" ? "管理员" : "成员" }))),
+    categories: unique([...(settings.categories || []), ...derivedCategories]),
+    tags: unique([...(settings.tags || []), ...derivedTags]),
+    customFilters: settings.customFilters?.length ? settings.customFilters : [
+      { id: uid("filter"), name: "我的高优先级", query: "assignee:PM priority:高 status:open" },
+      { id: uid("filter"), name: "临近截止任务", query: "status:open" }
+    ]
+  };
 }
 
 function activeProject() {
@@ -548,13 +601,26 @@ function renderHeader() {
 function renderFilters() {
   const project = activeProject();
   const cards = allCards();
-  const assignees = unique(cards.map((card) => card.assignee).filter(Boolean));
-  const categories = unique(cards.map((card) => card.category).filter(Boolean));
+  const assignees = unique([...project.settings.members.map((member) => member.name), ...cards.map((card) => card.assignee).filter(Boolean)]);
+  const categories = unique([...project.settings.categories, ...cards.map((card) => card.category).filter(Boolean)]);
   fillSelect(els.assigneeFilter, "全部负责人", assignees, els.assigneeFilter.value);
   fillSelect(els.categoryFilter, "全部分类", categories, els.categoryFilter.value);
-  fillSelect(els.swimlaneFilter, "全部泳道", project.swimlanes.map((lane) => lane.title), els.swimlaneFilter.value);
+  fillSelect(els.swimlaneFilter, "全部泳道", enabledSwimlanes(project).map((lane) => lane.title), els.swimlaneFilter.value);
+  fillCustomFilters(project);
   fillDatalist(els.memberOptions, assignees);
   fillDatalist(els.categoryOptions, categories);
+}
+
+function fillCustomFilters(project) {
+  const selected = els.customFilterSelect.value;
+  els.customFilterSelect.innerHTML = `<option value="">全部自定义筛选</option>`;
+  project.settings.customFilters.forEach((filter) => {
+    const option = document.createElement("option");
+    option.value = filter.id;
+    option.textContent = filter.name;
+    els.customFilterSelect.appendChild(option);
+  });
+  els.customFilterSelect.value = project.settings.customFilters.some((filter) => filter.id === selected) ? selected : "";
 }
 
 function fillSelect(select, label, values, selected) {
@@ -637,6 +703,12 @@ function visibleColumns(project = activeProject()) {
   return project.columns.filter((column) => !hiddenIds.has(column.id));
 }
 
+function enabledSwimlanes(project = activeProject()) {
+  const disabled = new Set(project.settings.disabledSwimlaneIds || []);
+  const lanes = project.swimlanes.filter((lane) => !disabled.has(lane.id));
+  return lanes.length ? lanes : project.swimlanes.slice(0, 1);
+}
+
 function toggleColumnVisibility(columnId) {
   const project = activeProject();
   const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
@@ -664,9 +736,10 @@ function renderBoard() {
   }
 
   const selectedLaneTitle = els.swimlaneFilter.value;
+  const availableSwimlanes = enabledSwimlanes(project);
   const swimlanes = selectedLaneTitle
-    ? project.swimlanes.filter((lane) => lane.title === selectedLaneTitle)
-    : project.swimlanes;
+    ? availableSwimlanes.filter((lane) => lane.title === selectedLaneTitle)
+    : availableSwimlanes;
 
   swimlanes.forEach((lane) => {
     const swimlaneEl = document.createElement("section");
@@ -693,7 +766,9 @@ function renderListView(project) {
   const rows = allCards(project).filter((card) => {
     const column = project.columns.find((item) => item.id === card.columnId);
     const lane = project.swimlanes.find((item) => item.id === card.swimlaneId);
-    return !hiddenColumnIds(project.id).has(card.columnId) && cardMatchesFilters(card, column, lane);
+    return !hiddenColumnIds(project.id).has(card.columnId)
+      && !project.settings.disabledSwimlaneIds.includes(card.swimlaneId)
+      && cardMatchesFilters(card, column, lane);
   });
 
   const list = document.createElement("section");
@@ -897,7 +972,7 @@ function createCardElement(card, columnId, swimlaneId) {
 
 function cardMatchesFilters(card, column = null, lane = null) {
   if (card.isClosed && !state.ui.showClosed) return false;
-  const query = parseSearchQuery(els.searchInput.value);
+  const query = parseSearchQuery(currentSearchQuery());
   const assignee = els.assigneeFilter.value;
   const category = els.categoryFilter.value;
   const laneTitle = lane?.title || "";
@@ -925,6 +1000,12 @@ function cardMatchesFilters(card, column = null, lane = null) {
     ...(card.links || []).map((link) => `${link.type} ${link.targetTitle}`)
   ].join(" ").toLowerCase();
   return query.terms.every((term) => text.includes(term.toLowerCase()));
+}
+
+function currentSearchQuery() {
+  const project = activeProject();
+  const customFilter = project.settings.customFilters.find((filter) => filter.id === els.customFilterSelect.value);
+  return [els.searchInput.value, customFilter?.query].filter(Boolean).join(" ");
 }
 
 function parseSearchQuery(raw) {
@@ -1109,6 +1190,205 @@ function saveProjectFromDialog(event) {
   render();
 }
 
+function openProjectSettingsDialog() {
+  const project = activeProject();
+  draftProjectSettings = {
+    ...clone(project.settings),
+    swimlanes: clone(project.swimlanes)
+  };
+  els.settingsProjectTypeInput.value = draftProjectSettings.projectType;
+  renderProjectSettings();
+  els.projectSettingsDialog.showModal();
+}
+
+function saveProjectSettings(event) {
+  if (event.submitter?.value === "cancel") return;
+  event.preventDefault();
+  const project = activeProject();
+  const { swimlanes, ...settings } = draftProjectSettings;
+  project.swimlanes = swimlanes;
+  project.settings = {
+    ...settings,
+    projectType: els.settingsProjectTypeInput.value,
+    defaultSwimlaneId: els.settingsDefaultSwimlaneInput.value
+  };
+  draftProjectSettings = null;
+  els.projectSettingsDialog.close();
+  persist();
+  render();
+}
+
+function renderProjectSettings() {
+  if (!draftProjectSettings) return;
+  els.settingsDefaultSwimlaneInput.innerHTML = draftProjectSettings.swimlanes
+    .map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`)
+    .join("");
+  els.settingsDefaultSwimlaneInput.value = draftProjectSettings.defaultSwimlaneId;
+  els.settingsDefaultSwimlaneInput.onchange = () => {
+    draftProjectSettings.defaultSwimlaneId = els.settingsDefaultSwimlaneInput.value;
+    draftProjectSettings.disabledSwimlaneIds = draftProjectSettings.disabledSwimlaneIds.filter((id) => id !== draftProjectSettings.defaultSwimlaneId);
+    renderProjectSettings();
+  };
+  renderMemberSettings();
+  renderSimpleSettingList(els.categoryList, draftProjectSettings.categories, "category");
+  renderSimpleSettingList(els.tagList, draftProjectSettings.tags, "tag");
+  renderCustomFilterSettings();
+  renderSwimlaneSettings();
+}
+
+function renderMemberSettings() {
+  els.memberList.innerHTML = draftProjectSettings.members.length
+    ? draftProjectSettings.members.map((member) => `
+      <div class="settings-item" data-id="${member.id}">
+        <strong>${escapeHtml(member.name)}</strong>
+        <select data-action="role">
+          ${["管理员", "成员", "访客"].map((role) => `<option value="${role}" ${member.role === role ? "selected" : ""}>${role}</option>`).join("")}
+        </select>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除成员">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无成员</div>`;
+
+  els.memberList.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector('[data-action="role"]').addEventListener("change", (event) => {
+      const member = draftProjectSettings.members.find((item) => item.id === row.dataset.id);
+      member.role = event.target.value;
+    });
+    row.querySelector('[data-action="remove"]').addEventListener("click", () => {
+      draftProjectSettings.members = draftProjectSettings.members.filter((item) => item.id !== row.dataset.id);
+      renderProjectSettings();
+    });
+  });
+}
+
+function renderSimpleSettingList(container, values, type) {
+  container.innerHTML = values.length
+    ? values.map((value) => `
+      <div class="settings-item" data-value="${escapeHtml(value)}">
+        <strong>${escapeHtml(value)}</strong>
+        <button class="mini-button" type="button" aria-label="删除">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无${type === "category" ? "分类" : "标签"}</div>`;
+
+  container.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector("button").addEventListener("click", () => {
+      const target = row.dataset.value;
+      if (type === "category") {
+        draftProjectSettings.categories = draftProjectSettings.categories.filter((item) => item !== target);
+      } else {
+        draftProjectSettings.tags = draftProjectSettings.tags.filter((item) => item !== target);
+      }
+      renderProjectSettings();
+    });
+  });
+}
+
+function renderCustomFilterSettings() {
+  els.customFilterList.innerHTML = draftProjectSettings.customFilters.length
+    ? draftProjectSettings.customFilters.map((filter) => `
+      <div class="settings-item filter-item" data-id="${filter.id}">
+        <strong>${escapeHtml(filter.name)}</strong>
+        <span>${escapeHtml(filter.query)}</span>
+        <button class="mini-button" type="button" aria-label="删除筛选">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无自定义筛选</div>`;
+
+  els.customFilterList.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector("button").addEventListener("click", () => {
+      draftProjectSettings.customFilters = draftProjectSettings.customFilters.filter((item) => item.id !== row.dataset.id);
+      renderProjectSettings();
+    });
+  });
+}
+
+function renderSwimlaneSettings() {
+  const disabled = new Set(draftProjectSettings.disabledSwimlaneIds);
+  els.settingsSwimlaneList.innerHTML = draftProjectSettings.swimlanes.map((lane, index) => `
+    <div class="settings-item swimlane-setting" data-id="${lane.id}">
+      <div>
+        <strong>${escapeHtml(lane.title)}</strong>
+        <span>${escapeHtml(lane.description || "无说明")}</span>
+      </div>
+      <span class="role-pill">${draftProjectSettings.defaultSwimlaneId === lane.id ? "默认" : disabled.has(lane.id) ? "已禁用" : "启用"}</span>
+      <button class="mini-button" type="button" data-action="up" aria-label="上移" ${index === 0 ? "disabled" : ""}>↑</button>
+      <button class="mini-button" type="button" data-action="down" aria-label="下移" ${index === draftProjectSettings.swimlanes.length - 1 ? "disabled" : ""}>↓</button>
+      <button class="secondary-button" type="button" data-action="toggle">${disabled.has(lane.id) ? "启用" : "禁用"}</button>
+    </div>
+  `).join("");
+
+  els.settingsSwimlaneList.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector('[data-action="up"]').addEventListener("click", () => moveDraftSwimlane(row.dataset.id, -1));
+    row.querySelector('[data-action="down"]').addEventListener("click", () => moveDraftSwimlane(row.dataset.id, 1));
+    row.querySelector('[data-action="toggle"]').addEventListener("click", () => toggleDraftSwimlane(row.dataset.id));
+  });
+}
+
+function addDraftMember() {
+  const name = els.memberNameInput.value.trim();
+  if (!name || draftProjectSettings.members.some((member) => member.name === name)) return;
+  draftProjectSettings.members.push({ id: uid("member"), name, role: els.memberRoleInput.value });
+  els.memberNameInput.value = "";
+  renderProjectSettings();
+}
+
+function addDraftCategory() {
+  const value = els.categoryNameInput.value.trim();
+  if (!value || draftProjectSettings.categories.includes(value)) return;
+  draftProjectSettings.categories.push(value);
+  draftProjectSettings.categories = unique(draftProjectSettings.categories);
+  els.categoryNameInput.value = "";
+  renderProjectSettings();
+}
+
+function addDraftTag() {
+  const value = els.tagNameInput.value.trim();
+  if (!value || draftProjectSettings.tags.includes(value)) return;
+  draftProjectSettings.tags.push(value);
+  draftProjectSettings.tags = unique(draftProjectSettings.tags);
+  els.tagNameInput.value = "";
+  renderProjectSettings();
+}
+
+function addDraftCustomFilter() {
+  const name = els.filterNameInput.value.trim();
+  const query = els.filterQueryInput.value.trim();
+  if (!name || !query) return;
+  draftProjectSettings.customFilters.push({ id: uid("filter"), name, query });
+  els.filterNameInput.value = "";
+  els.filterQueryInput.value = "";
+  renderProjectSettings();
+}
+
+function moveDraftSwimlane(swimlaneId, direction) {
+  const index = draftProjectSettings.swimlanes.findIndex((lane) => lane.id === swimlaneId);
+  const nextIndex = index + direction;
+  if (index < 0 || nextIndex < 0 || nextIndex >= draftProjectSettings.swimlanes.length) return;
+  [draftProjectSettings.swimlanes[index], draftProjectSettings.swimlanes[nextIndex]] = [draftProjectSettings.swimlanes[nextIndex], draftProjectSettings.swimlanes[index]];
+  renderProjectSettings();
+}
+
+function toggleDraftSwimlane(swimlaneId) {
+  if (draftProjectSettings.defaultSwimlaneId === swimlaneId) {
+    alert("默认泳道不能禁用。");
+    return;
+  }
+  const disabled = new Set(draftProjectSettings.disabledSwimlaneIds);
+  if (disabled.has(swimlaneId)) {
+    disabled.delete(swimlaneId);
+  } else {
+    const enabledCount = draftProjectSettings.swimlanes.filter((lane) => !disabled.has(lane.id)).length;
+    if (enabledCount <= 1) {
+      alert("至少保留一个启用泳道。");
+      return;
+    }
+    disabled.add(swimlaneId);
+  }
+  draftProjectSettings.disabledSwimlaneIds = [...disabled];
+  renderProjectSettings();
+}
+
 function deleteActiveProject() {
   if (state.projects.length <= 1) {
     alert("至少保留一个项目。");
@@ -1233,7 +1513,7 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   const column = project.columns.find((item) => item.id === columnId);
   const card = cardId ? column.cards.find((item) => item.id === cardId) : null;
   editingCard = { columnId, cardId };
-  const laneId = card?.swimlaneId || swimlaneId || project.swimlanes[0].id;
+  const laneId = card?.swimlaneId || swimlaneId || project.settings.defaultSwimlaneId || project.swimlanes[0].id;
 
   els.cardDialogTitle.textContent = card ? "编辑任务" : "新增任务";
   els.cardTitleInput.value = card?.title || "";
@@ -1245,8 +1525,9 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   els.cardTagsInput.value = card?.tags?.join(", ") || "";
   els.cardColorInput.value = card?.color || "blue";
   els.cardEstimateInput.value = card?.estimate || "";
-  els.cardSwimlaneInput.innerHTML = project.swimlanes.map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`).join("");
+  els.cardSwimlaneInput.innerHTML = enabledSwimlanes(project).map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`).join("");
   els.cardSwimlaneInput.value = laneId;
+  if (!els.cardSwimlaneInput.value) els.cardSwimlaneInput.value = enabledSwimlanes(project)[0].id;
   els.deleteCardBtn.style.visibility = card ? "visible" : "hidden";
   els.cardOperations.style.display = card ? "grid" : "none";
   els.cardLinksSection.style.display = card ? "grid" : "none";
@@ -1355,7 +1636,7 @@ function moveEditingCardToProject() {
 
   context.column.cards = context.column.cards.filter((card) => card.id !== context.card.id);
   const targetColumn = targetProject.columns[0];
-  const targetLane = targetProject.swimlanes[0];
+  const targetLane = targetProject.swimlanes.find((lane) => lane.id === targetProject.settings.defaultSwimlaneId) || enabledSwimlanes(targetProject)[0];
   context.card.swimlaneId = targetLane.id;
   context.card.updatedAt = new Date().toISOString();
   context.card.activity = addActivity(context.card.activity || [], `移动到项目“${targetProject.name}”`);

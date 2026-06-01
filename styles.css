@@ -186,7 +186,7 @@ button {
 
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 160px 160px 150px auto;
+  grid-template-columns: minmax(220px, 1fr) 150px 150px 140px 160px auto;
   gap: 12px;
   align-items: end;
 }
@@ -954,6 +954,75 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) 108px;
 }
 
+.settings-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.settings-add-row.compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.settings-add-row.filter-row {
+  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1.3fr) auto;
+}
+
+.settings-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.settings-item strong,
+.settings-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.settings-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.filter-item {
+  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr) auto;
+}
+
+.swimlane-setting {
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+}
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 8px;
+  color: #0f5f59;
+  background: #e8f5f3;
+  border: 1px solid #9ed3cc;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .operation-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(120px, auto)) minmax(180px, 1fr) auto;
@@ -1051,6 +1120,7 @@ textarea:focus {
 
   .toolbar,
   .view-controls,
+  .settings-two-column,
   .metrics {
     grid-template-columns: 1fr 1fr;
   }
@@ -1076,6 +1146,9 @@ textarea:focus {
   .view-controls,
   .metrics,
   .form-grid,
+  .settings-two-column,
+  .settings-add-row,
+  .settings-add-row.filter-row,
   .operation-grid,
   .link-add,
   .overview-view {
@@ -1096,7 +1169,10 @@ textarea:focus {
   }
 
   .inline-add,
-  .comment-add {
+  .comment-add,
+  .settings-item,
+  .filter-item,
+  .swimlane-setting {
     grid-template-columns: 1fr;
   }
 }
