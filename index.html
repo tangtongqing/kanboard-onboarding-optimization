@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kanboard MVP 复现</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div>
+          <h1>Kanboard MVP</h1>
+          <p>V0.3 复现版</p>
+        </div>
+      </div>
+
+      <button class="primary-action" id="newProjectBtn" type="button">新建项目</button>
+
+      <section class="side-section" aria-label="项目列表">
+        <div class="side-heading">项目</div>
+        <div class="project-list" id="projectList"></div>
+      </section>
+
+      <div class="sidebar-footer">
+        <button class="ghost-button" id="resetDemoBtn" type="button">重置演示数据</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="project-heading">
+          <span class="eyebrow">当前项目</span>
+          <h2 id="projectTitle"></h2>
+          <p id="projectDescription"></p>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary-button" id="editProjectBtn" type="button">编辑项目</button>
+          <button class="secondary-button danger" id="deleteProjectBtn" type="button">删除项目</button>
+        </div>
+      </header>
+
+      <section class="metrics" aria-label="项目指标">
+        <div class="metric">
+          <span id="metricCards">0</span>
+          <p>任务</p>
+        </div>
+        <div class="metric">
+          <span id="metricDoing">0</span>
+          <p>进行中</p>
+        </div>
+        <div class="metric">
+          <span id="metricDue">0</span>
+          <p>临近截止</p>
+        </div>
+        <div class="metric">
+          <span id="metricDone">0</span>
+          <p>完成</p>
+        </div>
+      </section>
+
+      <section class="toolbar" aria-label="看板工具栏">
+        <label class="search-field">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="任务标题、描述、标签">
+        </label>
+        <label>
+          <span>负责人</span>
+          <select id="assigneeFilter"></select>
+        </label>
+        <label>
+          <span>分类</span>
+          <select id="categoryFilter"></select>
+        </label>
+        <button class="secondary-button" id="addColumnBtn" type="button">新增列</button>
+      </section>
+
+      <section class="board-shell" aria-label="看板">
+        <div class="board" id="board"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="projectDialog" class="modal">
+    <form method="dialog" id="projectForm">
+      <div class="modal-header">
+        <h3 id="projectDialogTitle">新建项目</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+      <label>
+        <span>项目名称</span>
+        <input id="projectNameInput" required maxlength="40">
+      </label>
+      <label>
+        <span>项目描述</span>
+        <textarea id="projectDescInput" rows="3" maxlength="160"></textarea>
+      </label>
+      <div class="modal-actions">
+        <button class="secondary-button" value="cancel" type="submit">取消</button>
+        <button class="primary-action compact" id="saveProjectBtn" type="submit">保存</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="columnDialog" class="modal">
+    <form method="dialog" id="columnForm">
+      <div class="modal-header">
+        <h3 id="columnDialogTitle">新增列</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+      <label>
+        <span>列名称</span>
+        <input id="columnTitleInput" required maxlength="24">
+      </label>
+      <label>
+        <span>WIP 限制</span>
+        <input id="columnWipInput" type="number" min="0" max="99" placeholder="0 表示不限制">
+      </label>
+      <div class="modal-actions between">
+        <button class="secondary-button danger" id="deleteColumnBtn" type="button">删除列</button>
+        <div>
+          <button class="secondary-button" value="cancel" type="submit">取消</button>
+          <button class="primary-action compact" type="submit">保存</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="cardDialog" class="modal wide">
+    <form method="dialog" id="cardForm">
+      <div class="modal-header">
+        <h3 id="cardDialogTitle">新增任务</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+
+      <div class="form-grid">
+        <label class="span-2">
+          <span>任务标题</span>
+          <input id="cardTitleInput" required maxlength="80">
+        </label>
+        <label>
+          <span>负责人</span>
+          <input id="cardAssigneeInput" list="memberOptions" maxlength="24">
+        </label>
+        <label>
+          <span>分类</span>
+          <input id="cardCategoryInput" list="categoryOptions" maxlength="24">
+        </label>
+        <label>
+          <span>优先级</span>
+          <select id="cardPriorityInput">
+            <option value="低">低</option>
+            <option value="中">中</option>
+            <option value="高">高</option>
+            <option value="紧急">紧急</option>
+          </select>
+        </label>
+        <label>
+          <span>截止日期</span>
+          <input id="cardDueInput" type="date">
+        </label>
+        <label>
+          <span>标签</span>
+          <input id="cardTagsInput" maxlength="80" placeholder="用逗号分隔">
+        </label>
+        <label>
+          <span>颜色</span>
+          <select id="cardColorInput">
+            <option value="blue">蓝</option>
+            <option value="green">绿</option>
+            <option value="amber">黄</option>
+            <option value="rose">红</option>
+            <option value="gray">灰</option>
+          </select>
+        </label>
+        <label class="span-2">
+          <span>描述</span>
+          <textarea id="cardDescInput" rows="5" maxlength="600"></textarea>
+        </label>
+      </div>
+
+      <datalist id="memberOptions"></datalist>
+      <datalist id="categoryOptions"></datalist>
+
+      <div class="modal-actions between">
+        <button class="secondary-button danger" id="deleteCardBtn" type="button">删除任务</button>
+        <div>
+          <button class="secondary-button" value="cancel" type="submit">取消</button>
+          <button class="primary-action compact" type="submit">保存</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
