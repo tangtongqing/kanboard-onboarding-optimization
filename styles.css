@@ -186,7 +186,7 @@ button {
 
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 170px 170px auto;
+  grid-template-columns: minmax(220px, 1fr) 160px 160px 150px auto;
   gap: 12px;
   align-items: end;
 }
@@ -230,16 +230,46 @@ textarea:focus {
 
 .board {
   display: grid;
-  grid-auto-columns: minmax(280px, 320px);
-  grid-auto-flow: column;
-  gap: 14px;
+  gap: 18px;
   min-height: calc(100vh - 260px);
   padding-bottom: 8px;
 }
 
+.swimlane {
+  min-width: 0;
+}
+
+.swimlane-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.swimlane-title h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.swimlane-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.swimlane-board {
+  display: grid;
+  grid-auto-columns: minmax(280px, 320px);
+  grid-auto-flow: column;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
 .column {
   display: flex;
-  min-height: 420px;
+  min-height: 360px;
   flex-direction: column;
   background: #e9eef3;
   border: 1px solid #d4dde7;
@@ -283,7 +313,7 @@ textarea:focus {
   align-content: start;
   gap: 10px;
   padding: 10px;
-  min-height: 280px;
+  min-height: 220px;
 }
 
 .card {
@@ -325,6 +355,34 @@ textarea:focus {
   font-size: 15px;
 }
 
+.card-topline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.card-sort {
+  display: flex;
+  gap: 4px;
+}
+
+.mini-button {
+  width: 26px;
+  min-height: 26px;
+  color: var(--muted);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mini-button:hover {
+  color: var(--text);
+  border-color: #b7c4d2;
+}
+
 .card p {
   margin: 8px 0 0;
   color: var(--muted);
@@ -339,6 +397,21 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
+}
+
+.progress-bar {
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  background: #e5edf5;
+  border-radius: 999px;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: inherit;
 }
 
 .pill,
@@ -439,7 +512,7 @@ textarea:focus {
 }
 
 .modal.wide {
-  width: min(760px, calc(100vw - 32px));
+  width: min(840px, calc(100vw - 32px));
 }
 
 .modal::backdrop {
@@ -449,6 +522,8 @@ textarea:focus {
 .modal form {
   display: grid;
   gap: 16px;
+  max-height: min(86vh, 860px);
+  overflow: auto;
   padding: 18px;
 }
 
@@ -476,6 +551,96 @@ textarea:focus {
 
 .between {
   justify-content: space-between;
+}
+
+.detail-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-heading h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.detail-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.inline-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.comment-add {
+  grid-template-columns: minmax(0, 1fr) 108px;
+}
+
+.subtask-list,
+.comment-list,
+.activity-list {
+  display: grid;
+  gap: 8px;
+}
+
+.subtask-row,
+.comment-item,
+.activity-item {
+  display: grid;
+  gap: 6px;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.subtask-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.subtask-row input {
+  width: auto;
+  min-height: auto;
+}
+
+.subtask-row span {
+  color: var(--text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.subtask-row.done span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.comment-item p,
+.activity-item p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.comment-item span,
+.activity-item span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .empty-state {
@@ -522,6 +687,15 @@ textarea:focus {
   }
 
   .board {
+    min-height: auto;
+  }
+
+  .swimlane-board {
     grid-auto-columns: minmax(260px, 86vw);
+  }
+
+  .inline-add,
+  .comment-add {
+    grid-template-columns: 1fr;
   }
 }
