@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v07";
+const STORAGE_KEY = "kanboard-static-v08";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -243,6 +243,7 @@ let draftSubtasks = [];
 let draftComments = [];
 let draftActivity = [];
 let draftLinks = [];
+let draftTimeLogs = [];
 let draftProjectSettings = null;
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
 
@@ -255,6 +256,22 @@ const els = {
   metricDoing: document.querySelector("#metricDoing"),
   metricDue: document.querySelector("#metricDue"),
   metricDone: document.querySelector("#metricDone"),
+  analyticsDialog: document.querySelector("#analyticsDialog"),
+  analyticsSummary: document.querySelector("#analyticsSummary"),
+  analyticsColumnBreakdown: document.querySelector("#analyticsColumnBreakdown"),
+  analyticsTimeBreakdown: document.querySelector("#analyticsTimeBreakdown"),
+  analyticsCycleList: document.querySelector("#analyticsCycleList"),
+  automationDialog: document.querySelector("#automationDialog"),
+  automationForm: document.querySelector("#automationForm"),
+  automationTriggerInput: document.querySelector("#automationTriggerInput"),
+  automationActionInput: document.querySelector("#automationActionInput"),
+  automationTargetInput: document.querySelector("#automationTargetInput"),
+  addAutomationBtn: document.querySelector("#addAutomationBtn"),
+  runAutomationBtn: document.querySelector("#runAutomationBtn"),
+  automationList: document.querySelector("#automationList"),
+  notificationsDialog: document.querySelector("#notificationsDialog"),
+  markNotificationsBtn: document.querySelector("#markNotificationsBtn"),
+  notificationList: document.querySelector("#notificationList"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -320,11 +337,19 @@ const els = {
   cardTagsInput: document.querySelector("#cardTagsInput"),
   cardColorInput: document.querySelector("#cardColorInput"),
   cardEstimateInput: document.querySelector("#cardEstimateInput"),
+  cardActualInput: document.querySelector("#cardActualInput"),
   cardDescInput: document.querySelector("#cardDescInput"),
   subtaskSummary: document.querySelector("#subtaskSummary"),
   subtaskInput: document.querySelector("#subtaskInput"),
   addSubtaskBtn: document.querySelector("#addSubtaskBtn"),
   subtaskList: document.querySelector("#subtaskList"),
+  timeSummary: document.querySelector("#timeSummary"),
+  timeSpentInput: document.querySelector("#timeSpentInput"),
+  timeNoteInput: document.querySelector("#timeNoteInput"),
+  addTimeEntryBtn: document.querySelector("#addTimeEntryBtn"),
+  timeLogList: document.querySelector("#timeLogList"),
+  recurringPatternInput: document.querySelector("#recurringPatternInput"),
+  recurringNextDateInput: document.querySelector("#recurringNextDateInput"),
   cardOperations: document.querySelector("#cardOperations"),
   cardStatusText: document.querySelector("#cardStatusText"),
   toggleCardClosedBtn: document.querySelector("#toggleCardClosedBtn"),
@@ -345,6 +370,9 @@ const els = {
 
 document.querySelector("#newProjectBtn").addEventListener("click", () => openProjectDialog());
 document.querySelector("#editProjectBtn").addEventListener("click", () => openProjectDialog(activeProject().id));
+document.querySelector("#analyticsBtn").addEventListener("click", openAnalyticsDialog);
+document.querySelector("#automationBtn").addEventListener("click", openAutomationDialog);
+document.querySelector("#notificationsBtn").addEventListener("click", openNotificationsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
 document.querySelector("#addColumnBtn").addEventListener("click", () => openColumnDialog());
@@ -366,6 +394,10 @@ els.addMemberBtn.addEventListener("click", addDraftMember);
 els.addCategoryBtn.addEventListener("click", addDraftCategory);
 els.addTagBtn.addEventListener("click", addDraftTag);
 els.addFilterBtn.addEventListener("click", addDraftCustomFilter);
+els.automationForm.addEventListener("submit", saveAutomationDialog);
+els.addAutomationBtn.addEventListener("click", addAutomationRule);
+els.runAutomationBtn.addEventListener("click", runAutomationSimulation);
+els.markNotificationsBtn.addEventListener("click", markNotificationsRead);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -373,6 +405,8 @@ els.deleteSwimlaneBtn.addEventListener("click", deleteEditingSwimlane);
 els.cardForm.addEventListener("submit", saveCardFromDialog);
 els.deleteCardBtn.addEventListener("click", deleteEditingCard);
 els.addSubtaskBtn.addEventListener("click", addDraftSubtask);
+els.addTimeEntryBtn.addEventListener("click", addDraftTimeEntry);
+els.cardActualInput.addEventListener("input", renderCardDetails);
 els.toggleCardClosedBtn.addEventListener("click", toggleEditingCardClosed);
 els.duplicateCardBtn.addEventListener("click", duplicateEditingCard);
 els.moveCardBtn.addEventListener("click", moveEditingCardToProject);
@@ -483,6 +517,9 @@ function makeCard(options) {
     tags: options.tags || [],
     dueDate: options.dueDate || "",
     estimate: options.estimate || "",
+    actualTime: options.actualTime || "",
+    timeLogs: options.timeLogs || [],
+    recurring: options.recurring || { pattern: "", nextDate: "" },
     swimlaneId: options.swimlaneId || "",
     isClosed: Boolean(options.isClosed),
     links: options.links || [],
@@ -507,6 +544,8 @@ function normalizeState() {
       project.swimlanes = [{ id: uid("lane"), title: "默认泳道", description: "默认任务分组" }];
     }
     project.settings = normalizeProjectSettings(project);
+    project.automations = normalizeAutomations(project);
+    project.notifications ||= [];
     const fallbackLaneId = project.swimlanes[0].id;
     project.columns ||= [];
     if (!project.columns.length) {
@@ -526,12 +565,37 @@ function normalizeState() {
         card.tags ||= [];
         card.links ||= [];
         card.isClosed ??= false;
+        card.actualTime ||= "";
+        card.timeLogs ||= [];
+        card.recurring ||= { pattern: "", nextDate: "" };
       });
     });
   });
   if (!state.projects.some((project) => project.id === state.activeProjectId)) {
     state.activeProjectId = state.projects[0].id;
   }
+}
+
+function normalizeAutomations(project) {
+  if (project.automations?.length) return project.automations;
+  return [
+    {
+      id: uid("automation"),
+      trigger: "任务即将截止",
+      action: "发送通知",
+      target: "负责人",
+      enabled: true,
+      lastRunAt: ""
+    },
+    {
+      id: uid("automation"),
+      trigger: "任务被关闭",
+      action: "添加评论",
+      target: "自动记录完成",
+      enabled: true,
+      lastRunAt: ""
+    }
+  ];
 }
 
 function normalizeProjectSettings(project) {
@@ -653,6 +717,68 @@ function renderMetrics() {
   els.metricDoing.textContent = doing;
   els.metricDue.textContent = dueSoon;
   els.metricDone.textContent = done;
+}
+
+function openAnalyticsDialog() {
+  renderAnalyticsDialog();
+  els.analyticsDialog.showModal();
+}
+
+function renderAnalyticsDialog() {
+  const project = activeProject();
+  const cards = allCards(project);
+  const openCards = cards.filter((card) => !card.isClosed);
+  const closedCards = cards.filter((card) => card.isClosed);
+  const totalEstimate = sumCards(cards, cardEstimatedHours);
+  const totalActual = sumCards(cards, cardActualHours);
+  const recurringCount = cards.filter((card) => card.recurring?.pattern).length;
+  const unreadCount = project.notifications.filter((item) => !item.read).length;
+
+  els.analyticsSummary.innerHTML = [
+    ["打开任务", openCards.length],
+    ["已关闭", closedCards.length],
+    ["预估工时", `${formatHours(totalEstimate)}h`],
+    ["实际工时", `${formatHours(totalActual)}h`],
+    ["循环任务", recurringCount],
+    ["未读通知", unreadCount]
+  ].map(([label, value]) => `
+    <article class="overview-panel">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </article>
+  `).join("");
+
+  els.analyticsColumnBreakdown.innerHTML = project.columns.map((column) => {
+    const columnCards = column.cards;
+    const open = columnCards.filter((card) => !card.isClosed).length;
+    const closed = columnCards.filter((card) => card.isClosed).length;
+    return `
+      <div class="settings-item analytics-item">
+        <strong>${escapeHtml(column.title)}</strong>
+        <span>${open} 打开 · ${closed} 关闭</span>
+      </div>
+    `;
+  }).join("");
+
+  const assigneeTime = groupCountsWithSum(cards, (card) => card.assignee || "未分配", cardActualHours);
+  els.analyticsTimeBreakdown.innerHTML = assigneeTime.length
+    ? assigneeTime.map((item) => `
+      <div class="settings-item analytics-item">
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${formatHours(item.total)}h 实际 · ${item.count} 任务</span>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无时间数据</div>`;
+
+  els.analyticsCycleList.innerHTML = cards.slice(0, 6).map((card) => {
+    const days = Math.max(1, Math.ceil((new Date(card.updatedAt || Date.now()) - new Date(card.createdAt || Date.now())) / 86400000));
+    return `
+      <div class="settings-item analytics-item">
+        <strong>${escapeHtml(card.title)}</strong>
+        <span>${days} 天周期 · ${formatHours(cardEstimatedHours(card))}h 预估 · ${formatHours(cardActualHours(card))}h 实际</span>
+      </div>
+    `;
+  }).join("") || `<div class="empty-state">暂无任务</div>`;
 }
 
 function renderViewControls() {
@@ -939,6 +1065,8 @@ function createCardElement(card, columnId, swimlaneId) {
         ${card.category && !isCompact ? `<span class="pill">${escapeHtml(card.category)}</span>` : ""}
         ${card.priority ? `<span class="pill priority-${priorityClass(card.priority)}">${escapeHtml(card.priority)}</span>` : ""}
         ${card.estimate && !isCompact ? `<span class="pill">${escapeHtml(card.estimate)}h</span>` : ""}
+        ${cardActualHours(card) && !isCompact ? `<span class="pill">${formatHours(cardActualHours(card))}h 实际</span>` : ""}
+        ${card.recurring?.pattern && !isCompact ? `<span class="pill">循环</span>` : ""}
         ${card.links?.length && !isCompact ? `<span class="pill">${card.links.length} 链接</span>` : ""}
         ${card.dueDate ? `<span class="pill ${isOverdue(card.dueDate) ? "overdue" : ""}">${escapeHtml(card.dueDate)}</span>` : ""}
       </div>
@@ -1389,6 +1517,111 @@ function toggleDraftSwimlane(swimlaneId) {
   renderProjectSettings();
 }
 
+function openAutomationDialog() {
+  renderAutomationList();
+  els.automationDialog.showModal();
+}
+
+function saveAutomationDialog(event) {
+  if (event.submitter?.value === "cancel") return;
+  event.preventDefault();
+  els.automationDialog.close();
+  persist();
+  render();
+}
+
+function renderAutomationList() {
+  const project = activeProject();
+  els.automationList.innerHTML = project.automations.length
+    ? project.automations.map((rule) => `
+      <div class="settings-item automation-item" data-id="${rule.id}">
+        <div>
+          <strong>${escapeHtml(rule.trigger)} → ${escapeHtml(rule.action)}</strong>
+          <span>${escapeHtml(rule.target || "无目标")}${rule.lastRunAt ? ` · 上次执行 ${formatTime(rule.lastRunAt)}` : ""}</span>
+        </div>
+        <span class="role-pill">${rule.enabled ? "启用" : "停用"}</span>
+        <button class="secondary-button" type="button" data-action="toggle">${rule.enabled ? "停用" : "启用"}</button>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除规则">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无自动化规则</div>`;
+
+  els.automationList.querySelectorAll(".automation-item").forEach((row) => {
+    row.querySelector('[data-action="toggle"]').addEventListener("click", () => {
+      const rule = project.automations.find((item) => item.id === row.dataset.id);
+      rule.enabled = !rule.enabled;
+      renderAutomationList();
+    });
+    row.querySelector('[data-action="remove"]').addEventListener("click", () => {
+      project.automations = project.automations.filter((item) => item.id !== row.dataset.id);
+      renderAutomationList();
+    });
+  });
+}
+
+function addAutomationRule() {
+  const project = activeProject();
+  project.automations.push({
+    id: uid("automation"),
+    trigger: els.automationTriggerInput.value,
+    action: els.automationActionInput.value,
+    target: els.automationTargetInput.value.trim(),
+    enabled: true,
+    lastRunAt: ""
+  });
+  els.automationTargetInput.value = "";
+  renderAutomationList();
+}
+
+function runAutomationSimulation() {
+  const project = activeProject();
+  const now = new Date().toISOString();
+  const enabledRules = project.automations.filter((rule) => rule.enabled);
+  enabledRules.forEach((rule) => {
+    rule.lastRunAt = now;
+  });
+  if (enabledRules.length) {
+    project.notifications.unshift({
+      id: uid("notification"),
+      title: "自动化规则已模拟执行",
+      body: `执行 ${enabledRules.length} 条规则，生成静态通知记录。`,
+      read: false,
+      createdAt: now
+    });
+  }
+  persist();
+  renderAutomationList();
+}
+
+function openNotificationsDialog() {
+  renderNotifications();
+  els.notificationsDialog.showModal();
+}
+
+function renderNotifications() {
+  const project = activeProject();
+  els.notificationList.innerHTML = project.notifications.length
+    ? project.notifications.map((item) => `
+      <div class="settings-item notification-item ${item.read ? "read" : ""}">
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)} · ${formatTime(item.createdAt)}</span>
+        </div>
+        <span class="role-pill">${item.read ? "已读" : "未读"}</span>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无通知</div>`;
+}
+
+function markNotificationsRead() {
+  const project = activeProject();
+  project.notifications.forEach((item) => {
+    item.read = true;
+  });
+  persist();
+  renderNotifications();
+}
+
 function deleteActiveProject() {
   if (state.projects.length <= 1) {
     alert("至少保留一个项目。");
@@ -1525,6 +1758,9 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   els.cardTagsInput.value = card?.tags?.join(", ") || "";
   els.cardColorInput.value = card?.color || "blue";
   els.cardEstimateInput.value = card?.estimate || "";
+  els.cardActualInput.value = card?.actualTime || "";
+  els.recurringPatternInput.value = card?.recurring?.pattern || "";
+  els.recurringNextDateInput.value = card?.recurring?.nextDate || "";
   els.cardSwimlaneInput.innerHTML = enabledSwimlanes(project).map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`).join("");
   els.cardSwimlaneInput.value = laneId;
   if (!els.cardSwimlaneInput.value) els.cardSwimlaneInput.value = enabledSwimlanes(project)[0].id;
@@ -1542,6 +1778,7 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   draftComments = clone(card?.comments || []);
   draftActivity = clone(card?.activity || []);
   draftLinks = clone(card?.links || []);
+  draftTimeLogs = clone(card?.timeLogs || []);
   renderCardLinkOptions(card?.id);
   renderCardDetails();
   els.cardDialog.showModal();
@@ -1568,6 +1805,12 @@ function saveCardFromDialog(event) {
     tags,
     color: els.cardColorInput.value,
     estimate: els.cardEstimateInput.value,
+    actualTime: els.cardActualInput.value,
+    timeLogs: draftTimeLogs,
+    recurring: {
+      pattern: els.recurringPatternInput.value,
+      nextDate: els.recurringNextDateInput.value
+    },
     swimlaneId: targetSwimlaneId,
     subtasks: draftSubtasks,
     comments: draftComments,
@@ -1670,6 +1913,21 @@ function addDraftSubtask() {
   renderCardDetails();
 }
 
+function addDraftTimeEntry() {
+  const hours = Number(els.timeSpentInput.value);
+  if (!hours || hours <= 0) return;
+  draftTimeLogs.unshift({
+    id: uid("time"),
+    hours,
+    note: els.timeNoteInput.value.trim() || "记录耗时",
+    createdAt: new Date().toISOString()
+  });
+  draftActivity = addActivity(draftActivity, `记录了 ${formatHours(hours)}h 耗时`);
+  els.timeSpentInput.value = "";
+  els.timeNoteInput.value = "";
+  renderCardDetails();
+}
+
 function addDraftComment() {
   const text = els.commentInput.value.trim();
   if (!text) return;
@@ -1691,6 +1949,26 @@ function renderCardLinkOptions(currentCardId) {
 function renderCardDetails() {
   const progress = getSubtaskProgress({ subtasks: draftSubtasks });
   els.subtaskSummary.textContent = `${progress.done}/${progress.total}`;
+  const baseActual = Number(els.cardActualInput.value) || 0;
+  const logTotal = draftTimeLogs.reduce((sum, item) => sum + Number(item.hours || 0), 0);
+  els.timeSummary.textContent = `${formatHours(baseActual + logTotal)}h 实际`;
+  els.timeLogList.innerHTML = draftTimeLogs.length
+    ? draftTimeLogs.map((entry) => `
+      <div class="settings-item time-entry" data-id="${entry.id}">
+        <strong>${formatHours(entry.hours)}h</strong>
+        <span>${escapeHtml(entry.note)} · ${formatTime(entry.createdAt)}</span>
+        <button class="mini-button" type="button" aria-label="删除时间记录">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无时间记录</div>`;
+  els.timeLogList.querySelectorAll(".time-entry").forEach((row) => {
+    row.querySelector("button").addEventListener("click", () => {
+      draftTimeLogs = draftTimeLogs.filter((entry) => entry.id !== row.dataset.id);
+      draftActivity = addActivity(draftActivity, "删除了一条时间记录");
+      renderCardDetails();
+    });
+  });
+
   els.subtaskList.innerHTML = draftSubtasks.length
     ? draftSubtasks.map((task) => `
       <div class="subtask-row ${task.done ? "done" : ""}" data-id="${task.id}">
@@ -1850,6 +2128,35 @@ function groupCounts(values) {
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"));
+}
+
+function groupCountsWithSum(values, labelGetter, valueGetter) {
+  const groups = new Map();
+  values.forEach((item) => {
+    const label = labelGetter(item);
+    const current = groups.get(label) || { label, count: 0, total: 0 };
+    current.count += 1;
+    current.total += Number(valueGetter(item) || 0);
+    groups.set(label, current);
+  });
+  return [...groups.values()].sort((a, b) => b.total - a.total || b.count - a.count || a.label.localeCompare(b.label, "zh-CN"));
+}
+
+function cardEstimatedHours(card) {
+  return Number(card.estimate) || 0;
+}
+
+function cardActualHours(card) {
+  return (Number(card.actualTime) || 0) + (card.timeLogs || []).reduce((sum, entry) => sum + Number(entry.hours || 0), 0);
+}
+
+function sumCards(cards, getter) {
+  return cards.reduce((sum, card) => sum + Number(getter(card) || 0), 0);
+}
+
+function formatHours(value) {
+  const number = Number(value) || 0;
+  return Number.isInteger(number) ? String(number) : number.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
 function clone(value) {

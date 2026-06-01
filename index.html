@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.7 项目配置与协作补齐</title>
+  <title>Kanboard V0.8 分析时间与自动化补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.7 项目配置与协作版</p>
+          <p>V0.8 分析时间与自动化版</p>
         </div>
       </div>
 
@@ -37,6 +37,9 @@
         </div>
         <div class="topbar-actions">
           <button class="secondary-button" id="editProjectBtn" type="button">编辑项目</button>
+          <button class="secondary-button" id="analyticsBtn" type="button">项目分析</button>
+          <button class="secondary-button" id="automationBtn" type="button">自动化</button>
+          <button class="secondary-button" id="notificationsBtn" type="button">通知</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
           <button class="secondary-button danger" id="deleteProjectBtn" type="button">删除项目</button>
@@ -255,6 +258,103 @@
     </form>
   </dialog>
 
+  <dialog id="analyticsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>项目分析</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="analyticsSummary"></section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>列分布</h4>
+            <span>打开 / 关闭</span>
+          </div>
+          <div class="settings-list" id="analyticsColumnBreakdown"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>时间跟踪</h4>
+            <span>预估 / 实际</span>
+          </div>
+          <div class="settings-list" id="analyticsTimeBreakdown"></div>
+        </div>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>周期时间样例</h4>
+          <span>静态模拟</span>
+        </div>
+        <div class="settings-list" id="analyticsCycleList"></div>
+      </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit">关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="automationDialog" class="modal wide">
+    <form method="dialog" id="automationForm">
+      <div class="modal-header">
+        <h3>自动化规则</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>新增规则</h4>
+          <span>静态模拟 V0.8</span>
+        </div>
+        <div class="settings-add-row automation-row">
+          <select id="automationTriggerInput">
+            <option value="任务移动到列">任务移动到列</option>
+            <option value="任务即将截止">任务即将截止</option>
+            <option value="任务被关闭">任务被关闭</option>
+            <option value="任务创建">任务创建</option>
+          </select>
+          <select id="automationActionInput">
+            <option value="发送通知">发送通知</option>
+            <option value="添加评论">添加评论</option>
+            <option value="分配负责人">分配负责人</option>
+            <option value="添加标签">添加标签</option>
+          </select>
+          <input id="automationTargetInput" maxlength="80" placeholder="条件或目标，例如 已完成 / PM / MVP">
+          <button class="secondary-button" id="addAutomationBtn" type="button">添加规则</button>
+        </div>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>规则列表</h4>
+          <button class="secondary-button compact-button" id="runAutomationBtn" type="button">模拟执行</button>
+        </div>
+        <div class="settings-list" id="automationList"></div>
+      </section>
+      <div class="modal-actions">
+        <button class="secondary-button" value="cancel" type="submit">取消</button>
+        <button class="primary-action compact" type="submit">保存规则</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="notificationsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>通知中心</h3>
+        <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
+      </div>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>通知</h4>
+          <button class="secondary-button compact-button" id="markNotificationsBtn" type="button">全部已读</button>
+        </div>
+        <div class="settings-list" id="notificationList"></div>
+      </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit">关闭</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="columnDialog" class="modal">
     <form method="dialog" id="columnForm">
       <div class="modal-header">
@@ -358,6 +458,10 @@
           <span>预估工时</span>
           <input id="cardEstimateInput" type="number" min="0" max="999" step="0.5" placeholder="小时">
         </label>
+        <label>
+          <span>实际工时</span>
+          <input id="cardActualInput" type="number" min="0" max="999" step="0.5" placeholder="小时">
+        </label>
         <label class="span-2">
           <span>描述</span>
           <textarea id="cardDescInput" rows="5" maxlength="600"></textarea>
@@ -389,6 +493,41 @@
             <select id="moveProjectInput"></select>
           </label>
           <button class="secondary-button" id="moveCardBtn" type="button">移动</button>
+        </div>
+      </section>
+
+      <section class="detail-section" id="cardTimeSection">
+        <div class="detail-heading">
+          <h4>时间跟踪</h4>
+          <span id="timeSummary">0h</span>
+        </div>
+        <div class="settings-add-row time-row">
+          <input id="timeSpentInput" type="number" min="0" max="99" step="0.25" placeholder="耗时">
+          <input id="timeNoteInput" maxlength="100" placeholder="记录说明">
+          <button class="secondary-button" id="addTimeEntryBtn" type="button">添加时间</button>
+        </div>
+        <div class="settings-list" id="timeLogList"></div>
+      </section>
+
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>循环任务</h4>
+          <span>静态规则</span>
+        </div>
+        <div class="form-grid">
+          <label>
+            <span>重复频率</span>
+            <select id="recurringPatternInput">
+              <option value="">不重复</option>
+              <option value="daily">每天</option>
+              <option value="weekly">每周</option>
+              <option value="monthly">每月</option>
+            </select>
+          </label>
+          <label>
+            <span>下次生成日期</span>
+            <input id="recurringNextDateInput" type="date">
+          </label>
         </div>
       </section>
 

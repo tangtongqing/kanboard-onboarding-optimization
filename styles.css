@@ -159,6 +159,11 @@ button {
   gap: 8px;
 }
 
+.topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));
@@ -678,6 +683,7 @@ textarea:focus {
   border-radius: 8px;
   border: 1px solid transparent;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .primary-action {
@@ -975,6 +981,14 @@ textarea:focus {
   grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1.3fr) auto;
 }
 
+.settings-add-row.automation-row {
+  grid-template-columns: 160px 160px minmax(180px, 1fr) auto;
+}
+
+.settings-add-row.time-row {
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+}
+
 .settings-list {
   display: grid;
   gap: 8px;
@@ -1008,6 +1022,34 @@ textarea:focus {
 
 .swimlane-setting {
   grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+}
+
+.automation-item {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.analytics-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.notification-item.read {
+  opacity: 0.72;
+  background: #f8fafc;
+}
+
+.time-entry {
+  grid-template-columns: 90px minmax(0, 1fr) auto;
+}
+
+.compact-button {
+  min-height: 32px;
+  padding: 0 10px;
 }
 
 .role-pill {
@@ -1149,6 +1191,9 @@ textarea:focus {
   .settings-two-column,
   .settings-add-row,
   .settings-add-row.filter-row,
+  .settings-add-row.automation-row,
+  .settings-add-row.time-row,
+  .analytics-grid,
   .operation-grid,
   .link-add,
   .overview-view {
@@ -1172,7 +1217,10 @@ textarea:focus {
   .comment-add,
   .settings-item,
   .filter-item,
-  .swimlane-setting {
+  .swimlane-setting,
+  .automation-item,
+  .analytics-item,
+  .time-entry {
     grid-template-columns: 1fr;
   }
 }
