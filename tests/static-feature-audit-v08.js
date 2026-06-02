@@ -438,6 +438,31 @@ async function testMobileDialogBounds(page) {
   await page.setViewportSize({ width: 1280, height: 900 });
 }
 
+async function testDesktopSidebarFixedWorkspaceScroll(page) {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await fresh(page);
+  const layout = await page.evaluate(async () => {
+    const sidebar = document.querySelector(".sidebar");
+    const workspace = document.querySelector(".workspace");
+    const sidebarTopBefore = sidebar.getBoundingClientRect().top;
+    window.scrollTo(0, 320);
+    workspace.scrollTop = 320;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    return {
+      windowScrollY: window.scrollY,
+      bodyOverflow: getComputedStyle(document.body).overflow,
+      workspaceOverflowY: getComputedStyle(workspace).overflowY,
+      workspaceCanScroll: workspace.scrollHeight > workspace.clientHeight,
+      workspaceScrolled: workspace.scrollTop > 0,
+      sidebarTopBefore,
+      sidebarTopAfter: sidebar.getBoundingClientRect().top
+    };
+  });
+  check(layout.bodyOverflow === "hidden" && layout.windowScrollY === 0, "desktop page scroll is locked to app shell");
+  check(layout.workspaceOverflowY === "auto" && layout.workspaceCanScroll && layout.workspaceScrolled, "desktop workspace owns vertical scroll");
+  check(layout.sidebarTopBefore === 0 && layout.sidebarTopAfter === 0, "desktop sidebar stays fixed while workspace scrolls");
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -454,6 +479,7 @@ async function testMobileDialogBounds(page) {
     await testFlowSortingSearchAndViews(page);
     await testTaskActionsLinksAndMove(page);
     await testSettingsAnalyticsAutomation(page);
+    await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);
   } finally {
