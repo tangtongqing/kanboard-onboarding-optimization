@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v08";
+const STORAGE_KEY = "kanboard-static-v083";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
