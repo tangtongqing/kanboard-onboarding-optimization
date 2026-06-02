@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v083";
+const STORAGE_KEY = "kanboard-static-v084";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -830,6 +830,12 @@ function createDemoState() {
     ]
   });
 
+  const learningProject = createProjectFromTemplate(
+    "个人学习计划项目",
+    "用待学 / 学习中 / 已学完管理英语词汇、试卷练习和错题复盘，展示个人轻量项目场景。",
+    "learning"
+  );
+
   return {
     activeProjectId: projectId,
     projects: [
@@ -840,7 +846,8 @@ function createDemoState() {
         createdAt: new Date().toISOString(),
         swimlanes: [laneDemand, laneProduct, laneDelivery, laneGrowth],
         columns
-      }
+      },
+      learningProject
     ]
   };
 }

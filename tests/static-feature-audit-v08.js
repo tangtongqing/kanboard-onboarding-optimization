@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v083";
+const STORAGE_KEY = "kanboard-static-v084";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -86,13 +86,14 @@ async function testInitialShell(page) {
   await fresh(page);
   const state = await getState(page);
   const project = activeProjectFrom(state);
-  check(state.projects.length === 1, "demo has one project");
+  check(state.projects.length === 2, "demo has two projects");
+  check(state.projects.some((item) => item.name === "个人学习计划项目"), "demo includes personal learning project");
   check(project.columns.length === 8, "demo has eight PM workflow columns");
   check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
   check(allCards(project).length === 24, "demo has twenty-four PM workflow cards");
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
-  check((await page.locator("#projectList .project-item").count()) === 1, "project list renders");
+  check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator(".swimlane").count()) === 4, "swimlanes render");
   check((await page.locator(".column").count()) === 32, "columns render per swimlane");
   check(Number(await page.locator("#metricCards").textContent()) === 24, "metrics render card count");
