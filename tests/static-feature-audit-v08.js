@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v085";
+const STORAGE_KEY = "kanboard-static-v087";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -89,19 +89,23 @@ async function testInitialShell(page) {
   const learningProject = state.projects.find((item) => item.name === "个人学习计划项目");
   check(state.projects.length === 2, "demo has two projects");
   check(Boolean(learningProject), "demo includes personal learning project");
-  check(learningProject.columns.length === 3, "learning project keeps three learning columns");
-  check(learningProject.swimlanes.length === 4, "learning project has PM learning swimlanes");
-  check(allCards(learningProject).length === 12, "learning project has twelve PM growth cards");
+  check(learningProject.columns.length === 6, "learning project has six growth columns");
+  check(learningProject.swimlanes.length === 7, "learning project has seven PM learning swimlanes");
+  check(allCards(learningProject).length === 19, "learning project has nineteen PM growth cards");
   check(allCards(learningProject).some((card) => card.title === "写出第一版 PRD 框架"), "learning project includes PRD practice");
-  check(project.columns.length === 8, "demo has eight PM workflow columns");
+  check(project.columns.length === 11, "demo has eleven PM workflow columns");
   check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
-  check(allCards(project).length === 24, "demo has twenty-four PM workflow cards");
+  check(allCards(project).length === 25, "demo has twenty-five PM workflow cards");
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator(".swimlane").count()) === 4, "swimlanes render");
-  check((await page.locator(".column").count()) === 32, "columns render per swimlane");
-  check(Number(await page.locator("#metricCards").textContent()) === 24, "metrics render card count");
+  check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
+  check((await page.locator(".column").count()) === 17, "compact swimlanes hide empty columns");
+  await page.uncheck("#hideEmptyColumnsInput");
+  await pause();
+  check((await page.locator(".column").count()) === 44, "full swimlanes can show every workflow column");
+  check(Number(await page.locator("#metricCards").textContent()) === 25, "metrics render card count");
 }
 
 async function testProjectCrudAndTemplates(page) {
@@ -114,9 +118,9 @@ async function testProjectCrudAndTemplates(page) {
   await saveForm(page, "#projectForm");
   let project = await getActiveProject(page);
   check(project.name === "Template Audit", "template project becomes active");
-  check(project.columns.length === 3, "template project has generated columns");
-  check(project.swimlanes.length === 4, "template project has PM learning swimlanes");
-  check(allCards(project).length === 12, "template project has PM learning cards");
+  check(project.columns.length === 6, "template project has generated learning columns");
+  check(project.swimlanes.length === 7, "template project has PM learning swimlanes");
+  check(allCards(project).length === 19, "template project has PM learning cards");
 
   await fresh(page);
   const blankId = await createBlankProject(page, "Blank Audit");

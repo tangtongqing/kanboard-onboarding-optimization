@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.6 固定侧栏滚动修复</title>
+  <title>Kanboard V0.8.7 泳道空列精简</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.6 固定侧栏版</p>
+          <p>V0.8.7 泳道精简版</p>
         </div>
       </div>
 
@@ -106,6 +106,10 @@
         <label class="checkbox-control">
           <input id="showClosedInput" type="checkbox">
           <span>显示已关闭</span>
+        </label>
+        <label class="checkbox-control">
+          <input id="hideEmptyColumnsInput" type="checkbox">
+          <span>隐藏空列</span>
         </label>
         <div class="column-visibility" id="columnVisibility" aria-label="显示或隐藏列"></div>
       </section>
@@ -303,7 +307,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.6</span>
+          <span>静态模拟 V0.8.7</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">

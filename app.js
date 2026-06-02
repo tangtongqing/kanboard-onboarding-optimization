@@ -1,23 +1,29 @@
-const STORAGE_KEY = "kanboard-static-v085";
+const STORAGE_KEY = "kanboard-static-v087";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
     name: "个人学习项目",
     description: "适合从 0 开始学习产品经理能力，把认知、调研、PRD、原型、协作和作品集训练拆成可推进任务。",
     columns: [
-      { key: "todo", title: "待学", wipLimit: 0 },
-      { key: "doing", title: "学习中", wipLimit: 3 },
-      { key: "done", title: "已学完", wipLimit: 0 }
+      { key: "plan", title: "待规划", wipLimit: 0 },
+      { key: "learn", title: "资料学习", wipLimit: 4 },
+      { key: "case", title: "案例拆解", wipLimit: 3 },
+      { key: "practice", title: "实操产出", wipLimit: 3 },
+      { key: "review", title: "复盘完善", wipLimit: 2 },
+      { key: "mastered", title: "已掌握", wipLimit: 0 }
     ],
     swimlanes: [
       { key: "foundation", title: "产品认知", description: "角色、术语和基础产品思维" },
-      { key: "research", title: "用户与需求", description: "用户研究、竞品拆解和需求判断" },
-      { key: "solution", title: "方案与表达", description: "PRD、原型、指标和评审表达" },
-      { key: "delivery", title: "协作与成长", description: "研发测试、上线复盘和作品集沉淀" }
+      { key: "research", title: "用户研究", description: "访谈、画像、旅程和真实场景" },
+      { key: "analysis", title: "需求分析", description: "需求池、优先级、MVP 和竞品判断" },
+      { key: "solution", title: "方案表达", description: "PRD、原型、流程、指标和评审材料" },
+      { key: "delivery", title: "协作交付", description: "研发沟通、测试验收、上线发布和风险处理" },
+      { key: "growth", title: "数据增长", description: "埋点、运营反馈、复盘和下一轮迭代" },
+      { key: "portfolio", title: "作品集求职", description: "项目故事线、面试表达和长期成长记录" }
     ],
     cards: [
       {
-        column: "done",
+        column: "mastered",
         swimlane: "foundation",
         title: "理解产品经理职责与能力模型",
         description: "搞清楚产品经理不是画原型的人，而是发现问题、定义方案、推动落地的人。",
@@ -34,7 +40,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "done",
+        column: "mastered",
         swimlane: "foundation",
         title: "建立产品术语清单",
         description: "把需求池、PRD、MVP、用户旅程、验收标准、埋点等高频概念整理成自己的语言。",
@@ -50,7 +56,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "doing",
+        column: "case",
         swimlane: "research",
         title: "拆解 Kanboard 的核心用户路径",
         description: "从新建项目到创建任务、拖动卡片，画出用户第一次使用 Kanboard 的完整路径。",
@@ -67,7 +73,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "doing",
+        column: "practice",
         swimlane: "research",
         title: "完成一次用户访谈练习",
         description: "围绕“新手如何拆任务”访谈 1-2 个同学或朋友，练习从回答里提炼真实问题。",
@@ -84,8 +90,8 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
-        swimlane: "research",
+        column: "practice",
+        swimlane: "analysis",
         title: "整理需求池并做优先级排序",
         description: "把调研、竞品和自己的体验问题统一放入需求池，再用影响范围和实现成本排序。",
         assignee: "我",
@@ -101,7 +107,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "doing",
+        column: "practice",
         swimlane: "solution",
         title: "写出第一版 PRD 框架",
         description: "用背景、目标、用户场景、功能范围、流程、验收标准组织一份可讨论的产品文档。",
@@ -118,7 +124,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
+        column: "practice",
         swimlane: "solution",
         title: "绘制低保真原型与页面流程",
         description: "先用静态页面或 Figma 低保真表达关键路径，再进入高保真视觉细化。",
@@ -135,8 +141,8 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
-        swimlane: "solution",
+        column: "learn",
+        swimlane: "growth",
         title: "设计数据指标与埋点问题",
         description: "练习从目标反推指标，例如创建完成率、模板使用率、任务创建数和次日回访。",
         assignee: "我",
@@ -152,7 +158,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
+        column: "plan",
         swimlane: "delivery",
         title: "模拟一次研发评审与排期沟通",
         description: "把需求讲给开发视角的人听，练习解释价值、边界、依赖和取舍。",
@@ -169,7 +175,7 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
+        column: "plan",
         swimlane: "delivery",
         title: "编写测试验收清单",
         description: "把功能是否完成转成可检查的验收项，练习从 PM 视角保障交付质量。",
@@ -186,8 +192,8 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
-        swimlane: "delivery",
+        column: "review",
+        swimlane: "growth",
         title: "复盘上线运营和用户反馈",
         description: "练习用上线结果反推下一轮需求，而不是把发布当成项目终点。",
         assignee: "我",
@@ -203,8 +209,8 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "todo",
-        swimlane: "delivery",
+        column: "plan",
+        swimlane: "portfolio",
         title: "整理产品作品集故事线",
         description: "把这个 Kanboard 实战项目整理成作品集表达：问题、洞察、方案、验证和迭代。",
         assignee: "我",
@@ -217,6 +223,119 @@ const PROJECT_TEMPLATES = [
           { title: "整理项目背景", done: false },
           { title: "截图关键版本", done: false },
           { title: "写出项目复盘", done: false }
+        ]
+      },
+      {
+        column: "learn",
+        swimlane: "foundation",
+        title: "学习经典产品方法论",
+        description: "理解用户价值、业务价值、MVP、北极星指标、AARRR 和增长漏斗等常用方法。",
+        assignee: "我",
+        category: "方法论",
+        priority: "中",
+        color: "amber",
+        tags: ["方法论", "PM"],
+        estimate: "2",
+        subtasks: [
+          { title: "整理 5 个常用模型", done: false },
+          { title: "给每个模型配一个例子", done: false }
+        ]
+      },
+      {
+        column: "case",
+        swimlane: "research",
+        title: "绘制用户画像与用户旅程",
+        description: "把访谈和观察结果沉淀成用户画像，再画出用户从触发到完成任务的路径。",
+        assignee: "我",
+        category: "用户研究",
+        priority: "中",
+        color: "blue",
+        tags: ["画像", "旅程"],
+        estimate: "2",
+        subtasks: [
+          { title: "定义目标用户", done: false },
+          { title: "画出用户旅程阶段", done: false }
+        ]
+      },
+      {
+        column: "case",
+        swimlane: "analysis",
+        title: "完成竞品分析报告",
+        description: "选择 3 个同类产品，对比核心路径、信息架构、优势缺口和可借鉴点。",
+        assignee: "我",
+        category: "竞品分析",
+        priority: "高",
+        color: "gray",
+        tags: ["竞品", "分析"],
+        estimate: "3",
+        subtasks: [
+          { title: "选择竞品对象", done: false },
+          { title: "截图关键路径", done: false },
+          { title: "输出对比结论", done: false }
+        ]
+      },
+      {
+        column: "learn",
+        swimlane: "analysis",
+        title: "练习定义 MVP 与不做范围",
+        description: "把需求拆成必须做、可以后置、明确不做三类，训练产品边界感。",
+        assignee: "我",
+        category: "MVP",
+        priority: "高",
+        color: "rose",
+        tags: ["MVP", "范围"],
+        estimate: "1.5",
+        subtasks: [
+          { title: "列出 P0 功能", done: false },
+          { title: "说明暂不做原因", done: false }
+        ]
+      },
+      {
+        column: "practice",
+        swimlane: "delivery",
+        title: "制定上线检查与风险预案",
+        description: "练习从发布窗口、灰度范围、回滚方案、客服话术和监控指标检查上线准备。",
+        assignee: "我",
+        category: "上线",
+        priority: "中",
+        color: "green",
+        tags: ["上线", "风险"],
+        estimate: "2",
+        subtasks: [
+          { title: "列出上线前检查项", done: false },
+          { title: "准备回滚方案", done: false }
+        ]
+      },
+      {
+        column: "review",
+        swimlane: "portfolio",
+        title: "每周复盘学习产出",
+        description: "每周检查完成了哪些卡片、产出了哪些文档、哪些能力还停留在理解层。",
+        assignee: "我",
+        category: "复盘",
+        priority: "中",
+        color: "blue",
+        tags: ["周复盘", "成长"],
+        estimate: "1",
+        subtasks: [
+          { title: "回顾本周完成任务", done: false },
+          { title: "补齐作品集素材", done: false }
+        ]
+      },
+      {
+        column: "plan",
+        swimlane: "portfolio",
+        title: "准备产品经理面试表达",
+        description: "把项目经历整理成背景、问题、行动、结果和复盘，练习清楚讲出自己的产品判断。",
+        assignee: "我",
+        category: "面试",
+        priority: "中",
+        color: "amber",
+        tags: ["面试", "表达"],
+        estimate: "2",
+        subtasks: [
+          { title: "整理 3 个项目问题", done: false },
+          { title: "准备自我介绍", done: false }
         ]
       }
     ]
@@ -436,6 +555,7 @@ const els = {
   viewButtons: [...document.querySelectorAll("#viewSwitcher [data-view]")],
   cardModeSelect: document.querySelector("#cardModeSelect"),
   showClosedInput: document.querySelector("#showClosedInput"),
+  hideEmptyColumnsInput: document.querySelector("#hideEmptyColumnsInput"),
   columnVisibility: document.querySelector("#columnVisibility"),
   memberOptions: document.querySelector("#memberOptions"),
   categoryOptions: document.querySelector("#categoryOptions"),
@@ -543,6 +663,7 @@ els.customFilterSelect.addEventListener("change", renderBoard);
 els.viewButtons.forEach((button) => button.addEventListener("click", () => setViewMode(button.dataset.view)));
 els.cardModeSelect.addEventListener("change", setCardMode);
 els.showClosedInput.addEventListener("change", toggleClosedVisibility);
+els.hideEmptyColumnsInput.addEventListener("change", toggleEmptyColumnVisibility);
 els.projectModeInputs.forEach((input) => input.addEventListener("change", renderProjectCreateOptions));
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
 els.projectSettingsForm.addEventListener("submit", saveProjectSettings);
@@ -606,14 +727,17 @@ function createDemoState() {
     growth: laneGrowth
   };
   const columns = [
-    { id: uid("column"), key: "intake", title: "需求池", wipLimit: 0, cards: [] },
+    { id: uid("column"), key: "intake", title: "机会/需求池", wipLimit: 0, cards: [] },
     { id: uid("column"), key: "clarify", title: "需求澄清", wipLimit: 4, cards: [] },
-    { id: uid("column"), key: "design", title: "产品方案", wipLimit: 3, cards: [] },
-    { id: uid("column"), key: "review", title: "评审排期", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "solution", title: "方案设计", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "prd", title: "PRD 原型", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "review", title: "评审确认", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "planning", title: "研发排期", wipLimit: 3, cards: [] },
     { id: uid("column"), key: "dev", title: "研发实现", wipLimit: 5, cards: [] },
     { id: uid("column"), key: "qa", title: "测试验收", wipLimit: 4, cards: [] },
-    { id: uid("column"), key: "launch", title: "上线运营", wipLimit: 3, cards: [] },
-    { id: uid("column"), key: "feedback", title: "反馈维护", wipLimit: 0, cards: [] }
+    { id: uid("column"), key: "launch", title: "上线发布", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "operate", title: "运营反馈", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "iterate", title: "复盘迭代", wipLimit: 0, cards: [] }
   ];
   const columnByKey = new Map(columns.map((column) => [column.key, column]));
   const addDemoCard = (columnKey, laneKey, options) => {
@@ -713,7 +837,23 @@ function createDemoState() {
     ]
   });
 
-  addDemoCard("design", "product", {
+  addDemoCard("solution", "product", {
+    title: "形成方案假设与取舍结论",
+    description: "把多个方案按用户收益、业务收益、实现成本和风险做对比，明确本轮采用哪一个方案。",
+    assignee: "PM",
+    category: "方案设计",
+    priority: "高",
+    color: "blue",
+    tags: ["方案", "取舍"],
+    estimate: "2.5",
+    subtasks: [
+      { title: "列出备选方案", done: true },
+      { title: "评估成本和风险", done: false },
+      { title: "同步方案取舍原因", done: false }
+    ]
+  });
+
+  addDemoCard("prd", "product", {
     title: "输出 PRD 需求文档",
     description: "沉淀背景、目标、用户故事、流程、页面规则、异常场景和验收标准。",
     assignee: "PM",
@@ -728,7 +868,7 @@ function createDemoState() {
       { title: "写异常和边界场景", done: false }
     ]
   });
-  addDemoCard("design", "product", {
+  addDemoCard("prd", "product", {
     title: "绘制核心流程与页面原型",
     description: "先画低保真流程，再补关键页面状态，确保研发和测试能理解交互。",
     assignee: "设计",
@@ -743,7 +883,7 @@ function createDemoState() {
       { title: "标注关键交互", done: false }
     ]
   });
-  addDemoCard("design", "growth", {
+  addDemoCard("solution", "growth", {
     title: "设计埋点与数据看板口径",
     description: "提前定义上线后要看的激活率、转化率、使用频次和漏斗节点。",
     assignee: "数据",
@@ -773,7 +913,7 @@ function createDemoState() {
       { title: "同步范围变更", done: false }
     ]
   });
-  addDemoCard("review", "delivery", {
+  addDemoCard("planning", "delivery", {
     title: "对接研发技术方案与排期",
     description: "确认接口、数据结构、依赖系统、工期、风险点和灰度方案。",
     assignee: "研发",
@@ -788,7 +928,7 @@ function createDemoState() {
       { title: "识别技术风险", done: false }
     ]
   });
-  addDemoCard("review", "delivery", {
+  addDemoCard("planning", "delivery", {
     title: "输出验收标准和测试重点",
     description: "把 PRD 转成测试能执行的验收清单，避免上线前才发现口径不一致。",
     assignee: "测试",
@@ -894,7 +1034,7 @@ function createDemoState() {
     ]
   });
 
-  addDemoCard("launch", "growth", {
+  addDemoCard("operate", "growth", {
     title: "准备上线公告与运营素材",
     description: "产出更新说明、帮助文档、运营话术和必要的用户引导素材。",
     assignee: "运营",
@@ -924,7 +1064,7 @@ function createDemoState() {
       { title: "准备回滚方案", done: false }
     ]
   });
-  addDemoCard("launch", "growth", {
+  addDemoCard("operate", "growth", {
     title: "同步客服/销售/运营话术",
     description: "让一线团队知道功能变化、适用用户、常见问题和升级路径。",
     assignee: "运营",
@@ -939,7 +1079,7 @@ function createDemoState() {
     ]
   });
 
-  addDemoCard("feedback", "growth", {
+  addDemoCard("operate", "growth", {
     title: "收集上线后反馈与数据",
     description: "上线后跟踪用户反馈、客服工单、数据看板和异常报警。",
     assignee: "PM",
@@ -955,7 +1095,7 @@ function createDemoState() {
       { title: "记录遗留问题", done: true }
     ]
   });
-  addDemoCard("feedback", "growth", {
+  addDemoCard("iterate", "growth", {
     title: "复盘版本效果与问题",
     description: "对比上线前目标和上线后数据，明确有效改进、失败假设和下一步动作。",
     assignee: "PM",
@@ -970,7 +1110,7 @@ function createDemoState() {
       { title: "输出复盘结论", done: false }
     ]
   });
-  addDemoCard("feedback", "product", {
+  addDemoCard("iterate", "product", {
     title: "规划下一轮迭代需求",
     description: "把上线后反馈转回需求池，拆出下一轮可执行的优化点。",
     assignee: "PM",
@@ -988,7 +1128,7 @@ function createDemoState() {
 
   const learningProject = createProjectFromTemplate(
     "个人学习计划项目",
-    "用待学 / 学习中 / 已学完推进从 0 开始成为优秀产品经理的学习路线。",
+    "用待规划、资料学习、案例拆解、实操产出、复盘完善、已掌握推进从 0 开始成为优秀产品经理的学习路线。",
     "learning"
   );
 
@@ -998,7 +1138,7 @@ function createDemoState() {
       {
         id: projectId,
         name: "产品开发全流程项目",
-        description: "用 Kanboard 复现 PM 从提需、PRD、研发、测试、上线运营到反馈维护的完整产品开发流程。",
+        description: "用 Kanboard 复现 PM 从机会提需、需求澄清、方案设计、PRD 原型、评审排期、研发测试、上线运营到复盘迭代的完整周期。",
         createdAt: new Date().toISOString(),
         swimlanes: [laneDemand, laneProduct, laneDelivery, laneGrowth],
         columns
@@ -1041,6 +1181,7 @@ function normalizeState() {
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
   state.ui.showClosed ??= false;
+  state.ui.hideEmptyColumns ??= true;
   state.ui.hiddenColumns ||= {};
   state.projects.forEach((project) => {
     state.ui.hiddenColumns[project.id] ||= [];
@@ -1214,8 +1355,26 @@ function fillDatalist(list, values) {
 function renderMetrics() {
   const cards = allCards();
   const openCards = cards.filter((card) => !card.isClosed);
-  const doingColumns = ["进行中", "开发中", "处理中", "学习中", "需求澄清", "产品方案", "评审排期", "研发实现", "测试验收", "上线运营"];
-  const doneColumns = ["已完成", "完成", "Done", "已学完"];
+  const doingColumns = [
+    "进行中",
+    "开发中",
+    "处理中",
+    "资料学习",
+    "案例拆解",
+    "实操产出",
+    "复盘完善",
+    "需求澄清",
+    "方案设计",
+    "PRD 原型",
+    "评审确认",
+    "研发排期",
+    "研发实现",
+    "测试验收",
+    "上线发布",
+    "运营反馈",
+    "复盘迭代"
+  ];
+  const doneColumns = ["已完成", "完成", "Done", "已学完", "已掌握"];
   const doing = openCards.filter((card) => doingColumns.includes(card.columnTitle)).length;
   const done = cards.filter((card) => card.isClosed || doneColumns.includes(card.columnTitle)).length;
   const dueSoon = openCards.filter((card) => isDueSoon(card.dueDate)).length;
@@ -1295,6 +1454,7 @@ function renderViewControls() {
   });
   els.cardModeSelect.value = state.ui.cardMode;
   els.showClosedInput.checked = state.ui.showClosed;
+  els.hideEmptyColumnsInput.checked = state.ui.hideEmptyColumns;
 
   const project = activeProject();
   const hiddenIds = hiddenColumnIds(project.id);
@@ -1326,6 +1486,12 @@ function toggleClosedVisibility() {
   render();
 }
 
+function toggleEmptyColumnVisibility() {
+  state.ui.hideEmptyColumns = els.hideEmptyColumnsInput.checked;
+  persist();
+  render();
+}
+
 function hiddenColumnIds(projectId = activeProject().id) {
   return new Set(state.ui.hiddenColumns?.[projectId] || []);
 }
@@ -1333,6 +1499,19 @@ function hiddenColumnIds(projectId = activeProject().id) {
 function visibleColumns(project = activeProject()) {
   const hiddenIds = hiddenColumnIds(project.id);
   return project.columns.filter((column) => !hiddenIds.has(column.id));
+}
+
+function visibleCardsInColumnLane(column, lane) {
+  return column.cards
+    .filter((card) => card.swimlaneId === lane.id)
+    .filter((card) => cardMatchesFilters(card, column, lane));
+}
+
+function columnsForLane(project, lane) {
+  const columns = visibleColumns(project);
+  if (!state.ui.hideEmptyColumns) return columns;
+  const columnsWithCards = columns.filter((column) => visibleCardsInColumnLane(column, lane).length > 0 || column.cards.length === 0);
+  return columnsWithCards.length ? columnsWithCards : columns;
 }
 
 function enabledSwimlanes(project = activeProject()) {
@@ -1389,7 +1568,7 @@ function renderBoard() {
 
     swimlaneEl.querySelector('[data-action="edit-swimlane"]').addEventListener("click", () => openSwimlaneDialog(lane.id));
     const laneBoard = swimlaneEl.querySelector(".swimlane-board");
-    visibleColumns(project).forEach((column) => laneBoard.appendChild(createColumnElement(column, lane)));
+    columnsForLane(project, lane).forEach((column) => laneBoard.appendChild(createColumnElement(column, lane)));
     els.board.appendChild(swimlaneEl);
   });
 }
