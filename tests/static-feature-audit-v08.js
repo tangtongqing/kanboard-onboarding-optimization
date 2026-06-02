@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v084";
+const STORAGE_KEY = "kanboard-static-v085";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -86,8 +86,13 @@ async function testInitialShell(page) {
   await fresh(page);
   const state = await getState(page);
   const project = activeProjectFrom(state);
+  const learningProject = state.projects.find((item) => item.name === "个人学习计划项目");
   check(state.projects.length === 2, "demo has two projects");
-  check(state.projects.some((item) => item.name === "个人学习计划项目"), "demo includes personal learning project");
+  check(Boolean(learningProject), "demo includes personal learning project");
+  check(learningProject.columns.length === 3, "learning project keeps three learning columns");
+  check(learningProject.swimlanes.length === 4, "learning project has PM learning swimlanes");
+  check(allCards(learningProject).length === 12, "learning project has twelve PM growth cards");
+  check(allCards(learningProject).some((card) => card.title === "写出第一版 PRD 框架"), "learning project includes PRD practice");
   check(project.columns.length === 8, "demo has eight PM workflow columns");
   check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
   check(allCards(project).length === 24, "demo has twenty-four PM workflow cards");
@@ -110,8 +115,8 @@ async function testProjectCrudAndTemplates(page) {
   let project = await getActiveProject(page);
   check(project.name === "Template Audit", "template project becomes active");
   check(project.columns.length === 3, "template project has generated columns");
-  check(project.swimlanes.length === 1, "template project has generated swimlane");
-  check(allCards(project).length === 3, "template project has sample cards");
+  check(project.swimlanes.length === 4, "template project has PM learning swimlanes");
+  check(allCards(project).length === 12, "template project has PM learning cards");
 
   await fresh(page);
   const blankId = await createBlankProject(page, "Blank Audit");

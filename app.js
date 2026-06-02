@@ -1,66 +1,222 @@
-const STORAGE_KEY = "kanboard-static-v084";
+const STORAGE_KEY = "kanboard-static-v085";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
     name: "个人学习项目",
-    description: "适合课程学习、考试准备、作品集训练，把学习任务从“要做”推进到“已学完”。",
+    description: "适合从 0 开始学习产品经理能力，把认知、调研、PRD、原型、协作和作品集训练拆成可推进任务。",
     columns: [
       { key: "todo", title: "待学", wipLimit: 0 },
       { key: "doing", title: "学习中", wipLimit: 3 },
       { key: "done", title: "已学完", wipLimit: 0 }
     ],
     swimlanes: [
-      { key: "main", title: "学习任务", description: "课程、练习和复盘任务" }
+      { key: "foundation", title: "产品认知", description: "角色、术语和基础产品思维" },
+      { key: "research", title: "用户与需求", description: "用户研究、竞品拆解和需求判断" },
+      { key: "solution", title: "方案与表达", description: "PRD、原型、指标和评审表达" },
+      { key: "delivery", title: "协作与成长", description: "研发测试、上线复盘和作品集沉淀" }
     ],
     cards: [
       {
-        column: "todo",
-        swimlane: "main",
-        title: "学习英语词汇",
-        description: "每天完成一组高频词汇，并把不熟悉的词加入复习列表。",
+        column: "done",
+        swimlane: "foundation",
+        title: "理解产品经理职责与能力模型",
+        description: "搞清楚产品经理不是画原型的人，而是发现问题、定义方案、推动落地的人。",
         assignee: "我",
-        category: "词汇",
+        category: "产品认知",
         priority: "中",
         color: "blue",
-        tags: ["英语", "输入"],
+        tags: ["入门", "能力模型"],
         estimate: "1.5",
         subtasks: [
-          { title: "背诵 50 个高频词汇", done: false },
-          { title: "完成一次自测", done: false },
-          { title: "记录错误词汇", done: false }
+          { title: "梳理 PM 日常工作内容", done: true },
+          { title: "列出自己当前短板", done: true },
+          { title: "确定 4 周学习节奏", done: true }
+        ]
+      },
+      {
+        column: "done",
+        swimlane: "foundation",
+        title: "建立产品术语清单",
+        description: "把需求池、PRD、MVP、用户旅程、验收标准、埋点等高频概念整理成自己的语言。",
+        assignee: "我",
+        category: "基础知识",
+        priority: "中",
+        color: "gray",
+        tags: ["术语", "基础"],
+        estimate: "1",
+        subtasks: [
+          { title: "整理 20 个产品术语", done: true },
+          { title: "为每个术语写一句解释", done: true }
         ]
       },
       {
         column: "doing",
-        swimlane: "main",
-        title: "完成两套英语试卷",
-        description: "记录错题原因，区分词汇、定位、长难句和选项陷阱。",
+        swimlane: "research",
+        title: "拆解 Kanboard 的核心用户路径",
+        description: "从新建项目到创建任务、拖动卡片，画出用户第一次使用 Kanboard 的完整路径。",
         assignee: "我",
-        category: "刷题",
+        category: "产品体验",
         priority: "高",
         color: "green",
-        tags: ["英语", "练习"],
+        tags: ["体验拆解", "Kanboard"],
+        estimate: "2",
+        subtasks: [
+          { title: "记录关键页面", done: true },
+          { title: "标出新手卡点", done: false },
+          { title: "输出路径图", done: false }
+        ]
+      },
+      {
+        column: "doing",
+        swimlane: "research",
+        title: "完成一次用户访谈练习",
+        description: "围绕“新手如何拆任务”访谈 1-2 个同学或朋友，练习从回答里提炼真实问题。",
+        assignee: "我",
+        category: "用户研究",
+        priority: "高",
+        color: "amber",
+        tags: ["访谈", "用户研究"],
         estimate: "3",
         subtasks: [
-          { title: "完成第一套试卷", done: false },
-          { title: "完成第二套试卷", done: false },
-          { title: "标注错题原因", done: false }
+          { title: "准备访谈提纲", done: true },
+          { title: "完成访谈记录", done: false },
+          { title: "提炼 3 个痛点", done: false }
         ]
       },
       {
         column: "todo",
-        swimlane: "main",
-        title: "复习之前做过的错题",
-        description: "把错题从“做过”转化为“真正掌握”。",
+        swimlane: "research",
+        title: "整理需求池并做优先级排序",
+        description: "把调研、竞品和自己的体验问题统一放入需求池，再用影响范围和实现成本排序。",
+        assignee: "我",
+        category: "需求分析",
+        priority: "高",
+        color: "rose",
+        tags: ["需求池", "优先级"],
+        estimate: "2",
+        subtasks: [
+          { title: "合并重复需求", done: false },
+          { title: "标注 P0/P1/P2", done: false },
+          { title: "说明排序理由", done: false }
+        ]
+      },
+      {
+        column: "doing",
+        swimlane: "solution",
+        title: "写出第一版 PRD 框架",
+        description: "用背景、目标、用户场景、功能范围、流程、验收标准组织一份可讨论的产品文档。",
+        assignee: "我",
+        category: "PRD",
+        priority: "高",
+        color: "blue",
+        tags: ["PRD", "产品文档"],
+        estimate: "4",
+        subtasks: [
+          { title: "写清楚问题背景", done: true },
+          { title: "列出 P0 功能范围", done: false },
+          { title: "补充验收标准", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "solution",
+        title: "绘制低保真原型与页面流程",
+        description: "先用静态页面或 Figma 低保真表达关键路径，再进入高保真视觉细化。",
+        assignee: "我",
+        category: "原型",
+        priority: "中",
+        color: "green",
+        tags: ["原型", "流程"],
+        estimate: "3",
+        subtasks: [
+          { title: "画出首页状态", done: false },
+          { title: "画出新建项目路径", done: false },
+          { title: "标注关键交互", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "solution",
+        title: "设计数据指标与埋点问题",
+        description: "练习从目标反推指标，例如创建完成率、模板使用率、任务创建数和次日回访。",
+        assignee: "我",
+        category: "数据分析",
+        priority: "中",
+        color: "amber",
+        tags: ["指标", "埋点"],
+        estimate: "2",
+        subtasks: [
+          { title: "定义北极星指标", done: false },
+          { title: "列出 5 个过程指标", done: false },
+          { title: "说明每个指标的用途", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "delivery",
+        title: "模拟一次研发评审与排期沟通",
+        description: "把需求讲给开发视角的人听，练习解释价值、边界、依赖和取舍。",
+        assignee: "我",
+        category: "项目协作",
+        priority: "中",
+        color: "rose",
+        tags: ["评审", "沟通"],
+        estimate: "2",
+        subtasks: [
+          { title: "准备评审材料", done: false },
+          { title: "列出可能被问到的问题", done: false },
+          { title: "记录评审修改点", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "delivery",
+        title: "编写测试验收清单",
+        description: "把功能是否完成转成可检查的验收项，练习从 PM 视角保障交付质量。",
+        assignee: "我",
+        category: "测试验收",
+        priority: "中",
+        color: "blue",
+        tags: ["验收", "测试"],
+        estimate: "1.5",
+        subtasks: [
+          { title: "写出核心流程验收项", done: false },
+          { title: "补充异常状态", done: false },
+          { title: "确认移动端可用性", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "delivery",
+        title: "复盘上线运营和用户反馈",
+        description: "练习用上线结果反推下一轮需求，而不是把发布当成项目终点。",
         assignee: "我",
         category: "复盘",
         priority: "中",
-        color: "amber",
-        tags: ["错题", "复盘"],
+        color: "gray",
+        tags: ["上线", "复盘"],
         estimate: "2",
         subtasks: [
-          { title: "归类错题", done: false },
-          { title: "整理高频错误类型", done: false }
+          { title: "记录上线目标", done: false },
+          { title: "收集反馈问题", done: false },
+          { title: "拆出下一轮优化点", done: false }
+        ]
+      },
+      {
+        column: "todo",
+        swimlane: "delivery",
+        title: "整理产品作品集故事线",
+        description: "把这个 Kanboard 实战项目整理成作品集表达：问题、洞察、方案、验证和迭代。",
+        assignee: "我",
+        category: "作品集",
+        priority: "高",
+        color: "green",
+        tags: ["作品集", "求职"],
+        estimate: "4",
+        subtasks: [
+          { title: "整理项目背景", done: false },
+          { title: "截图关键版本", done: false },
+          { title: "写出项目复盘", done: false }
         ]
       }
     ]
@@ -832,7 +988,7 @@ function createDemoState() {
 
   const learningProject = createProjectFromTemplate(
     "个人学习计划项目",
-    "用待学 / 学习中 / 已学完管理英语词汇、试卷练习和错题复盘，展示个人轻量项目场景。",
+    "用待学 / 学习中 / 已学完推进从 0 开始成为优秀产品经理的学习路线。",
     "learning"
   );
 
