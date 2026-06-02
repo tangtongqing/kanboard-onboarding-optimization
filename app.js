@@ -439,66 +439,407 @@ function persist() {
 
 function createDemoState() {
   const projectId = uid("project");
-  const laneProduct = { id: uid("lane"), title: "产品设计泳道", description: "调研、方案、文档和评审任务" };
-  const laneDev = { id: uid("lane"), title: "研发实现泳道", description: "前端实现、验证和交互细节" };
-  const todoColumn = { id: uid("column"), title: "待办", wipLimit: 0, cards: [] };
-  const doingColumn = { id: uid("column"), title: "进行中", wipLimit: 3, cards: [] };
-  const reviewColumn = { id: uid("column"), title: "待验证", wipLimit: 0, cards: [] };
-  const doneColumn = { id: uid("column"), title: "已完成", wipLimit: 0, cards: [] };
+  const laneDemand = { id: uid("lane"), title: "需求与用户泳道", description: "提需、用户反馈、竞品洞察和问题澄清" };
+  const laneProduct = { id: uid("lane"), title: "产品方案泳道", description: "PRD、原型、验收标准、埋点和评审材料" };
+  const laneDelivery = { id: uid("lane"), title: "研发测试泳道", description: "技术评审、开发联调、测试验收和上线保障" };
+  const laneGrowth = { id: uid("lane"), title: "运营反馈泳道", description: "运营物料、发布沟通、数据复盘和持续维护" };
+  const lanes = {
+    demand: laneDemand,
+    product: laneProduct,
+    delivery: laneDelivery,
+    growth: laneGrowth
+  };
+  const columns = [
+    { id: uid("column"), key: "intake", title: "需求池", wipLimit: 0, cards: [] },
+    { id: uid("column"), key: "clarify", title: "需求澄清", wipLimit: 4, cards: [] },
+    { id: uid("column"), key: "design", title: "产品方案", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "review", title: "评审排期", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "dev", title: "研发实现", wipLimit: 5, cards: [] },
+    { id: uid("column"), key: "qa", title: "测试验收", wipLimit: 4, cards: [] },
+    { id: uid("column"), key: "launch", title: "上线运营", wipLimit: 3, cards: [] },
+    { id: uid("column"), key: "feedback", title: "反馈维护", wipLimit: 0, cards: [] }
+  ];
+  const columnByKey = new Map(columns.map((column) => [column.key, column]));
+  const addDemoCard = (columnKey, laneKey, options) => {
+    columnByKey.get(columnKey).cards.push(makeCard({
+      ...options,
+      swimlaneId: lanes[laneKey].id
+    }));
+  };
 
-  todoColumn.cards.push(makeCard({
-    title: "梳理 Kanboard 核心功能",
-    description: "明确 MVP 必须包含项目、列、任务卡、泳道和拖拽流转。",
+  addDemoCard("intake", "demand", {
+    title: "收集业务方提需与目标口径",
+    description: "记录提需人、业务目标、期望上线时间和影响范围，先判断是否值得进入需求澄清。",
     assignee: "PM",
-    category: "调研",
+    category: "提需",
     priority: "高",
     color: "blue",
-    tags: ["MVP"],
-    swimlaneId: laneProduct.id,
+    tags: ["提需", "目标"],
+    estimate: "1.5",
     subtasks: [
-      { title: "定义复现范围", done: true },
-      { title: "确认不做范围", done: false }
+      { title: "确认提需背景和业务目标", done: true },
+      { title: "记录影响用户和使用场景", done: false },
+      { title: "补齐期望上线时间", done: false }
     ]
-  }));
-  doingColumn.cards.push(makeCard({
-    title: "实现任务卡片拖拽",
-    description: "卡片可以在列和泳道之间移动，表达任务状态变化。",
-    assignee: "开发",
-    category: "原型",
+  });
+  addDemoCard("intake", "demand", {
+    title: "汇总用户反馈与客服工单",
+    description: "把高频反馈、投诉、客服转述和用户原话汇总成可判断的问题池。",
+    assignee: "客服",
+    category: "用户反馈",
     priority: "中",
-    color: "green",
-    tags: ["交互"],
-    swimlaneId: laneDev.id,
+    color: "amber",
+    tags: ["反馈", "客服"],
+    estimate: "2",
     subtasks: [
-      { title: "跨列移动", done: true },
-      { title: "跨泳道移动", done: false }
+      { title: "整理近两周高频反馈", done: true },
+      { title: "标注反馈频次和影响程度", done: false }
     ]
-  }));
-  doneColumn.cards.push(makeCard({
-    title: "完成 V0.2 竞品分析",
-    description: "对比 Kanboard、WeKan、Trello、Notion 的新手创建体验。",
+  });
+  addDemoCard("intake", "growth", {
+    title: "竞品功能拆解与机会点记录",
+    description: "对比竞品同类流程，提炼我们当前流程缺口和可借鉴交互。",
     assignee: "PM",
-    category: "文档",
+    category: "竞品",
     priority: "中",
     color: "gray",
-    tags: ["研究"],
-    swimlaneId: laneProduct.id,
+    tags: ["竞品", "机会点"],
+    estimate: "3",
     subtasks: [
-      { title: "竞品维度定义", done: true },
-      { title: "需求池整理", done: true }
+      { title: "选择 3 个对标产品", done: true },
+      { title: "截图关键路径", done: true },
+      { title: "沉淀机会点", done: false }
     ]
-  }));
+  });
+
+  addDemoCard("clarify", "demand", {
+    title: "明确问题假设与成功指标",
+    description: "把“想做一个功能”转成“解决什么问题、用什么指标判断成功”。",
+    assignee: "PM",
+    category: "需求澄清",
+    priority: "高",
+    color: "blue",
+    tags: ["问题定义", "指标"],
+    estimate: "2",
+    subtasks: [
+      { title: "定义核心问题", done: true },
+      { title: "确定成功指标", done: false },
+      { title: "确认不做范围", done: false }
+    ]
+  });
+  addDemoCard("clarify", "demand", {
+    title: "访谈目标用户并整理场景",
+    description: "用 3-5 个访谈样本校准需求，避免只按业务方想象做产品。",
+    assignee: "PM",
+    category: "用户研究",
+    priority: "中",
+    color: "green",
+    tags: ["访谈", "场景"],
+    estimate: "4",
+    subtasks: [
+      { title: "准备访谈提纲", done: true },
+      { title: "完成用户访谈", done: false },
+      { title: "输出场景摘要", done: false }
+    ]
+  });
+  addDemoCard("clarify", "product", {
+    title: "需求优先级评估",
+    description: "按用户价值、业务价值、实现成本和风险判断本轮做什么、暂缓什么。",
+    assignee: "PM",
+    category: "优先级",
+    priority: "高",
+    color: "amber",
+    tags: ["P0", "排期"],
+    estimate: "1.5",
+    subtasks: [
+      { title: "标注 P0/P1/P2", done: true },
+      { title: "同步暂不做原因", done: false }
+    ]
+  });
+
+  addDemoCard("design", "product", {
+    title: "输出 PRD 需求文档",
+    description: "沉淀背景、目标、用户故事、流程、页面规则、异常场景和验收标准。",
+    assignee: "PM",
+    category: "PRD",
+    priority: "高",
+    color: "blue",
+    tags: ["PRD", "规则"],
+    estimate: "5",
+    subtasks: [
+      { title: "补齐需求背景和目标", done: true },
+      { title: "写核心业务规则", done: false },
+      { title: "写异常和边界场景", done: false }
+    ]
+  });
+  addDemoCard("design", "product", {
+    title: "绘制核心流程与页面原型",
+    description: "先画低保真流程，再补关键页面状态，确保研发和测试能理解交互。",
+    assignee: "设计",
+    category: "原型",
+    priority: "高",
+    color: "green",
+    tags: ["原型", "流程"],
+    estimate: "4",
+    subtasks: [
+      { title: "画主流程", done: true },
+      { title: "补空状态和错误状态", done: false },
+      { title: "标注关键交互", done: false }
+    ]
+  });
+  addDemoCard("design", "growth", {
+    title: "设计埋点与数据看板口径",
+    description: "提前定义上线后要看的激活率、转化率、使用频次和漏斗节点。",
+    assignee: "数据",
+    category: "数据",
+    priority: "中",
+    color: "amber",
+    tags: ["埋点", "指标"],
+    estimate: "3",
+    subtasks: [
+      { title: "列出关键事件", done: true },
+      { title: "定义漏斗口径", done: false }
+    ]
+  });
+
+  addDemoCard("review", "product", {
+    title: "组织产品评审并确认范围",
+    description: "让业务、设计、研发、测试一起确认目标、范围、规则和风险。",
+    assignee: "PM",
+    category: "评审",
+    priority: "高",
+    color: "blue",
+    tags: ["评审", "范围"],
+    estimate: "2",
+    subtasks: [
+      { title: "预约评审会议", done: true },
+      { title: "记录评审结论", done: false },
+      { title: "同步范围变更", done: false }
+    ]
+  });
+  addDemoCard("review", "delivery", {
+    title: "对接研发技术方案与排期",
+    description: "确认接口、数据结构、依赖系统、工期、风险点和灰度方案。",
+    assignee: "研发",
+    category: "技术评审",
+    priority: "高",
+    color: "green",
+    tags: ["技术方案", "排期"],
+    estimate: "3",
+    subtasks: [
+      { title: "确认接口依赖", done: true },
+      { title: "确认研发排期", done: false },
+      { title: "识别技术风险", done: false }
+    ]
+  });
+  addDemoCard("review", "delivery", {
+    title: "输出验收标准和测试重点",
+    description: "把 PRD 转成测试能执行的验收清单，避免上线前才发现口径不一致。",
+    assignee: "测试",
+    category: "验收标准",
+    priority: "中",
+    color: "amber",
+    tags: ["验收", "测试"],
+    estimate: "2",
+    subtasks: [
+      { title: "整理主流程用例", done: true },
+      { title: "补边界和异常用例", done: false }
+    ]
+  });
+
+  addDemoCard("dev", "delivery", {
+    title: "跟进前端/后端开发进度",
+    description: "按里程碑同步开发进度，提前暴露阻塞项，避免临近提测才延期。",
+    assignee: "研发",
+    category: "研发",
+    priority: "高",
+    color: "green",
+    tags: ["开发", "进度"],
+    estimate: "6",
+    subtasks: [
+      { title: "后端接口开发", done: true },
+      { title: "前端页面开发", done: false },
+      { title: "异常状态处理", done: false }
+    ]
+  });
+  addDemoCard("dev", "delivery", {
+    title: "联调接口与异常场景",
+    description: "PM 参与关键路径联调，确认页面表现、接口返回和异常兜底是否符合预期。",
+    assignee: "研发",
+    category: "联调",
+    priority: "高",
+    color: "blue",
+    tags: ["联调", "异常"],
+    estimate: "4",
+    subtasks: [
+      { title: "联调主路径", done: false },
+      { title: "验证错误返回", done: false },
+      { title: "记录待修复问题", done: false }
+    ]
+  });
+  addDemoCard("dev", "product", {
+    title: "处理研发过程中的需求变更",
+    description: "把新增想法、实现限制和临时变更记录成变更单，避免口头承诺失控。",
+    assignee: "PM",
+    category: "变更管理",
+    priority: "中",
+    color: "amber",
+    tags: ["变更", "范围"],
+    estimate: "2",
+    subtasks: [
+      { title: "记录变更原因", done: false },
+      { title: "评估影响范围", done: false }
+    ]
+  });
+
+  addDemoCard("qa", "delivery", {
+    title: "编写测试用例与验收清单",
+    description: "测试按主流程、异常流程、权限、兼容性和数据口径拆解用例。",
+    assignee: "测试",
+    category: "测试",
+    priority: "高",
+    color: "green",
+    tags: ["测试用例", "验收"],
+    estimate: "4",
+    subtasks: [
+      { title: "主流程用例", done: true },
+      { title: "异常场景用例", done: false },
+      { title: "回归范围确认", done: false }
+    ]
+  });
+  addDemoCard("qa", "delivery", {
+    title: "跟进缺陷修复与回归测试",
+    description: "按严重程度拆分缺陷，确认阻塞上线的问题优先修复并回归。",
+    assignee: "测试",
+    category: "缺陷",
+    priority: "高",
+    color: "rose",
+    tags: ["Bug", "回归"],
+    estimate: "5",
+    subtasks: [
+      { title: "标注阻塞缺陷", done: false },
+      { title: "跟进修复状态", done: false },
+      { title: "完成回归测试", done: false }
+    ]
+  });
+  addDemoCard("qa", "product", {
+    title: "PM 走查核心用户路径",
+    description: "PM 按真实用户路径走查，确认体验、文案、默认值和边界状态可接受。",
+    assignee: "PM",
+    category: "验收",
+    priority: "高",
+    color: "blue",
+    tags: ["走查", "体验"],
+    estimate: "2",
+    subtasks: [
+      { title: "走查新用户路径", done: false },
+      { title: "确认关键文案", done: false },
+      { title: "输出验收结论", done: false }
+    ]
+  });
+
+  addDemoCard("launch", "growth", {
+    title: "准备上线公告与运营素材",
+    description: "产出更新说明、帮助文档、运营话术和必要的用户引导素材。",
+    assignee: "运营",
+    category: "运营",
+    priority: "中",
+    color: "amber",
+    tags: ["公告", "素材"],
+    estimate: "3",
+    subtasks: [
+      { title: "写更新公告", done: false },
+      { title: "准备帮助文档", done: false },
+      { title: "同步运营话术", done: false }
+    ]
+  });
+  addDemoCard("launch", "delivery", {
+    title: "灰度发布与监控关键指标",
+    description: "先小流量发布，观察错误率、转化率、反馈量和核心漏斗是否异常。",
+    assignee: "研发",
+    category: "上线",
+    priority: "高",
+    color: "green",
+    tags: ["灰度", "监控"],
+    estimate: "2",
+    subtasks: [
+      { title: "确认发布窗口", done: false },
+      { title: "配置监控指标", done: false },
+      { title: "准备回滚方案", done: false }
+    ]
+  });
+  addDemoCard("launch", "growth", {
+    title: "同步客服/销售/运营话术",
+    description: "让一线团队知道功能变化、适用用户、常见问题和升级路径。",
+    assignee: "运营",
+    category: "培训",
+    priority: "中",
+    color: "blue",
+    tags: ["培训", "话术"],
+    estimate: "2",
+    subtasks: [
+      { title: "整理 FAQ", done: false },
+      { title: "完成内部同步", done: false }
+    ]
+  });
+
+  addDemoCard("feedback", "growth", {
+    title: "收集上线后反馈与数据",
+    description: "上线后跟踪用户反馈、客服工单、数据看板和异常报警。",
+    assignee: "PM",
+    category: "反馈",
+    priority: "高",
+    color: "blue",
+    tags: ["反馈", "数据"],
+    estimate: "3",
+    isClosed: true,
+    subtasks: [
+      { title: "收集首日反馈", done: true },
+      { title: "检查关键漏斗", done: true },
+      { title: "记录遗留问题", done: true }
+    ]
+  });
+  addDemoCard("feedback", "growth", {
+    title: "复盘版本效果与问题",
+    description: "对比上线前目标和上线后数据，明确有效改进、失败假设和下一步动作。",
+    assignee: "PM",
+    category: "复盘",
+    priority: "中",
+    color: "gray",
+    tags: ["复盘", "指标"],
+    estimate: "2.5",
+    subtasks: [
+      { title: "整理指标变化", done: true },
+      { title: "分析未达预期原因", done: false },
+      { title: "输出复盘结论", done: false }
+    ]
+  });
+  addDemoCard("feedback", "product", {
+    title: "规划下一轮迭代需求",
+    description: "把上线后反馈转回需求池，拆出下一轮可执行的优化点。",
+    assignee: "PM",
+    category: "迭代",
+    priority: "中",
+    color: "green",
+    tags: ["迭代", "需求池"],
+    estimate: "2",
+    subtasks: [
+      { title: "合并重复反馈", done: false },
+      { title: "拆分下一轮需求", done: false },
+      { title: "同步优先级建议", done: false }
+    ]
+  });
 
   return {
     activeProjectId: projectId,
     projects: [
       {
         id: projectId,
-        name: "产品优化项目",
-        description: "复现 Kanboard 的项目、任务卡、泳道和卡片流转，再加入新手创建向导。",
+        name: "产品开发全流程项目",
+        description: "用 Kanboard 复现 PM 从提需、PRD、研发、测试、上线运营到反馈维护的完整产品开发流程。",
         createdAt: new Date().toISOString(),
-        swimlanes: [laneProduct, laneDev],
-        columns: [todoColumn, doingColumn, reviewColumn, doneColumn]
+        swimlanes: [laneDemand, laneProduct, laneDelivery, laneGrowth],
+        columns
       }
     ]
   };
@@ -710,8 +1051,10 @@ function fillDatalist(list, values) {
 function renderMetrics() {
   const cards = allCards();
   const openCards = cards.filter((card) => !card.isClosed);
-  const doing = openCards.filter((card) => ["进行中", "开发中", "处理中", "学习中"].includes(card.columnTitle)).length;
-  const done = cards.filter((card) => card.isClosed || ["已完成", "完成", "Done", "已学完"].includes(card.columnTitle)).length;
+  const doingColumns = ["进行中", "开发中", "处理中", "学习中", "需求澄清", "产品方案", "评审排期", "研发实现", "测试验收", "上线运营"];
+  const doneColumns = ["已完成", "完成", "Done", "已学完"];
+  const doing = openCards.filter((card) => doingColumns.includes(card.columnTitle)).length;
+  const done = cards.filter((card) => card.isClosed || doneColumns.includes(card.columnTitle)).length;
   const dueSoon = openCards.filter((card) => isDueSoon(card.dueDate)).length;
   els.metricCards.textContent = cards.length;
   els.metricDoing.textContent = doing;

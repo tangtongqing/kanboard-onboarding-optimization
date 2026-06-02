@@ -87,15 +87,15 @@ async function testInitialShell(page) {
   const state = await getState(page);
   const project = activeProjectFrom(state);
   check(state.projects.length === 1, "demo has one project");
-  check(project.columns.length === 4, "demo has four columns");
-  check(project.swimlanes.length === 2, "demo has two swimlanes");
-  check(allCards(project).length === 3, "demo has three cards");
+  check(project.columns.length === 8, "demo has eight PM workflow columns");
+  check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
+  check(allCards(project).length === 24, "demo has twenty-four PM workflow cards");
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 1, "project list renders");
-  check((await page.locator(".swimlane").count()) === 2, "swimlanes render");
-  check((await page.locator(".column").count()) === 8, "columns render per swimlane");
-  check(Number(await page.locator("#metricCards").textContent()) === 3, "metrics render card count");
+  check((await page.locator(".swimlane").count()) === 4, "swimlanes render");
+  check((await page.locator(".column").count()) === 32, "columns render per swimlane");
+  check(Number(await page.locator("#metricCards").textContent()) === 24, "metrics render card count");
 }
 
 async function testProjectCrudAndTemplates(page) {
@@ -244,12 +244,16 @@ async function testFlowSortingSearchAndViews(page) {
   const targetColumn = project.columns[1];
   const card = sourceColumn.cards[0];
   const laneId = card.swimlaneId;
-  await page.locator(`.card[data-card-id="${card.id}"]`).dragTo(
-    page.locator(`.column[data-column-id="${targetColumn.id}"][data-swimlane-id="${laneId}"] .column-body`)
-  );
+  const beforeSourceCount = sourceColumn.cards.length;
+  const beforeTargetCount = targetColumn.cards.length;
+  const sourceCard = page.locator(`.card[data-card-id="${card.id}"]`);
+  const targetBody = page.locator(`.column[data-column-id="${targetColumn.id}"][data-swimlane-id="${laneId}"] .column-body`);
+  await sourceCard.scrollIntoViewIfNeeded();
+  await targetBody.scrollIntoViewIfNeeded();
+  await sourceCard.dragTo(targetBody, { force: true });
   await pause();
   project = await getActiveProject(page);
-  check(project.columns[1].cards.some((item) => item.id === card.id), "drag and drop moves card across columns");
+  check(project.columns[0].cards.length === beforeSourceCount - 1 && project.columns[1].cards.length === beforeTargetCount + 1, "drag and drop moves card across columns");
 
   const lane = project.swimlanes.find((item) => item.id === laneId);
   const sortableOne = await quickCreateCard(page, targetColumn.id, lane.id, "Sort One");
