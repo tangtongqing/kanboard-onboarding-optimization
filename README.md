@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.1 静态界面视觉优化
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.2 Open-source Command Desk 界面重设计
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -41,6 +41,7 @@
 - [x] 分析时间与自动化补齐 V0.8
 - [x] 静态功能验收 V0.8
 - [x] 静态界面视觉优化 V0.8.1
+- [x] Open-source Command Desk 界面重设计 V0.8.2
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -61,6 +62,7 @@
 | `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
 | `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 79 个核心检查项 |
 | `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
+| `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -70,6 +72,7 @@
 | `设计图/kanboard-v0.7-project-settings.png` | V0.7 项目设置截图 |
 | `设计图/kanboard-v0.8-analytics-automation.png` | V0.8 项目分析截图 |
 | `设计图/kanboard-v0.8.1-visual-polish.png` | V0.8.1 静态界面视觉优化截图 |
+| `设计图/kanboard-v0.8.2-command-desk-redesign.png` | V0.8.2 Open-source Command Desk 界面重设计截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -85,6 +88,7 @@
 | V0.7 | 项目配置与协作能力补齐 | 已完成 |
 | V0.8 | 分析、时间跟踪和自动化补齐 | 已完成 |
 | V0.8.1 | 静态界面视觉优化 | 已完成 |
+| V0.8.2 | Open-source Command Desk 界面重设计 | 已完成 |
 | V0.9 | Figma 高保真原型 | 下一步 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
@@ -104,4 +108,4 @@ Figma 高保真原型推迟到完整复现补齐之后。
 
 ## 当前截图
 
-![Kanboard 静态界面视觉优化 V0.8.1](设计图/kanboard-v0.8.1-visual-polish.png)
+![Kanboard Open-source Command Desk 界面重设计 V0.8.2](设计图/kanboard-v0.8.2-command-desk-redesign.png)
