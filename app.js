@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v089";
+const STORAGE_KEY = "kanboard-static-v0810";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",

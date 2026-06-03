@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v089";
+const STORAGE_KEY = "kanboard-static-v0810";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -108,6 +108,30 @@ async function testInitialShell(page) {
   await pause();
   check((await page.locator(".column").count()) === 44, "full swimlanes can show every workflow column");
   check(Number(await page.locator("#metricCards").textContent()) === 25, "metrics render card count");
+}
+
+async function testDialogCancelBypassesRequiredFields(page) {
+  await fresh(page);
+
+  await page.click("#newProjectBtn");
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await pause();
+  check((await page.locator("#projectDialog[open]").count()) === 0, "project dialog close bypasses required name");
+
+  await page.click("#addColumnBtn");
+  await page.locator("#columnDialog .modal-header .icon-button").click();
+  await pause();
+  check((await page.locator("#columnDialog[open]").count()) === 0, "column dialog close bypasses required title");
+
+  await page.click("#addSwimlaneBtn");
+  await page.locator('#swimlaneForm .modal-actions button[value="cancel"]').click();
+  await pause();
+  check((await page.locator("#swimlaneDialog[open]").count()) === 0, "swimlane dialog cancel bypasses required title");
+
+  await page.locator('.column [data-action="new-card"]').first().click();
+  await page.locator("#cardDialog .modal-header .icon-button").click();
+  await pause();
+  check((await page.locator("#cardDialog[open]").count()) === 0, "card dialog close bypasses required title");
 }
 
 async function testProjectCrudAndTemplates(page) {
@@ -501,6 +525,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
 
   try {
     await testInitialShell(page);
+    await testDialogCancelBypassesRequiredFields(page);
     await testProjectCrudAndTemplates(page);
     await testColumnAndSwimlaneCrud(page);
     await testCardCrudDetailsAndPersistence(page);
