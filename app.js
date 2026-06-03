@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0810";
+const STORAGE_KEY = "kanboard-static-v0811";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -763,15 +763,12 @@ function persist() {
 
 function createDemoState() {
   const projectId = uid("project");
-  const laneDemand = { id: uid("lane"), title: "需求与用户泳道", description: "提需、用户反馈、竞品洞察和问题澄清" };
-  const laneProduct = { id: uid("lane"), title: "产品方案泳道", description: "PRD、原型、验收标准、埋点和评审材料" };
-  const laneDelivery = { id: uid("lane"), title: "研发测试泳道", description: "技术评审、开发联调、测试验收和上线保障" };
-  const laneGrowth = { id: uid("lane"), title: "运营反馈泳道", description: "运营物料、发布沟通、数据复盘和持续维护" };
+  const laneMain = { id: uid("lane"), title: "产品开发主流程", description: "单一产品项目的完整状态流；需求、产品、研发、运营差异通过分类和标签表达" };
   const lanes = {
-    demand: laneDemand,
-    product: laneProduct,
-    delivery: laneDelivery,
-    growth: laneGrowth
+    demand: laneMain,
+    product: laneMain,
+    delivery: laneMain,
+    growth: laneMain
   };
   const columns = [
     { id: uid("column"), key: "intake", title: "机会/需求池", wipLimit: 0, cards: [] },
@@ -1195,7 +1192,7 @@ function createDemoState() {
           actualLaunch: "",
           phasePlans: Object.fromEntries(columns.map((column) => [column.key, DEFAULT_PHASE_PLAN_DAYS[column.key] ?? 2]))
         },
-        swimlanes: [laneDemand, laneProduct, laneDelivery, laneGrowth],
+        swimlanes: [laneMain],
         columns
       },
       learningProject

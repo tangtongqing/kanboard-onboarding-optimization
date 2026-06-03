@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0810";
+const STORAGE_KEY = "kanboard-static-v0811";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -94,19 +94,20 @@ async function testInitialShell(page) {
   check(allCards(learningProject).length === 19, "learning project has nineteen PM growth cards");
   check(allCards(learningProject).some((card) => card.title === "写出第一版 PRD 框架"), "learning project includes PRD practice");
   check(project.columns.length === 11, "demo has eleven PM workflow columns");
-  check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
+  check(project.swimlanes.length === 1, "demo PM project uses one main workflow swimlane");
   check(allCards(project).length === 25, "demo has twenty-five PM workflow cards");
+  check(new Set(allCards(project).map((card) => card.swimlaneId)).size === 1, "demo PM cards stay in the main workflow swimlane");
   check(project.timeline.plannedStart === "2026-05-20" && project.timeline.plannedLaunch === "2026-06-11", "demo has project timeline");
   check(allCards(project).some((card) => card.schedule?.plannedEnd), "demo cards have schedule dates");
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
-  check((await page.locator(".swimlane").count()) === 4, "swimlanes render");
+  check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
-  check((await page.locator(".column").count()) === 17, "compact swimlanes hide empty columns");
+  check((await page.locator(".column").count()) === 11, "main swimlane renders each workflow column once");
   await page.uncheck("#hideEmptyColumnsInput");
   await pause();
-  check((await page.locator(".column").count()) === 44, "full swimlanes can show every workflow column");
+  check((await page.locator(".column").count()) === 11, "full view keeps one workflow column set for the main swimlane");
   check(Number(await page.locator("#metricCards").textContent()) === 25, "metrics render card count");
 }
 
@@ -399,6 +400,9 @@ async function testTaskActionsLinksAndMove(page) {
 
 async function testSettingsAnalyticsAutomation(page) {
   await fresh(page);
+  await page.click("#addSwimlaneBtn");
+  await page.fill("#swimlaneTitleInput", "Audit Disabled Lane");
+  await saveForm(page, "#swimlaneForm");
   await page.click("#projectSettingsBtn");
   await page.selectOption("#settingsProjectTypeInput", "personal");
   await page.fill("#settingsPlannedStartInput", "2026-06-01");
