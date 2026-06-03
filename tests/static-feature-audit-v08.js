@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0811";
+const STORAGE_KEY = "kanboard-static-v0812";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -102,6 +102,7 @@ async function testInitialShell(page) {
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
+  check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
   check((await page.locator(".column").count()) === 11, "main swimlane renders each workflow column once");
@@ -182,6 +183,7 @@ async function testColumnAndSwimlaneCrud(page) {
   check(Boolean(addedColumn), "column create saves title");
   check(addedColumn.wipLimit === 2, "column create saves WIP limit");
 
+  await page.locator(`.column[data-column-id="${addedColumn.id}"] .board-menu summary`).first().click();
   await page.locator(`.column[data-column-id="${addedColumn.id}"] [data-action="edit-column"]`).first().click();
   await page.fill("#columnTitleInput", "Audit Column Edited");
   await page.fill("#columnWipInput", "4");
@@ -189,6 +191,7 @@ async function testColumnAndSwimlaneCrud(page) {
   project = await getActiveProject(page);
   check(project.columns.some((column) => column.title === "Audit Column Edited" && column.wipLimit === 4), "column edit saves");
 
+  await page.locator(`.column[data-column-id="${addedColumn.id}"] .board-menu summary`).first().click();
   await page.locator(`.column[data-column-id="${addedColumn.id}"] [data-action="edit-column"]`).first().click();
   await page.click("#deleteColumnBtn");
   await pause();
@@ -323,6 +326,10 @@ async function testFlowSortingSearchAndViews(page) {
 
   await page.click('[data-view="list"]');
   check(await page.locator(".list-view").isVisible(), "list view renders");
+  await page.click('[data-view="calendar"]');
+  check(await page.locator(".calendar-view").isVisible(), "calendar view renders");
+  await page.click('[data-view="gantt"]');
+  check(await page.locator(".gantt-view").isVisible(), "gantt view renders");
   await page.click('[data-view="overview"]');
   check(await page.locator(".overview-view").isVisible(), "overview view renders");
   await page.click('[data-view="board"]');
@@ -331,9 +338,18 @@ async function testFlowSortingSearchAndViews(page) {
   const state = await getState(page);
   check(state.ui.cardMode === "compact", "card display mode saves");
 
+  await page.locator(".column .board-menu summary").first().click();
+  check(await page.locator(".column .board-menu-panel").first().isVisible(), "column dropdown menu renders");
+  await page.locator('.column .board-menu-panel [data-action="hide-column"]').first().click();
+  await pause();
+  let stateAfterMenu = await getState(page);
+  check(stateAfterMenu.ui.hiddenColumns[stateAfterMenu.activeProjectId].length === 1, "column dropdown menu hides column");
+
   check(await page.locator("#columnVisibility .column-picker summary").isVisible(), "column visibility picker renders compact summary");
   await page.locator("#columnVisibility .column-picker summary").click();
   check((await page.locator("#columnVisibility .column-picker-option").count()) === project.columns.length, "column visibility picker lists every column");
+  await page.locator('#columnVisibility [data-action="show-all-columns"]').click();
+  await pause();
   const firstVisibilityCheckbox = page.locator("#columnVisibility .column-picker-option input").first();
   await firstVisibilityCheckbox.uncheck();
   await pause();
@@ -344,6 +360,15 @@ async function testFlowSortingSearchAndViews(page) {
   await pause();
   stateAfterHide = await getState(page);
   check(stateAfterHide.ui.hiddenColumns[stateAfterHide.activeProjectId].length === 0, "column visibility restores column");
+
+  project = await getActiveProject(page);
+  const menuCard = allCards(project).find((item) => item.title === "Search Audit");
+  await page.locator(`.card[data-card-id="${menuCard.id}"] .board-menu summary`).click();
+  check(await page.locator(`.card[data-card-id="${menuCard.id}"] .board-menu-panel`).isVisible(), "task dropdown menu renders");
+  await page.locator(`.card[data-card-id="${menuCard.id}"] [data-action="duplicate-card"]`).click();
+  await pause();
+  project = await getActiveProject(page);
+  check(allCards(project).filter((item) => item.title.startsWith("Search Audit")).length === 2, "task dropdown menu duplicates card");
 }
 
 async function testTaskActionsLinksAndMove(page) {

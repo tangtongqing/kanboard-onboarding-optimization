@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0811";
+const STORAGE_KEY = "kanboard-static-v0812";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -1818,8 +1818,17 @@ function renderBoard() {
   const project = activeProject();
   els.board.innerHTML = "";
   els.board.className = `board view-${state.ui.viewMode} card-mode-${state.ui.cardMode}`;
+  closeBoardMenus();
   if (state.ui.viewMode === "list") {
     renderListView(project);
+    return;
+  }
+  if (state.ui.viewMode === "calendar") {
+    renderCalendarView(project);
+    return;
+  }
+  if (state.ui.viewMode === "gantt") {
+    renderGanttView(project);
     return;
   }
   if (state.ui.viewMode === "overview") {
@@ -1854,14 +1863,18 @@ function renderBoard() {
   });
 }
 
-function renderListView(project) {
-  const rows = allCards(project).filter((card) => {
+function filteredCards(project) {
+  return allCards(project).filter((card) => {
     const column = project.columns.find((item) => item.id === card.columnId);
     const lane = project.swimlanes.find((item) => item.id === card.swimlaneId);
     return !hiddenColumnIds(project.id).has(card.columnId)
       && !project.settings.disabledSwimlaneIds.includes(card.swimlaneId)
       && cardMatchesFilters(card, column, lane);
   });
+}
+
+function renderListView(project) {
+  const rows = filteredCards(project);
 
   const list = document.createElement("section");
   list.className = "list-view";
@@ -1896,6 +1909,107 @@ function renderListView(project) {
     });
   }
   els.board.appendChild(list);
+}
+
+function renderCalendarView(project) {
+  const cards = filteredCards(project);
+  const datedCards = cards
+    .map((card) => ({ ...card, calendarDate: card.dueDate || card.schedule?.plannedEnd || card.schedule?.actualEnd || card.createdAt?.slice(0, 10) || "" }))
+    .filter((card) => card.calendarDate);
+  const baseDate = minDateString(datedCards.map((card) => card.calendarDate)) || todayString();
+  const weeks = buildCalendarWeeks(baseDate, datedCards);
+  const calendar = document.createElement("section");
+  calendar.className = "calendar-view";
+  calendar.innerHTML = `
+    <div class="view-heading">
+      <div>
+        <h3>项目日历</h3>
+        <p>按任务截止日、计划完成日或创建日展示筛选结果</p>
+      </div>
+      <span>${datedCards.length} 张有日期任务</span>
+    </div>
+    <div class="calendar-weekdays">
+      ${["一", "二", "三", "四", "五", "六", "日"].map((day) => `<strong>${day}</strong>`).join("")}
+    </div>
+    <div class="calendar-grid">
+      ${weeks.flat().map((day) => {
+        const dayCards = datedCards.filter((card) => card.calendarDate === day.date);
+        return `
+          <article class="calendar-day ${day.isCurrentMonth ? "" : "muted"} ${day.date === todayString() ? "today" : ""}">
+            <header>
+              <strong>${day.label}</strong>
+              ${dayCards.length ? `<span>${dayCards.length}</span>` : ""}
+            </header>
+            <div>
+              ${dayCards.slice(0, 4).map((card) => `
+                <button class="calendar-task color-${card.color || "blue"}" type="button" data-column-id="${card.columnId}" data-card-id="${card.id}" data-swimlane-id="${card.swimlaneId}">
+                  ${escapeHtml(card.title)}
+                </button>
+              `).join("")}
+              ${dayCards.length > 4 ? `<em>+${dayCards.length - 4} 更多</em>` : ""}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+  calendar.querySelectorAll(".calendar-task").forEach((button) => {
+    button.addEventListener("click", () => openCardDialog(button.dataset.columnId, button.dataset.cardId, button.dataset.swimlaneId));
+  });
+  els.board.appendChild(calendar);
+}
+
+function renderGanttView(project) {
+  const cards = filteredCards(project)
+    .map((card) => ({
+      ...card,
+      startDate: card.schedule?.plannedStart || card.createdAt?.slice(0, 10) || "",
+      endDate: card.schedule?.plannedEnd || card.dueDate || card.schedule?.actualEnd || card.createdAt?.slice(0, 10) || ""
+    }))
+    .filter((card) => card.startDate && card.endDate)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const minDate = minDateString(cards.map((card) => card.startDate)) || todayString();
+  const maxDate = maxDateString(cards.map((card) => card.endDate)) || minDate;
+  const totalDays = Math.max(scheduleDays(minDate, maxDate), 1);
+  const gantt = document.createElement("section");
+  gantt.className = "gantt-view";
+  gantt.innerHTML = `
+    <div class="view-heading">
+      <div>
+        <h3>项目甘特</h3>
+        <p>按计划开始、计划完成和截止日展示任务排期</p>
+      </div>
+      <span>${minDate} → ${maxDate}</span>
+    </div>
+    <div class="gantt-scale">
+      ${buildGanttTicks(minDate, totalDays).map((tick) => `<span style="left:${tick.left}%">${escapeHtml(tick.label)}</span>`).join("")}
+    </div>
+    <div class="gantt-list">
+      ${cards.length ? cards.map((card) => {
+        const offset = Math.max(scheduleDays(minDate, card.startDate) - 1, 0);
+        const duration = Math.max(scheduleDays(card.startDate, card.endDate), 1);
+        const left = totalDays <= 1 ? 0 : (offset / totalDays) * 100;
+        const width = Math.max((duration / totalDays) * 100, 3);
+        return `
+          <button class="gantt-row" type="button" data-column-id="${card.columnId}" data-card-id="${card.id}" data-swimlane-id="${card.swimlaneId}">
+            <span class="gantt-task-title">
+              <strong>${escapeHtml(card.title)}</strong>
+              <em>${escapeHtml(card.columnTitle)} · ${escapeHtml(card.assignee || "未分配")}</em>
+            </span>
+            <span class="gantt-track">
+              <span class="gantt-bar color-${card.color || "blue"}" style="left:${left}%; width:${Math.min(width, 100 - left)}%">
+                ${escapeHtml(card.startDate.slice(5))} - ${escapeHtml(card.endDate.slice(5))}
+              </span>
+            </span>
+          </button>
+        `;
+      }).join("") : `<div class="empty-state">暂无可排期任务</div>`}
+    </div>
+  `;
+  gantt.querySelectorAll(".gantt-row").forEach((button) => {
+    button.addEventListener("click", () => openCardDialog(button.dataset.columnId, button.dataset.cardId, button.dataset.swimlaneId));
+  });
+  els.board.appendChild(gantt);
 }
 
 function renderOverviewView(project) {
@@ -1979,7 +2093,14 @@ function createColumnElement(column, lane) {
         <span>${cardsInLane.length} 任务${column.wipLimit ? ` · WIP ${column.wipLimit}` : ""}</span>
       </div>
       <div class="column-actions">
-        <button class="icon-button" type="button" data-action="edit-column" aria-label="编辑列">⋯</button>
+        <details class="board-menu">
+          <summary class="icon-button" aria-label="列菜单">⋯</summary>
+          <div class="board-menu-panel">
+            <button type="button" data-action="new-card-menu">新增任务</button>
+            <button type="button" data-action="edit-column">编辑列</button>
+            <button type="button" data-action="hide-column">隐藏此列</button>
+          </div>
+        </details>
       </div>
     </header>
     <div class="column-body"></div>
@@ -1998,7 +2119,22 @@ function createColumnElement(column, lane) {
     visibleCards.forEach((card) => body.appendChild(createCardElement(card, column.id, lane.id)));
   }
 
-  columnEl.querySelector('[data-action="edit-column"]').addEventListener("click", () => openColumnDialog(column.id));
+  columnEl.querySelector(".board-menu summary").addEventListener("click", (event) => event.stopPropagation());
+  columnEl.querySelector('[data-action="new-card-menu"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeBoardMenus();
+    openCardDialog(column.id, null, lane.id);
+  });
+  columnEl.querySelector('[data-action="edit-column"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeBoardMenus();
+    openColumnDialog(column.id);
+  });
+  columnEl.querySelector('[data-action="hide-column"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeBoardMenus();
+    setColumnVisibility(column.id, false);
+  });
   columnEl.querySelector('[data-action="new-card"]').addEventListener("click", () => openCardDialog(column.id, null, lane.id));
   columnEl.addEventListener("dragover", handleColumnDragOver);
   columnEl.addEventListener("dragleave", handleColumnDragLeave);
@@ -2023,6 +2159,14 @@ function createCardElement(card, columnId, swimlaneId) {
       <div class="card-sort">
         <button class="mini-button" type="button" data-action="move-up" aria-label="上移">↑</button>
         <button class="mini-button" type="button" data-action="move-down" aria-label="下移">↓</button>
+        <details class="board-menu">
+          <summary class="mini-button" aria-label="任务菜单">⋯</summary>
+          <div class="board-menu-panel">
+            <button type="button" data-action="edit-card">编辑任务</button>
+            <button type="button" data-action="duplicate-card">复制任务</button>
+            <button type="button" data-action="toggle-card">${card.isClosed ? "重新打开" : "关闭任务"}</button>
+          </div>
+        </details>
       </div>
     </div>
     ${!isCollapsed && !isCompact && card.description ? `<p>${escapeHtml(card.description)}</p>` : ""}
@@ -2050,6 +2194,20 @@ function createCardElement(card, columnId, swimlaneId) {
   cardEl.querySelector('[data-action="move-down"]').addEventListener("click", (event) => {
     event.stopPropagation();
     moveCardWithinLane(columnId, card.id, 1);
+  });
+  cardEl.querySelector(".board-menu summary").addEventListener("click", (event) => event.stopPropagation());
+  cardEl.querySelector('[data-action="edit-card"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeBoardMenus();
+    openCardDialog(columnId, card.id, swimlaneId);
+  });
+  cardEl.querySelector('[data-action="duplicate-card"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    duplicateCardFromBoard(card.id);
+  });
+  cardEl.querySelector('[data-action="toggle-card"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleCardClosedFromBoard(card.id);
   });
   cardEl.addEventListener("click", () => openCardDialog(columnId, card.id, swimlaneId));
   cardEl.addEventListener("dragstart", (event) => {
@@ -2870,6 +3028,33 @@ function duplicateEditingCard() {
   alert("已复制任务到当前列。");
 }
 
+function duplicateCardFromBoard(cardId) {
+  const context = findCardContext(cardId);
+  if (!context) return;
+  const copy = cloneCardForCopy(context.card);
+  context.column.cards.push(copy);
+  closeBoardMenus();
+  persist();
+  render();
+}
+
+function toggleCardClosedFromBoard(cardId) {
+  const context = findCardContext(cardId);
+  if (!context) return;
+  context.card.isClosed = !context.card.isClosed;
+  context.card.updatedAt = new Date().toISOString();
+  context.card.activity = addActivity(context.card.activity || [], context.card.isClosed ? "从看板菜单关闭任务" : "从看板菜单重新打开任务");
+  closeBoardMenus();
+  persist();
+  render();
+}
+
+function closeBoardMenus() {
+  document.querySelectorAll(".board-menu[open]").forEach((menu) => {
+    menu.open = false;
+  });
+}
+
 function moveEditingCardToProject() {
   const targetProjectId = els.moveProjectInput.value;
   const context = findCardContext(editingCard?.cardId);
@@ -3202,6 +3387,50 @@ function dateValue(dateString) {
   const [year, month, day] = dateString.split("-").map(Number);
   if (!year || !month || !day) return null;
   return new Date(year, month - 1, day).getTime();
+}
+
+function addDaysString(dateString, days) {
+  const value = dateValue(dateString);
+  if (value === null) return "";
+  const date = new Date(value);
+  date.setDate(date.getDate() + days);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function buildCalendarWeeks(baseDate) {
+  const value = dateValue(baseDate);
+  const base = value === null ? new Date() : new Date(value);
+  const month = base.getMonth();
+  const firstOfMonth = new Date(base.getFullYear(), month, 1);
+  const mondayOffset = (firstOfMonth.getDay() + 6) % 7;
+  const startDate = new Date(firstOfMonth);
+  startDate.setDate(firstOfMonth.getDate() - mondayOffset);
+  return Array.from({ length: 6 }, (_, weekIndex) => (
+    Array.from({ length: 7 }, (_, dayIndex) => {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + weekIndex * 7 + dayIndex);
+      const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return {
+        date: dateString,
+        label: String(date.getDate()),
+        isCurrentMonth: date.getMonth() === month
+      };
+    })
+  ));
+}
+
+function buildGanttTicks(minDate, totalDays) {
+  const tickCount = Math.min(5, Math.max(totalDays, 1));
+  return Array.from({ length: tickCount }, (_, index) => {
+    const offset = tickCount === 1 ? 0 : Math.round((totalDays - 1) * (index / (tickCount - 1)));
+    return {
+      label: addDaysString(minDate, offset).slice(5),
+      left: totalDays <= 1 ? 0 : Math.round((offset / totalDays) * 100)
+    };
+  });
 }
 
 function scheduleDays(startDate, endDate) {
