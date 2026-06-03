@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v087";
+const STORAGE_KEY = "kanboard-static-v088";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -508,6 +508,42 @@ const PROJECT_TEMPLATES = [
   }
 ];
 
+const DEFAULT_PHASE_PLAN_DAYS = {
+  intake: 2,
+  clarify: 3,
+  solution: 2,
+  prd: 3,
+  review: 2,
+  planning: 2,
+  dev: 5,
+  qa: 3,
+  launch: 1,
+  operate: 3,
+  iterate: 2,
+  plan: 2,
+  learn: 3,
+  case: 3,
+  practice: 4,
+  mastered: 0,
+  todo: 2,
+  doing: 3,
+  done: 0
+};
+
+const DEMO_CARD_SCHEDULES = {
+  intake: { plannedStart: "2026-05-20", plannedEnd: "2026-05-21", actualStart: "2026-05-20", actualEnd: "2026-05-22" },
+  clarify: { plannedStart: "2026-05-22", plannedEnd: "2026-05-24", actualStart: "2026-05-23", actualEnd: "2026-05-26" },
+  solution: { plannedStart: "2026-05-25", plannedEnd: "2026-05-26", actualStart: "2026-05-27", actualEnd: "2026-05-28" },
+  prd: { plannedStart: "2026-05-27", plannedEnd: "2026-05-29", actualStart: "2026-05-29", actualEnd: "2026-05-31" },
+  review: { plannedStart: "2026-05-30", plannedEnd: "2026-05-31", actualStart: "2026-06-01", actualEnd: "2026-06-02" },
+  planning: { plannedStart: "2026-06-01", plannedEnd: "2026-06-02", actualStart: "2026-06-02", actualEnd: "" },
+  dev: { plannedStart: "2026-06-03", plannedEnd: "2026-06-07", actualStart: "2026-06-03", actualEnd: "" },
+  qa: { plannedStart: "2026-06-08", plannedEnd: "2026-06-10", actualStart: "", actualEnd: "" },
+  launch: { plannedStart: "2026-06-11", plannedEnd: "2026-06-11", actualStart: "", actualEnd: "" },
+  operate: { plannedStart: "2026-06-12", plannedEnd: "2026-06-14", actualStart: "", actualEnd: "" },
+  iterate: { plannedStart: "2026-06-15", plannedEnd: "2026-06-16", actualStart: "", actualEnd: "" }
+};
+
 let state = loadState();
 let editingProjectId = null;
 let editingColumnId = null;
@@ -533,6 +569,9 @@ const els = {
   metricDone: document.querySelector("#metricDone"),
   analyticsDialog: document.querySelector("#analyticsDialog"),
   analyticsSummary: document.querySelector("#analyticsSummary"),
+  analyticsTimelineSummary: document.querySelector("#analyticsTimelineSummary"),
+  analyticsPhaseTimeline: document.querySelector("#analyticsPhaseTimeline"),
+  analyticsRiskList: document.querySelector("#analyticsRiskList"),
   analyticsColumnBreakdown: document.querySelector("#analyticsColumnBreakdown"),
   analyticsTimeBreakdown: document.querySelector("#analyticsTimeBreakdown"),
   analyticsCycleList: document.querySelector("#analyticsCycleList"),
@@ -574,6 +613,10 @@ const els = {
   projectSettingsForm: document.querySelector("#projectSettingsForm"),
   settingsProjectTypeInput: document.querySelector("#settingsProjectTypeInput"),
   settingsDefaultSwimlaneInput: document.querySelector("#settingsDefaultSwimlaneInput"),
+  settingsPlannedStartInput: document.querySelector("#settingsPlannedStartInput"),
+  settingsPlannedLaunchInput: document.querySelector("#settingsPlannedLaunchInput"),
+  settingsActualStartInput: document.querySelector("#settingsActualStartInput"),
+  settingsActualLaunchInput: document.querySelector("#settingsActualLaunchInput"),
   memberNameInput: document.querySelector("#memberNameInput"),
   memberRoleInput: document.querySelector("#memberRoleInput"),
   addMemberBtn: document.querySelector("#addMemberBtn"),
@@ -614,6 +657,10 @@ const els = {
   cardColorInput: document.querySelector("#cardColorInput"),
   cardEstimateInput: document.querySelector("#cardEstimateInput"),
   cardActualInput: document.querySelector("#cardActualInput"),
+  cardPlannedStartInput: document.querySelector("#cardPlannedStartInput"),
+  cardPlannedEndInput: document.querySelector("#cardPlannedEndInput"),
+  cardActualStartInput: document.querySelector("#cardActualStartInput"),
+  cardActualEndInput: document.querySelector("#cardActualEndInput"),
   cardDescInput: document.querySelector("#cardDescInput"),
   subtaskSummary: document.querySelector("#subtaskSummary"),
   subtaskInput: document.querySelector("#subtaskInput"),
@@ -743,6 +790,7 @@ function createDemoState() {
   const addDemoCard = (columnKey, laneKey, options) => {
     columnByKey.get(columnKey).cards.push(makeCard({
       ...options,
+      schedule: options.schedule || DEMO_CARD_SCHEDULES[columnKey],
       swimlaneId: lanes[laneKey].id
     }));
   };
@@ -1140,6 +1188,13 @@ function createDemoState() {
         name: "产品开发全流程项目",
         description: "用 Kanboard 复现 PM 从机会提需、需求澄清、方案设计、PRD 原型、评审排期、研发测试、上线运营到复盘迭代的完整周期。",
         createdAt: new Date().toISOString(),
+        timeline: {
+          plannedStart: "2026-05-20",
+          plannedLaunch: "2026-06-11",
+          actualStart: "2026-05-20",
+          actualLaunch: "",
+          phasePlans: Object.fromEntries(columns.map((column) => [column.key, DEFAULT_PHASE_PLAN_DAYS[column.key] ?? 2]))
+        },
         swimlanes: [laneDemand, laneProduct, laneDelivery, laneGrowth],
         columns
       },
@@ -1162,6 +1217,7 @@ function makeCard(options) {
     dueDate: options.dueDate || "",
     estimate: options.estimate || "",
     actualTime: options.actualTime || "",
+    schedule: normalizeSchedule(options.schedule),
     timeLogs: options.timeLogs || [],
     recurring: options.recurring || { pattern: "", nextDate: "" },
     swimlaneId: options.swimlaneId || "",
@@ -1189,6 +1245,7 @@ function normalizeState() {
       project.swimlanes = [{ id: uid("lane"), title: "默认泳道", description: "默认任务分组" }];
     }
     project.settings = normalizeProjectSettings(project);
+    project.timeline = normalizeProjectTimeline(project);
     project.automations = normalizeAutomations(project);
     project.notifications ||= [];
     const fallbackLaneId = project.swimlanes[0].id;
@@ -1211,6 +1268,7 @@ function normalizeState() {
         card.links ||= [];
         card.isClosed ??= false;
         card.actualTime ||= "";
+        card.schedule = normalizeSchedule(card.schedule);
         card.timeLogs ||= [];
         card.recurring ||= { pattern: "", nextDate: "" };
       });
@@ -1219,6 +1277,42 @@ function normalizeState() {
   if (!state.projects.some((project) => project.id === state.activeProjectId)) {
     state.activeProjectId = state.projects[0].id;
   }
+}
+
+function normalizeSchedule(schedule = {}) {
+  return {
+    plannedStart: schedule.plannedStart || "",
+    plannedEnd: schedule.plannedEnd || "",
+    actualStart: schedule.actualStart || "",
+    actualEnd: schedule.actualEnd || ""
+  };
+}
+
+function normalizeProjectTimeline(project) {
+  const existing = project.timeline || {};
+  const hasPmWorkflow = project.columns.some((column) => ["intake", "prd", "launch", "iterate"].includes(column.key));
+  const hasLearningWorkflow = project.columns.some((column) => ["learn", "practice", "mastered"].includes(column.key));
+  const fallbackDates = hasPmWorkflow
+    ? { plannedStart: "2026-05-20", plannedLaunch: "2026-06-11", actualStart: "2026-05-20", actualLaunch: "" }
+    : hasLearningWorkflow
+      ? { plannedStart: "2026-06-03", plannedLaunch: "2026-07-15", actualStart: "2026-06-03", actualLaunch: "" }
+      : { plannedStart: "", plannedLaunch: "", actualStart: "", actualLaunch: "" };
+  const phasePlans = { ...(existing.phasePlans || {}) };
+  project.columns.forEach((column) => {
+    const key = phaseKey(column);
+    phasePlans[key] ??= DEFAULT_PHASE_PLAN_DAYS[column.key] ?? DEFAULT_PHASE_PLAN_DAYS[key] ?? 2;
+  });
+  return {
+    plannedStart: existing.plannedStart || fallbackDates.plannedStart,
+    plannedLaunch: existing.plannedLaunch || fallbackDates.plannedLaunch,
+    actualStart: existing.actualStart || fallbackDates.actualStart,
+    actualLaunch: existing.actualLaunch || fallbackDates.actualLaunch,
+    phasePlans
+  };
+}
+
+function phaseKey(column) {
+  return column.key || column.title;
 }
 
 function normalizeAutomations(project) {
@@ -1398,6 +1492,9 @@ function renderAnalyticsDialog() {
   const totalActual = sumCards(cards, cardActualHours);
   const recurringCount = cards.filter((card) => card.recurring?.pattern).length;
   const unreadCount = project.notifications.filter((item) => !item.read).length;
+  const phaseStats = buildPhaseStats(project);
+  const risks = buildProjectRisks(project, phaseStats);
+  const timelineSummary = buildTimelineSummary(project, phaseStats, risks);
 
   els.analyticsSummary.innerHTML = [
     ["打开任务", openCards.length],
@@ -1412,6 +1509,38 @@ function renderAnalyticsDialog() {
       <strong>${escapeHtml(value)}</strong>
     </article>
   `).join("");
+
+  els.analyticsTimelineSummary.innerHTML = timelineSummary.map(([label, value]) => `
+    <article class="overview-panel">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </article>
+  `).join("");
+
+  const maxPhaseDays = Math.max(1, ...phaseStats.map((item) => Math.max(item.plannedDays, item.actualDays)));
+  els.analyticsPhaseTimeline.innerHTML = phaseStats.map((item) => {
+    const width = Math.max(8, Math.round((Math.max(item.actualDays, item.plannedDays) / maxPhaseDays) * 100));
+    const varianceText = item.variance > 0 ? `+${item.variance} 天` : item.variance < 0 ? `${item.variance} 天` : "准点";
+    return `
+      <div class="settings-item phase-item ${item.variance > 0 ? "delayed" : ""}">
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>计划 ${item.plannedDays} 天 · 实际 ${item.actualDays || "-"} 天 · ${item.cardCount} 任务 · 超期 ${item.overdueCards}</span>
+          <div class="phase-meter" aria-hidden="true"><span style="width: ${width}%"></span></div>
+        </div>
+        <span class="role-pill">${escapeHtml(varianceText)}</span>
+      </div>
+    `;
+  }).join("");
+
+  els.analyticsRiskList.innerHTML = risks.length
+    ? risks.map((risk) => `
+      <div class="settings-item analytics-item risk-${risk.level}">
+        <strong>${escapeHtml(risk.title)}</strong>
+        <span>${escapeHtml(risk.body)}</span>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无明显周期风险</div>`;
 
   els.analyticsColumnBreakdown.innerHTML = project.columns.map((column) => {
     const columnCards = column.cards;
@@ -1436,14 +1565,93 @@ function renderAnalyticsDialog() {
     : `<div class="empty-state">暂无时间数据</div>`;
 
   els.analyticsCycleList.innerHTML = cards.slice(0, 6).map((card) => {
-    const days = Math.max(1, Math.ceil((new Date(card.updatedAt || Date.now()) - new Date(card.createdAt || Date.now())) / 86400000));
+    const plannedDays = scheduleDays(card.schedule?.plannedStart, card.schedule?.plannedEnd);
+    const actualDays = scheduleDays(card.schedule?.actualStart || card.schedule?.plannedStart, card.schedule?.actualEnd || todayString());
+    const delay = cardDelayDays(card);
     return `
       <div class="settings-item analytics-item">
         <strong>${escapeHtml(card.title)}</strong>
-        <span>${days} 天周期 · ${formatHours(cardEstimatedHours(card))}h 预估 · ${formatHours(cardActualHours(card))}h 实际</span>
+        <span>计划 ${plannedDays || "-"} 天 · 实际 ${actualDays || "-"} 天 · ${delay > 0 ? `延期 ${delay} 天` : "未延期"} · ${formatHours(cardEstimatedHours(card))}h 预估</span>
       </div>
     `;
   }).join("") || `<div class="empty-state">暂无任务</div>`;
+}
+
+function buildTimelineSummary(project, phaseStats, risks) {
+  const timeline = project.timeline || normalizeProjectTimeline(project);
+  const plannedDays = scheduleDays(timeline.plannedStart, timeline.plannedLaunch);
+  const actualDays = scheduleDays(timeline.actualStart || timeline.plannedStart, timeline.actualLaunch || todayString());
+  const overdueCards = phaseStats.reduce((sum, item) => sum + item.overdueCards, 0);
+  const activePhase = [...phaseStats].reverse().find((item) => item.openCards > 0)?.title || "暂无活跃阶段";
+  return [
+    ["计划周期", plannedDays ? `${plannedDays} 天` : "未设置"],
+    ["已运行", actualDays ? `${actualDays} 天` : "未开始"],
+    ["当前阶段", activePhase],
+    ["周期风险", `${risks.length} 项`],
+    ["超期任务", `${overdueCards} 张`],
+    ["计划上线", timeline.plannedLaunch || "未设置"]
+  ];
+}
+
+function buildPhaseStats(project) {
+  const timeline = project.timeline || normalizeProjectTimeline(project);
+  return project.columns.map((column) => {
+    const cards = column.cards || [];
+    const startedCards = cards.filter((card) => card.schedule?.actualStart || card.schedule?.actualEnd);
+    const startDates = startedCards.map((card) => card.schedule.actualStart || card.schedule.plannedStart).filter(Boolean);
+    const endDates = startedCards.map((card) => card.schedule.actualEnd || todayString()).filter(Boolean);
+    const actualStart = minDateString(startDates);
+    const actualEnd = maxDateString(endDates);
+    const plannedDays = Number(timeline.phasePlans?.[phaseKey(column)] ?? DEFAULT_PHASE_PLAN_DAYS[column.key] ?? 2);
+    const actualDays = actualStart && actualEnd ? scheduleDays(actualStart, actualEnd) : 0;
+    const overdueCards = cards.filter((card) => cardDelayDays(card) > 0).length;
+    return {
+      key: phaseKey(column),
+      title: column.title,
+      plannedDays,
+      actualDays,
+      variance: actualDays ? actualDays - plannedDays : 0,
+      cardCount: cards.length,
+      openCards: cards.filter((card) => !card.isClosed).length,
+      overdueCards
+    };
+  });
+}
+
+function buildProjectRisks(project, phaseStats) {
+  const risks = [];
+  const timeline = project.timeline || normalizeProjectTimeline(project);
+  const launchDelay = timeline.plannedLaunch ? dateDelayDays(timeline.plannedLaunch, timeline.actualLaunch || todayString()) : 0;
+  if (!timeline.actualLaunch && launchDelay > 0) {
+    risks.push({
+      level: "high",
+      title: "项目上线存在延期风险",
+      body: `计划上线日已超过 ${launchDelay} 天，建议先确认阻塞阶段和可降级范围。`
+    });
+  }
+  phaseStats
+    .filter((item) => item.variance > 0)
+    .slice(0, 4)
+    .forEach((item) => {
+      risks.push({
+        level: item.variance >= 3 ? "high" : "medium",
+        title: `${item.title} 阶段超出计划`,
+        body: `计划 ${item.plannedDays} 天，当前实际 ${item.actualDays} 天，已超出 ${item.variance} 天。`
+      });
+    });
+  allCards(project)
+    .map((card) => ({ card, delay: cardDelayDays(card) }))
+    .filter((item) => item.delay > 0)
+    .sort((a, b) => b.delay - a.delay)
+    .slice(0, 4)
+    .forEach(({ card, delay }) => {
+      risks.push({
+        level: delay >= 3 ? "high" : "medium",
+        title: `任务「${card.title}」超期`,
+        body: `计划完成日 ${card.schedule.plannedEnd}，已超出 ${delay} 天。`
+      });
+    });
+  return risks.slice(0, 8);
 }
 
 function renderViewControls() {
@@ -1730,6 +1938,7 @@ function createCardElement(card, columnId, swimlaneId) {
   const progress = getSubtaskProgress(card);
   const isCollapsed = state.ui.cardMode === "collapsed";
   const isCompact = state.ui.cardMode === "compact";
+  const delayDays = cardDelayDays(card);
   cardEl.className = `card color-${card.color || "blue"} ${card.isClosed ? "closed" : ""}`;
   cardEl.draggable = !card.isClosed;
   cardEl.dataset.cardId = card.id;
@@ -1754,6 +1963,7 @@ function createCardElement(card, columnId, swimlaneId) {
         ${card.recurring?.pattern && !isCompact ? `<span class="pill">循环</span>` : ""}
         ${card.links?.length && !isCompact ? `<span class="pill">${card.links.length} 链接</span>` : ""}
         ${card.dueDate ? `<span class="pill ${isOverdue(card.dueDate) ? "overdue" : ""}">${escapeHtml(card.dueDate)}</span>` : ""}
+        ${card.schedule?.plannedEnd && !isCompact ? `<span class="pill ${delayDays > 0 ? "overdue" : ""}">${delayDays > 0 ? `超期 ${delayDays} 天` : `计划 ${escapeHtml(card.schedule.plannedEnd)}`}</span>` : ""}
       </div>
       ${card.tags?.length && !isCompact ? `<div class="tag-row">${card.tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
       ${card.subtasks?.length ? `<div class="progress-bar" title="子任务 ${progress.done}/${progress.total}"><span style="width: ${progress.percent}%"></span></div>` : ""}
@@ -1927,18 +2137,20 @@ function renderTemplatePreview() {
 
 function createBlankProject(name, description) {
   const lane = { id: uid("lane"), title: "默认泳道", description: "默认任务分组" };
-  return {
+  const project = {
     id: uid("project"),
     name,
     description,
     createdAt: new Date().toISOString(),
     swimlanes: [lane],
     columns: [
-      { id: uid("column"), title: "待办", wipLimit: 0, cards: [] },
-      { id: uid("column"), title: "进行中", wipLimit: 3, cards: [] },
-      { id: uid("column"), title: "已完成", wipLimit: 0, cards: [] }
+      { id: uid("column"), key: "todo", title: "待办", wipLimit: 0, cards: [] },
+      { id: uid("column"), key: "doing", title: "进行中", wipLimit: 3, cards: [] },
+      { id: uid("column"), key: "done", title: "已完成", wipLimit: 0, cards: [] }
     ]
   };
+  project.timeline = normalizeProjectTimeline(project);
+  return project;
 }
 
 function createProjectFromTemplate(name, description, templateId) {
@@ -1951,6 +2163,7 @@ function createProjectFromTemplate(name, description, templateId) {
   const laneByKey = new Map(template.swimlanes.map((lane, index) => [lane.key, lanes[index]]));
   const columns = template.columns.map((column) => ({
     id: uid("column"),
+    key: column.key,
     title: column.title,
     wipLimit: column.wipLimit || 0,
     cards: []
@@ -1968,7 +2181,7 @@ function createProjectFromTemplate(name, description, templateId) {
     column.cards.push(card);
   });
 
-  return {
+  const project = {
     id: uid("project"),
     name,
     description: description || template.description,
@@ -1976,6 +2189,8 @@ function createProjectFromTemplate(name, description, templateId) {
     swimlanes: lanes,
     columns
   };
+  project.timeline = normalizeProjectTimeline(project);
+  return project;
 }
 
 function saveProjectFromDialog(event) {
@@ -2010,6 +2225,10 @@ function openProjectSettingsDialog() {
     swimlanes: clone(project.swimlanes)
   };
   els.settingsProjectTypeInput.value = draftProjectSettings.projectType;
+  els.settingsPlannedStartInput.value = project.timeline?.plannedStart || "";
+  els.settingsPlannedLaunchInput.value = project.timeline?.plannedLaunch || "";
+  els.settingsActualStartInput.value = project.timeline?.actualStart || "";
+  els.settingsActualLaunchInput.value = project.timeline?.actualLaunch || "";
   renderProjectSettings();
   els.projectSettingsDialog.showModal();
 }
@@ -2025,6 +2244,16 @@ function saveProjectSettings(event) {
     projectType: els.settingsProjectTypeInput.value,
     defaultSwimlaneId: els.settingsDefaultSwimlaneInput.value
   };
+  project.timeline = normalizeProjectTimeline({
+    ...project,
+    timeline: {
+      ...(project.timeline || {}),
+      plannedStart: els.settingsPlannedStartInput.value,
+      plannedLaunch: els.settingsPlannedLaunchInput.value,
+      actualStart: els.settingsActualStartInput.value,
+      actualLaunch: els.settingsActualLaunchInput.value
+    }
+  });
   draftProjectSettings = null;
   els.projectSettingsDialog.close();
   persist();
@@ -2344,7 +2573,9 @@ function saveColumnFromDialog(event) {
     column.title = title;
     column.wipLimit = wipLimit;
   } else {
-    project.columns.push({ id: uid("column"), title, wipLimit, cards: [] });
+    const column = { id: uid("column"), key: uid("phase"), title, wipLimit, cards: [] };
+    project.columns.push(column);
+    project.timeline = normalizeProjectTimeline(project);
   }
 
   editingColumnId = null;
@@ -2444,6 +2675,10 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   els.cardColorInput.value = card?.color || "blue";
   els.cardEstimateInput.value = card?.estimate || "";
   els.cardActualInput.value = card?.actualTime || "";
+  els.cardPlannedStartInput.value = card?.schedule?.plannedStart || "";
+  els.cardPlannedEndInput.value = card?.schedule?.plannedEnd || "";
+  els.cardActualStartInput.value = card?.schedule?.actualStart || "";
+  els.cardActualEndInput.value = card?.schedule?.actualEnd || "";
   els.recurringPatternInput.value = card?.recurring?.pattern || "";
   els.recurringNextDateInput.value = card?.recurring?.nextDate || "";
   els.cardSwimlaneInput.innerHTML = enabledSwimlanes(project).map((lane) => `<option value="${lane.id}">${escapeHtml(lane.title)}</option>`).join("");
@@ -2491,6 +2726,12 @@ function saveCardFromDialog(event) {
     color: els.cardColorInput.value,
     estimate: els.cardEstimateInput.value,
     actualTime: els.cardActualInput.value,
+    schedule: {
+      plannedStart: els.cardPlannedStartInput.value,
+      plannedEnd: els.cardPlannedEndInput.value,
+      actualStart: els.cardActualStartInput.value,
+      actualEnd: els.cardActualEndInput.value
+    },
     timeLogs: draftTimeLogs,
     recurring: {
       pattern: els.recurringPatternInput.value,
@@ -2873,6 +3114,51 @@ function isDueSoon(dateString) {
   const due = new Date(dateString);
   const diffDays = (due - today) / 86400000;
   return diffDays >= 0 && diffDays <= 3;
+}
+
+function todayString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateValue(dateString) {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day).getTime();
+}
+
+function scheduleDays(startDate, endDate) {
+  const start = dateValue(startDate);
+  const end = dateValue(endDate);
+  if (start === null || end === null || end < start) return 0;
+  return Math.floor((end - start) / 86400000) + 1;
+}
+
+function dateDelayDays(plannedEnd, actualEnd) {
+  const planned = dateValue(plannedEnd);
+  const actual = dateValue(actualEnd);
+  if (planned === null || actual === null || actual <= planned) return 0;
+  return Math.floor((actual - planned) / 86400000);
+}
+
+function cardDelayDays(card) {
+  const schedule = card.schedule || {};
+  if (!schedule.plannedEnd) return 0;
+  const compareDate = schedule.actualEnd || todayString();
+  return dateDelayDays(schedule.plannedEnd, compareDate);
+}
+
+function minDateString(values) {
+  return values.filter(Boolean).sort()[0] || "";
+}
+
+function maxDateString(values) {
+  const sorted = values.filter(Boolean).sort();
+  return sorted.length ? sorted[sorted.length - 1] : "";
 }
 
 function formatTime(value) {

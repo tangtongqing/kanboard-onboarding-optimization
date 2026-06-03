@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.7 泳道空列精简</title>
+  <title>Kanboard V0.8.8 项目周期时间系统</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.7 泳道精简版</p>
+          <p>V0.8.8 周期分析版</p>
         </div>
       </div>
 
@@ -196,6 +196,31 @@
 
       <section class="detail-section">
         <div class="detail-heading">
+          <h4>项目周期</h4>
+          <span>计划 / 实际</span>
+        </div>
+        <div class="form-grid">
+          <label>
+            <span>计划开始</span>
+            <input id="settingsPlannedStartInput" type="date">
+          </label>
+          <label>
+            <span>计划上线</span>
+            <input id="settingsPlannedLaunchInput" type="date">
+          </label>
+          <label>
+            <span>实际开始</span>
+            <input id="settingsActualStartInput" type="date">
+          </label>
+          <label>
+            <span>实际上线</span>
+            <input id="settingsActualLaunchInput" type="date">
+          </label>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <div class="detail-heading">
           <h4>成员与角色</h4>
           <span>静态权限配置</span>
         </div>
@@ -269,6 +294,29 @@
         <button class="icon-button" value="cancel" type="submit" aria-label="关闭">×</button>
       </div>
       <section class="analytics-grid" id="analyticsSummary"></section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>项目周期</h4>
+          <span>计划 / 实际 / 风险</span>
+        </div>
+        <div class="analytics-grid" id="analyticsTimelineSummary"></div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>阶段周期</h4>
+            <span>计划天数 / 实际天数</span>
+          </div>
+          <div class="settings-list" id="analyticsPhaseTimeline"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>周期风险</h4>
+            <span>延期 / 瓶颈</span>
+          </div>
+          <div class="settings-list" id="analyticsRiskList"></div>
+        </div>
+      </section>
       <section class="settings-two-column">
         <div class="detail-section">
           <div class="detail-heading">
@@ -287,8 +335,8 @@
       </section>
       <section class="detail-section">
         <div class="detail-heading">
-          <h4>周期时间样例</h4>
-          <span>静态模拟</span>
+          <h4>任务周期样例</h4>
+          <span>计划 / 实际</span>
         </div>
         <div class="settings-list" id="analyticsCycleList"></div>
       </section>
@@ -307,7 +355,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.7</span>
+          <span>静态模拟 V0.8.8</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -465,6 +513,22 @@
         <label>
           <span>实际工时</span>
           <input id="cardActualInput" type="number" min="0" max="999" step="0.5" placeholder="小时">
+        </label>
+        <label>
+          <span>计划开始</span>
+          <input id="cardPlannedStartInput" type="date">
+        </label>
+        <label>
+          <span>计划完成</span>
+          <input id="cardPlannedEndInput" type="date">
+        </label>
+        <label>
+          <span>实际开始</span>
+          <input id="cardActualStartInput" type="date">
+        </label>
+        <label>
+          <span>实际完成</span>
+          <input id="cardActualEndInput" type="date">
         </label>
         <label class="span-2">
           <span>描述</span>

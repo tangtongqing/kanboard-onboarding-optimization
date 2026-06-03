@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v087";
+const STORAGE_KEY = "kanboard-static-v088";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -96,6 +96,8 @@ async function testInitialShell(page) {
   check(project.columns.length === 11, "demo has eleven PM workflow columns");
   check(project.swimlanes.length === 4, "demo has four PM workstream swimlanes");
   check(allCards(project).length === 25, "demo has twenty-five PM workflow cards");
+  check(project.timeline.plannedStart === "2026-05-20" && project.timeline.plannedLaunch === "2026-06-11", "demo has project timeline");
+  check(allCards(project).some((card) => card.schedule?.plannedEnd), "demo cards have schedule dates");
   check(Boolean(project.settings), "project settings normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
@@ -205,6 +207,10 @@ async function testCardCrudDetailsAndPersistence(page) {
   await page.selectOption("#cardColorInput", "rose");
   await page.fill("#cardEstimateInput", "2.5");
   await page.fill("#cardActualInput", "1.5");
+  await page.fill("#cardPlannedStartInput", "2026-06-10");
+  await page.fill("#cardPlannedEndInput", "2026-06-12");
+  await page.fill("#cardActualStartInput", "2026-06-11");
+  await page.fill("#cardActualEndInput", "2026-06-13");
   await page.fill("#cardDescInput", "Audit detail text");
   await page.fill("#subtaskInput", "Subtask One");
   await page.click("#addSubtaskBtn");
@@ -227,6 +233,7 @@ async function testCardCrudDetailsAndPersistence(page) {
   check(card.timeLogs.length === 1, "card time log saves");
   check(card.recurring.pattern === "weekly", "card recurring pattern saves");
   check(card.actualTime === "1.5", "card actual time saves");
+  check(card.schedule.plannedStart === "2026-06-10" && card.schedule.actualEnd === "2026-06-13", "card schedule saves");
 
   await page.reload();
   project = await getActiveProject(page);
@@ -366,6 +373,9 @@ async function testSettingsAnalyticsAutomation(page) {
   await fresh(page);
   await page.click("#projectSettingsBtn");
   await page.selectOption("#settingsProjectTypeInput", "personal");
+  await page.fill("#settingsPlannedStartInput", "2026-06-01");
+  await page.fill("#settingsPlannedLaunchInput", "2026-06-30");
+  await page.fill("#settingsActualStartInput", "2026-06-02");
   await page.fill("#memberNameInput", "Auditor");
   await page.click("#addMemberBtn");
   await page.fill("#categoryNameInput", "AuditCat");
@@ -379,6 +389,7 @@ async function testSettingsAnalyticsAutomation(page) {
   await saveForm(page, "#projectSettingsForm");
   let project = await getActiveProject(page);
   check(project.settings.projectType === "personal", "project type setting saves");
+  check(project.timeline.plannedLaunch === "2026-06-30", "project timeline setting saves");
   check(project.settings.members.some((item) => item.name === "Auditor"), "member setting saves");
   check(project.settings.categories.includes("AuditCat"), "category setting saves");
   check(project.settings.tags.includes("audit-tag"), "tag setting saves");
@@ -392,6 +403,9 @@ async function testSettingsAnalyticsAutomation(page) {
   });
   await page.locator(`.card[data-card-id="${analyticsCard.id}"]`).click();
   await page.fill("#cardActualInput", "2");
+  await page.fill("#cardPlannedStartInput", "2026-06-01");
+  await page.fill("#cardPlannedEndInput", "2026-06-02");
+  await page.fill("#cardActualStartInput", "2026-06-01");
   await page.fill("#timeSpentInput", "1");
   await page.fill("#timeNoteInput", "Analytics session");
   await page.click("#addTimeEntryBtn");
@@ -402,9 +416,15 @@ async function testSettingsAnalyticsAutomation(page) {
   const savedAnalyticsCard = allCards(project).find((item) => item.title === "Analytics Audit");
   check(savedAnalyticsCard.timeLogs.length === 1, "time tracking log saves for analytics");
   check(savedAnalyticsCard.recurring.pattern === "monthly", "recurring task data saves for analytics");
+  check(savedAnalyticsCard.schedule.plannedEnd === "2026-06-02", "card schedule data saves for analytics");
 
   await page.click("#analyticsBtn");
   check((await page.locator("#analyticsSummary .overview-panel").count()) === 6, "analytics summary renders six metrics");
+  check((await page.locator("#analyticsTimelineSummary .overview-panel").count()) === 6, "timeline summary renders six metrics");
+  check((await page.locator("#analyticsPhaseTimeline .phase-item").count()) === project.columns.length, "phase timeline renders every column");
+  const riskItems = await page.locator("#analyticsRiskList .settings-item").count();
+  const riskEmpty = await page.locator("#analyticsRiskList .empty-state").count();
+  check(riskItems + riskEmpty >= 1, "cycle risk panel renders");
   check((await page.locator("#analyticsColumnBreakdown .analytics-item").count()) === project.columns.length, "analytics column breakdown renders");
   await page.locator('#analyticsDialog .modal-actions button[value="cancel"]').click();
   await pause();

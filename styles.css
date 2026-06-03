@@ -1259,6 +1259,44 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.phase-item {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.phase-item.delayed {
+  border-color: #e2b27c;
+  background: #fffaf2;
+}
+
+.phase-meter {
+  height: 6px;
+  margin-top: 8px;
+  overflow: hidden;
+  background: #e6ebf1;
+  border-radius: 999px;
+}
+
+.phase-meter span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.phase-item.delayed .phase-meter span {
+  background: var(--warning);
+}
+
+.risk-high {
+  border-color: #efb0a8;
+  background: #fff5f3;
+}
+
+.risk-medium {
+  border-color: #e2c27c;
+  background: #fffbeb;
+}
+
 .notification-item.read {
   opacity: 0.72;
   background: #f8fafc;
