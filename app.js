@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v088";
+const STORAGE_KEY = "kanboard-static-v089";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -1238,6 +1238,7 @@ function normalizeState() {
   state.ui.cardMode ||= "expanded";
   state.ui.showClosed ??= false;
   state.ui.hideEmptyColumns ??= true;
+  state.ui.columnPickerOpen ??= false;
   state.ui.hiddenColumns ||= {};
   state.projects.forEach((project) => {
     state.ui.hiddenColumns[project.id] ||= [];
@@ -1257,6 +1258,7 @@ function normalizeState() {
         { id: uid("column"), title: "已完成", wipLimit: 0, cards: [] }
       ];
     }
+    cleanHiddenColumns(project);
     project.columns.forEach((column) => {
       column.cards ||= [];
       column.cards.forEach((card) => {
@@ -1666,14 +1668,101 @@ function renderViewControls() {
 
   const project = activeProject();
   const hiddenIds = hiddenColumnIds(project.id);
-  els.columnVisibility.innerHTML = project.columns.map((column) => `
-    <button class="${hiddenIds.has(column.id) ? "" : "active"}" type="button" data-column-id="${column.id}">
-      ${hiddenIds.has(column.id) ? "显示" : "隐藏"} ${escapeHtml(column.title)}
-    </button>
-  `).join("");
-  els.columnVisibility.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => toggleColumnVisibility(button.dataset.columnId));
+  const visibleCount = project.columns.length - hiddenIds.size;
+  const hiddenCount = hiddenIds.size;
+  els.columnVisibility.innerHTML = `
+    <details class="column-picker" ${state.ui.columnPickerOpen ? "open" : ""}>
+      <summary>
+        <span>
+          <strong>列显示</strong>
+          <em>${visibleCount}/${project.columns.length} 已显示${hiddenCount ? ` · ${hiddenCount} 已隐藏` : ""}</em>
+        </span>
+        <span class="column-picker-caret" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="column-picker-panel">
+        <div class="column-picker-actions">
+          <button class="secondary-button compact-button" type="button" data-action="show-all-columns">全部显示</button>
+          <button class="secondary-button compact-button" type="button" data-action="hide-empty-project-columns">隐藏无任务列</button>
+        </div>
+        <div class="column-picker-list" role="group" aria-label="选择要显示的列">
+          ${project.columns.map((column) => {
+            const isVisible = !hiddenIds.has(column.id);
+            return `
+              <label class="column-picker-option ${isVisible ? "" : "muted"}">
+                <input type="checkbox" data-column-id="${column.id}" ${isVisible ? "checked" : ""} ${isVisible && visibleCount === 1 ? "disabled" : ""}>
+                <span>
+                  <strong>${escapeHtml(column.title)}</strong>
+                  <em>${column.cards.length} 张任务</em>
+                </span>
+              </label>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    </details>
+  `;
+  const picker = els.columnVisibility.querySelector(".column-picker");
+  picker.addEventListener("toggle", () => {
+    state.ui.columnPickerOpen = picker.open;
+    persist();
   });
+  els.columnVisibility.querySelectorAll(".column-picker-option input").forEach((input) => {
+    input.addEventListener("change", () => setColumnVisibility(input.dataset.columnId, input.checked));
+  });
+  els.columnVisibility.querySelector('[data-action="show-all-columns"]').addEventListener("click", showAllColumns);
+  els.columnVisibility.querySelector('[data-action="hide-empty-project-columns"]').addEventListener("click", hideEmptyProjectColumns);
+}
+
+function setColumnVisibility(columnId, shouldShow) {
+  const project = activeProject();
+  const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
+  if (shouldShow) {
+    hidden.delete(columnId);
+  } else if (project.columns.length - hidden.size > 1) {
+    hidden.add(columnId);
+  }
+  state.ui.hiddenColumns[project.id] = [...hidden];
+  persist();
+  render();
+}
+
+function showAllColumns() {
+  const project = activeProject();
+  state.ui.hiddenColumns[project.id] = [];
+  persist();
+  render();
+}
+
+function hideEmptyProjectColumns() {
+  const project = activeProject();
+  const emptyColumnIds = project.columns
+    .filter((column) => column.cards.length === 0)
+    .map((column) => column.id);
+  state.ui.hiddenColumns[project.id] = emptyColumnIds.length === project.columns.length ? [] : emptyColumnIds;
+  persist();
+  render();
+}
+
+function toggleColumnVisibility(columnId) {
+  const project = activeProject();
+  const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
+  setColumnVisibility(columnId, hidden.has(columnId));
+}
+
+function ensureAtLeastOneVisibleColumn(project, hidden) {
+  if (project.columns.length - hidden.size <= 0 && project.columns[0]) {
+    hidden.delete(project.columns[0].id);
+  }
+  return hidden;
+}
+
+function cleanHiddenColumns(project) {
+  const knownIds = new Set(project.columns.map((column) => column.id));
+  const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
+  [...hidden].forEach((columnId) => {
+    if (!knownIds.has(columnId)) hidden.delete(columnId);
+  });
+  state.ui.hiddenColumns[project.id] = [...ensureAtLeastOneVisibleColumn(project, hidden)];
 }
 
 function setViewMode(viewMode) {
@@ -1726,19 +1815,6 @@ function enabledSwimlanes(project = activeProject()) {
   const disabled = new Set(project.settings.disabledSwimlaneIds || []);
   const lanes = project.swimlanes.filter((lane) => !disabled.has(lane.id));
   return lanes.length ? lanes : project.swimlanes.slice(0, 1);
-}
-
-function toggleColumnVisibility(columnId) {
-  const project = activeProject();
-  const hidden = new Set(state.ui.hiddenColumns[project.id] || []);
-  if (hidden.has(columnId)) {
-    hidden.delete(columnId);
-  } else {
-    hidden.add(columnId);
-  }
-  state.ui.hiddenColumns[project.id] = [...hidden];
-  persist();
-  render();
 }
 
 function renderBoard() {

@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v088";
+const STORAGE_KEY = "kanboard-static-v089";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -306,12 +306,16 @@ async function testFlowSortingSearchAndViews(page) {
   const state = await getState(page);
   check(state.ui.cardMode === "compact", "card display mode saves");
 
-  const firstVisibilityButton = page.locator("#columnVisibility button").first();
-  await firstVisibilityButton.click();
+  check(await page.locator("#columnVisibility .column-picker summary").isVisible(), "column visibility picker renders compact summary");
+  await page.locator("#columnVisibility .column-picker summary").click();
+  check((await page.locator("#columnVisibility .column-picker-option").count()) === project.columns.length, "column visibility picker lists every column");
+  const firstVisibilityCheckbox = page.locator("#columnVisibility .column-picker-option input").first();
+  await firstVisibilityCheckbox.uncheck();
   await pause();
   let stateAfterHide = await getState(page);
   check(stateAfterHide.ui.hiddenColumns[stateAfterHide.activeProjectId].length === 1, "column visibility hides column");
-  await page.locator("#columnVisibility button").first().click();
+  check(await page.locator("#columnVisibility .column-picker").evaluate((picker) => picker.open), "column visibility picker stays open after change");
+  await page.locator('#columnVisibility [data-action="show-all-columns"]').click();
   await pause();
   stateAfterHide = await getState(page);
   check(stateAfterHide.ui.hiddenColumns[stateAfterHide.activeProjectId].length === 0, "column visibility restores column");
