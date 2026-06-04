@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.12 视图与菜单补齐</title>
+  <title>Kanboard V0.8.13 活动附件快捷键补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.12 视图补齐版</p>
+          <p>V0.8.13 基础能力补齐版</p>
         </div>
       </div>
 
@@ -38,8 +38,10 @@
         <div class="topbar-actions">
           <button class="secondary-button" id="editProjectBtn" type="button">编辑项目</button>
           <button class="secondary-button" id="analyticsBtn" type="button">项目分析</button>
+          <button class="secondary-button" id="activityBtn" type="button">活动</button>
           <button class="secondary-button" id="automationBtn" type="button">自动化</button>
           <button class="secondary-button" id="notificationsBtn" type="button">通知</button>
+          <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
           <button class="secondary-button danger" id="deleteProjectBtn" type="button">删除项目</button>
@@ -357,7 +359,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.12</span>
+          <span>静态模拟 V0.8.13</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -386,6 +388,50 @@
       <div class="modal-actions">
         <button class="secondary-button" value="cancel" type="submit" formnovalidate>取消</button>
         <button class="primary-action compact" type="submit">保存规则</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="activityDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>项目活动</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>最近活动</h4>
+          <span id="activitySummary">0 条</span>
+        </div>
+        <div class="settings-list" id="projectActivityList"></div>
+      </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="shortcutsDialog" class="modal">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>快捷键</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="shortcut-list">
+        <div><kbd>?</kbd><span>打开快捷键帮助</span></div>
+        <div><kbd>f</kbd><span>聚焦搜索</span></div>
+        <div><kbd>r</kbd><span>重置搜索</span></div>
+        <div><kbd>v b</kbd><span>切换到看板视图</span></div>
+        <div><kbd>v c</kbd><span>切换到日历视图</span></div>
+        <div><kbd>v l</kbd><span>切换到列表视图</span></div>
+        <div><kbd>v g</kbd><span>切换到甘特视图</span></div>
+        <div><kbd>v o</kbd><span>切换到概览视图</span></div>
+        <div><kbd>n</kbd><span>在当前项目第一列新增任务</span></div>
+        <div><kbd>s</kbd><span>展开 / 折叠任务卡</span></div>
+        <div><kbd>c</kbd><span>紧凑 / 展开看板</span></div>
+      </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>
     </form>
   </dialog>
@@ -577,6 +623,19 @@
           <button class="secondary-button" id="addTimeEntryBtn" type="button">添加时间</button>
         </div>
         <div class="settings-list" id="timeLogList"></div>
+      </section>
+
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>附件</h4>
+          <span id="attachmentSummary">0 个</span>
+        </div>
+        <div class="settings-add-row attachment-row">
+          <input id="attachmentNameInput" maxlength="100" placeholder="文件名或链接，例如 PRD-v1.pdf">
+          <input id="attachmentMetaInput" maxlength="40" placeholder="类型 / 大小，例如 PDF · 2MB">
+          <button class="secondary-button" id="addAttachmentBtn" type="button">添加附件</button>
+        </div>
+        <div class="settings-list" id="attachmentList"></div>
       </section>
 
       <section class="detail-section">

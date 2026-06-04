@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0812";
+const STORAGE_KEY = "kanboard-static-v0813";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -555,7 +555,10 @@ let draftComments = [];
 let draftActivity = [];
 let draftLinks = [];
 let draftTimeLogs = [];
+let draftAttachments = [];
 let draftProjectSettings = null;
+let shortcutPrefix = "";
+let shortcutPrefixTimer = null;
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
 
 const els = {
@@ -583,6 +586,10 @@ const els = {
   addAutomationBtn: document.querySelector("#addAutomationBtn"),
   runAutomationBtn: document.querySelector("#runAutomationBtn"),
   automationList: document.querySelector("#automationList"),
+  activityDialog: document.querySelector("#activityDialog"),
+  activitySummary: document.querySelector("#activitySummary"),
+  projectActivityList: document.querySelector("#projectActivityList"),
+  shortcutsDialog: document.querySelector("#shortcutsDialog"),
   notificationsDialog: document.querySelector("#notificationsDialog"),
   markNotificationsBtn: document.querySelector("#markNotificationsBtn"),
   notificationList: document.querySelector("#notificationList"),
@@ -671,6 +678,11 @@ const els = {
   timeNoteInput: document.querySelector("#timeNoteInput"),
   addTimeEntryBtn: document.querySelector("#addTimeEntryBtn"),
   timeLogList: document.querySelector("#timeLogList"),
+  attachmentSummary: document.querySelector("#attachmentSummary"),
+  attachmentNameInput: document.querySelector("#attachmentNameInput"),
+  attachmentMetaInput: document.querySelector("#attachmentMetaInput"),
+  addAttachmentBtn: document.querySelector("#addAttachmentBtn"),
+  attachmentList: document.querySelector("#attachmentList"),
   recurringPatternInput: document.querySelector("#recurringPatternInput"),
   recurringNextDateInput: document.querySelector("#recurringNextDateInput"),
   cardOperations: document.querySelector("#cardOperations"),
@@ -694,8 +706,10 @@ const els = {
 document.querySelector("#newProjectBtn").addEventListener("click", () => openProjectDialog());
 document.querySelector("#editProjectBtn").addEventListener("click", () => openProjectDialog(activeProject().id));
 document.querySelector("#analyticsBtn").addEventListener("click", openAnalyticsDialog);
+document.querySelector("#activityBtn").addEventListener("click", openActivityDialog);
 document.querySelector("#automationBtn").addEventListener("click", openAutomationDialog);
 document.querySelector("#notificationsBtn").addEventListener("click", openNotificationsDialog);
+document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
 document.querySelector("#addColumnBtn").addEventListener("click", () => openColumnDialog());
@@ -730,12 +744,14 @@ els.cardForm.addEventListener("submit", saveCardFromDialog);
 els.deleteCardBtn.addEventListener("click", deleteEditingCard);
 els.addSubtaskBtn.addEventListener("click", addDraftSubtask);
 els.addTimeEntryBtn.addEventListener("click", addDraftTimeEntry);
+els.addAttachmentBtn.addEventListener("click", addDraftAttachment);
 els.cardActualInput.addEventListener("input", renderCardDetails);
 els.toggleCardClosedBtn.addEventListener("click", toggleEditingCardClosed);
 els.duplicateCardBtn.addEventListener("click", duplicateEditingCard);
 els.moveCardBtn.addEventListener("click", moveEditingCardToProject);
 els.addLinkBtn.addEventListener("click", addDraftLink);
 els.addCommentBtn.addEventListener("click", addDraftComment);
+document.addEventListener("keydown", handleKeyboardShortcuts);
 
 normalizeState();
 persist();
@@ -1216,6 +1232,7 @@ function makeCard(options) {
     actualTime: options.actualTime || "",
     schedule: normalizeSchedule(options.schedule),
     timeLogs: options.timeLogs || [],
+    attachments: options.attachments || [],
     recurring: options.recurring || { pattern: "", nextDate: "" },
     swimlaneId: options.swimlaneId || "",
     isClosed: Boolean(options.isClosed),
@@ -1265,6 +1282,7 @@ function normalizeState() {
         card.activity ||= [];
         card.tags ||= [];
         card.links ||= [];
+        card.attachments ||= [];
         card.isClosed ??= false;
         card.actualTime ||= "";
         card.schedule = normalizeSchedule(card.schedule);
@@ -1768,8 +1786,10 @@ function setViewMode(viewMode) {
   render();
 }
 
-function setCardMode() {
-  state.ui.cardMode = els.cardModeSelect.value;
+function setCardMode(cardMode) {
+  const nextMode = typeof cardMode === "string" ? cardMode : els.cardModeSelect.value;
+  state.ui.cardMode = nextMode;
+  els.cardModeSelect.value = nextMode;
   persist();
   render();
 }
@@ -2179,6 +2199,7 @@ function createCardElement(card, columnId, swimlaneId) {
         ${cardActualHours(card) && !isCompact ? `<span class="pill">${formatHours(cardActualHours(card))}h 实际</span>` : ""}
         ${card.recurring?.pattern && !isCompact ? `<span class="pill">循环</span>` : ""}
         ${card.links?.length && !isCompact ? `<span class="pill">${card.links.length} 链接</span>` : ""}
+        ${card.attachments?.length && !isCompact ? `<span class="pill">${card.attachments.length} 附件</span>` : ""}
         ${card.dueDate ? `<span class="pill ${isOverdue(card.dueDate) ? "overdue" : ""}">${escapeHtml(card.dueDate)}</span>` : ""}
         ${card.schedule?.plannedEnd && !isCompact ? `<span class="pill ${delayDays > 0 ? "overdue" : ""}">${delayDays > 0 ? `超期 ${delayDays} 天` : `计划 ${escapeHtml(card.schedule.plannedEnd)}`}</span>` : ""}
       </div>
@@ -2667,6 +2688,178 @@ function openAutomationDialog() {
   els.automationDialog.showModal();
 }
 
+function openActivityDialog() {
+  renderProjectActivity();
+  els.activityDialog.showModal();
+}
+
+function renderProjectActivity() {
+  const project = activeProject();
+  const activities = buildProjectActivity(project);
+  els.activitySummary.textContent = `${activities.length} 条`;
+  els.projectActivityList.innerHTML = activities.length
+    ? activities.slice(0, 40).map((item) => `
+      <button class="settings-item project-activity-item" type="button" data-card-id="${item.cardId || ""}">
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)}</span>
+        </div>
+        <em>${formatTime(item.createdAt)}</em>
+      </button>
+    `).join("")
+    : `<div class="empty-state">暂无项目活动</div>`;
+  els.projectActivityList.querySelectorAll(".project-activity-item").forEach((row) => {
+    row.addEventListener("click", () => {
+      const context = findCardContext(row.dataset.cardId);
+      if (!context) return;
+      els.activityDialog.close();
+      openCardDialog(context.column.id, context.card.id, context.card.swimlaneId);
+    });
+  });
+}
+
+function buildProjectActivity(project) {
+  const items = [];
+  allCards(project).forEach((card) => {
+    (card.activity || []).forEach((entry) => {
+      items.push({
+        cardId: card.id,
+        title: card.title,
+        body: entry.text,
+        createdAt: entry.createdAt
+      });
+    });
+    (card.comments || []).forEach((comment) => {
+      items.push({
+        cardId: card.id,
+        title: card.title,
+        body: `${comment.author || "我"} 评论：${comment.text}`,
+        createdAt: comment.createdAt
+      });
+    });
+    (card.timeLogs || []).forEach((entry) => {
+      items.push({
+        cardId: card.id,
+        title: card.title,
+        body: `记录耗时 ${formatHours(entry.hours)}h：${entry.note}`,
+        createdAt: entry.createdAt
+      });
+    });
+    (card.attachments || []).forEach((attachment) => {
+      items.push({
+        cardId: card.id,
+        title: card.title,
+        body: `附件：${attachment.name}（${attachment.meta || "附件"}）`,
+        createdAt: attachment.createdAt
+      });
+    });
+  });
+  (project.notifications || []).forEach((notification) => {
+    items.push({
+      title: notification.title,
+      body: notification.body,
+      createdAt: notification.createdAt
+    });
+  });
+  return items
+    .filter((item) => item.createdAt)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function openShortcutsDialog() {
+  els.shortcutsDialog.showModal();
+}
+
+function setShortcutPrefix(prefix) {
+  shortcutPrefix = prefix;
+  if (shortcutPrefixTimer) clearTimeout(shortcutPrefixTimer);
+  shortcutPrefixTimer = setTimeout(() => {
+    shortcutPrefix = "";
+    shortcutPrefixTimer = null;
+  }, 1200);
+}
+
+function clearShortcutPrefix() {
+  shortcutPrefix = "";
+  if (shortcutPrefixTimer) {
+    clearTimeout(shortcutPrefixTimer);
+    shortcutPrefixTimer = null;
+  }
+}
+
+function handleKeyboardShortcuts(event) {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const target = event.target;
+  const isTyping = ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable;
+  if (event.key === "?" && !isTyping) {
+    event.preventDefault();
+    clearShortcutPrefix();
+    openShortcutsDialog();
+    return;
+  }
+  if (isTyping) return;
+  const key = event.key.toLowerCase();
+
+  if (shortcutPrefix === "v") {
+    const viewByKey = {
+      b: "board",
+      c: "calendar",
+      l: "list",
+      g: "gantt",
+      o: "overview"
+    };
+    clearShortcutPrefix();
+    if (viewByKey[key]) {
+      event.preventDefault();
+      setViewMode(viewByKey[key]);
+    }
+    return;
+  }
+
+  if (key === "v") {
+    event.preventDefault();
+    setShortcutPrefix("v");
+    return;
+  }
+  if (key === "f") {
+    event.preventDefault();
+    clearShortcutPrefix();
+    els.searchInput.focus();
+    return;
+  }
+  if (key === "r") {
+    event.preventDefault();
+    clearShortcutPrefix();
+    els.searchInput.value = "";
+    renderBoard();
+    return;
+  }
+  if (key === "s") {
+    event.preventDefault();
+    clearShortcutPrefix();
+    setCardMode(state.ui.cardMode === "collapsed" ? "expanded" : "collapsed");
+    return;
+  }
+  if (key === "c") {
+    event.preventDefault();
+    clearShortcutPrefix();
+    setCardMode(state.ui.cardMode === "compact" ? "expanded" : "compact");
+    return;
+  }
+  if (key === "n") {
+    const project = activeProject();
+    const column = visibleColumns(project)[0] || project.columns[0];
+    const lane = enabledSwimlanes(project)[0] || project.swimlanes[0];
+    if (column && lane) {
+      event.preventDefault();
+      clearShortcutPrefix();
+      openCardDialog(column.id, null, lane.id);
+    }
+    return;
+  }
+  clearShortcutPrefix();
+}
+
 function saveAutomationDialog(event) {
   if (event.submitter?.value === "cancel") return;
   event.preventDefault();
@@ -2930,6 +3123,7 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   draftActivity = clone(card?.activity || []);
   draftLinks = clone(card?.links || []);
   draftTimeLogs = clone(card?.timeLogs || []);
+  draftAttachments = clone(card?.attachments || []);
   renderCardLinkOptions(card?.id);
   renderCardDetails();
   els.cardDialog.showModal();
@@ -2964,6 +3158,7 @@ function saveCardFromDialog(event) {
       actualEnd: els.cardActualEndInput.value
     },
     timeLogs: draftTimeLogs,
+    attachments: draftAttachments,
     recurring: {
       pattern: els.recurringPatternInput.value,
       nextDate: els.recurringNextDateInput.value
@@ -3112,6 +3307,21 @@ function addDraftTimeEntry() {
   renderCardDetails();
 }
 
+function addDraftAttachment() {
+  const name = els.attachmentNameInput.value.trim();
+  if (!name) return;
+  draftAttachments.unshift({
+    id: uid("attachment"),
+    name,
+    meta: els.attachmentMetaInput.value.trim() || "附件",
+    createdAt: new Date().toISOString()
+  });
+  draftActivity = addActivity(draftActivity, `添加附件“${name}”`);
+  els.attachmentNameInput.value = "";
+  els.attachmentMetaInput.value = "";
+  renderCardDetails();
+}
+
 function addDraftComment() {
   const text = els.commentInput.value.trim();
   if (!text) return;
@@ -3136,6 +3346,7 @@ function renderCardDetails() {
   const baseActual = Number(els.cardActualInput.value) || 0;
   const logTotal = draftTimeLogs.reduce((sum, item) => sum + Number(item.hours || 0), 0);
   els.timeSummary.textContent = `${formatHours(baseActual + logTotal)}h 实际`;
+  els.attachmentSummary.textContent = `${draftAttachments.length} 个`;
   els.timeLogList.innerHTML = draftTimeLogs.length
     ? draftTimeLogs.map((entry) => `
       <div class="settings-item time-entry" data-id="${entry.id}">
@@ -3149,6 +3360,25 @@ function renderCardDetails() {
     row.querySelector("button").addEventListener("click", () => {
       draftTimeLogs = draftTimeLogs.filter((entry) => entry.id !== row.dataset.id);
       draftActivity = addActivity(draftActivity, "删除了一条时间记录");
+      renderCardDetails();
+    });
+  });
+
+  els.attachmentList.innerHTML = draftAttachments.length
+    ? draftAttachments.map((attachment) => `
+      <div class="settings-item attachment-item" data-id="${attachment.id}">
+        <div>
+          <strong>${escapeHtml(attachment.name)}</strong>
+          <span>${escapeHtml(attachment.meta)} · ${formatTime(attachment.createdAt)}</span>
+        </div>
+        <button class="mini-button" type="button" aria-label="删除附件">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无附件</div>`;
+  els.attachmentList.querySelectorAll(".attachment-item").forEach((row) => {
+    row.querySelector("button").addEventListener("click", () => {
+      draftAttachments = draftAttachments.filter((attachment) => attachment.id !== row.dataset.id);
+      draftActivity = addActivity(draftActivity, "删除了一个附件");
       renderCardDetails();
     });
   });
@@ -3298,6 +3528,7 @@ function cloneCardForCopy(card) {
     subtasks: (card.subtasks || []).map((task) => ({ ...task, id: uid("subtask") })),
     comments: clone(card.comments || []),
     links: clone(card.links || []),
+    attachments: clone(card.attachments || []),
     activity: [{ id: uid("activity"), text: "由复制任务生成", createdAt: now }],
     createdAt: now,
     updatedAt: now

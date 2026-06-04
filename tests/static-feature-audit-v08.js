@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0812";
+const STORAGE_KEY = "kanboard-static-v0813";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -103,6 +103,8 @@ async function testInitialShell(page) {
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
+  check(await page.locator("#activityBtn").isVisible(), "activity entry renders");
+  check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
   check((await page.locator(".column").count()) === 11, "main swimlane renders each workflow column once");
@@ -247,6 +249,9 @@ async function testCardCrudDetailsAndPersistence(page) {
   await page.fill("#timeSpentInput", "0.75");
   await page.fill("#timeNoteInput", "Audit session");
   await page.click("#addTimeEntryBtn");
+  await page.fill("#attachmentNameInput", "audit-prd.pdf");
+  await page.fill("#attachmentMetaInput", "PDF · 2MB");
+  await page.click("#addAttachmentBtn");
   await page.selectOption("#recurringPatternInput", "weekly");
   await page.fill("#recurringNextDateInput", "2026-06-08");
   await saveForm(page, "#cardForm");
@@ -259,6 +264,7 @@ async function testCardCrudDetailsAndPersistence(page) {
   check(card.subtasks.length === 1, "card subtasks save");
   check(card.comments.length === 1, "card comments save");
   check(card.timeLogs.length === 1, "card time log saves");
+  check(card.attachments.length === 1, "card attachment saves");
   check(card.recurring.pattern === "weekly", "card recurring pattern saves");
   check(card.actualTime === "1.5", "card actual time saves");
   check(card.schedule.plannedStart === "2026-06-10" && card.schedule.actualEnd === "2026-06-13", "card schedule saves");
@@ -332,6 +338,19 @@ async function testFlowSortingSearchAndViews(page) {
   check(await page.locator(".gantt-view").isVisible(), "gantt view renders");
   await page.click('[data-view="overview"]');
   check(await page.locator(".overview-view").isVisible(), "overview view renders");
+  await page.keyboard.press("?");
+  check(await page.locator("#shortcutsDialog[open]").isVisible(), "keyboard shortcut help opens");
+  await page.locator('#shortcutsDialog button[value="cancel"]').first().click();
+  await pause();
+  await page.keyboard.press("v");
+  await page.keyboard.press("b");
+  check(await page.locator(".swimlane").isVisible(), "keyboard prefix switches to board view");
+  await page.keyboard.press("f");
+  check(await page.locator("#searchInput").evaluate((input) => document.activeElement === input), "keyboard shortcut focuses search");
+  await page.fill("#searchInput", "Search Audit");
+  await page.locator("body").click({ position: { x: 10, y: 10 } });
+  await page.keyboard.press("r");
+  check((await page.locator("#searchInput").inputValue()) === "", "keyboard shortcut resets search");
   await page.click('[data-view="board"]');
   await page.selectOption("#cardModeSelect", "compact");
   project = await getActiveProject(page);
@@ -466,12 +485,16 @@ async function testSettingsAnalyticsAutomation(page) {
   await page.fill("#timeSpentInput", "1");
   await page.fill("#timeNoteInput", "Analytics session");
   await page.click("#addTimeEntryBtn");
+  await page.fill("#attachmentNameInput", "analytics-brief.docx");
+  await page.fill("#attachmentMetaInput", "DOCX");
+  await page.click("#addAttachmentBtn");
   await page.selectOption("#recurringPatternInput", "monthly");
   await page.fill("#recurringNextDateInput", "2026-07-01");
   await saveForm(page, "#cardForm");
   project = await getActiveProject(page);
   const savedAnalyticsCard = allCards(project).find((item) => item.title === "Analytics Audit");
   check(savedAnalyticsCard.timeLogs.length === 1, "time tracking log saves for analytics");
+  check(savedAnalyticsCard.attachments.length === 1, "attachment data saves for analytics");
   check(savedAnalyticsCard.recurring.pattern === "monthly", "recurring task data saves for analytics");
   check(savedAnalyticsCard.schedule.plannedEnd === "2026-06-02", "card schedule data saves for analytics");
 
@@ -496,6 +519,11 @@ async function testSettingsAnalyticsAutomation(page) {
   check(project.automations.length === beforeAutomation + 1, "automation rule create saves");
   check(project.automations.some((rule) => rule.lastRunAt), "automation simulation stamps last run time");
   check(project.notifications.length >= 1 && project.notifications[0].read === false, "automation simulation creates unread notification");
+
+  await page.click("#activityBtn");
+  check((await page.locator("#projectActivityList .project-activity-item").count()) >= 1, "project activity stream renders");
+  await page.locator('#activityDialog button[value="cancel"]').first().click();
+  await pause();
 
   await page.click("#notificationsBtn");
   check((await page.locator("#notificationList .notification-item").count()) >= 1, "notification center renders notifications");
