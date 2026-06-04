@@ -1718,6 +1718,27 @@ kbd {
   gap: 12px;
 }
 
+.analytics-card {
+  display: grid;
+  gap: 8px;
+  min-height: 86px;
+  padding: 13px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-top: 3px solid #94a3b8;
+  border-radius: 6px;
+}
+
+.analytics-card span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.analytics-card strong {
+  font-size: 22px;
+}
+
 .analytics-item {
   grid-template-columns: minmax(0, 1fr) auto;
 }
@@ -1763,6 +1784,29 @@ kbd {
 .notification-item.read {
   opacity: 0.72;
   background: #f8fafc;
+}
+
+.subscription-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.subscription-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.helper-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.subscription-preview-item {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .time-entry {
@@ -1948,6 +1992,7 @@ kbd {
   .settings-add-row.attachment-row,
   .settings-add-row.time-row,
   .analytics-grid,
+  .subscription-link,
   .operation-grid,
   .link-add,
   .overview-view {

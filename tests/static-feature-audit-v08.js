@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0814";
+const STORAGE_KEY = "kanboard-static-v0815";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -101,12 +101,15 @@ async function testInitialShell(page) {
   check(allCards(project).some((card) => card.schedule?.plannedEnd), "demo cards have schedule dates");
   check(Boolean(project.settings), "project settings normalized");
   check(project.settings.permissionMode === "team", "project permission mode normalized");
+  check(project.settings.publicAccessEnabled === false, "project public access disabled by default");
+  check(Boolean(project.settings.publicToken), "project public token normalized");
   check(project.settings.groups.length >= 1, "project group permissions normalized");
   check(project.files.length >= 2, "project files normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
   check(await page.locator("#activityBtn").isVisible(), "activity entry renders");
+  check(await page.locator("#subscriptionsBtn").isVisible(), "subscription entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -453,6 +456,7 @@ async function testSettingsAnalyticsAutomation(page) {
   await page.click("#projectSettingsBtn");
   await page.selectOption("#settingsProjectTypeInput", "personal");
   await page.selectOption("#settingsAccessModeInput", "private");
+  await page.check("#settingsPublicAccessInput");
   await page.fill("#settingsPlannedStartInput", "2026-06-01");
   await page.fill("#settingsPlannedLaunchInput", "2026-06-30");
   await page.fill("#settingsActualStartInput", "2026-06-02");
@@ -477,6 +481,7 @@ async function testSettingsAnalyticsAutomation(page) {
   let project = await getActiveProject(page);
   check(project.settings.projectType === "personal", "project type setting saves");
   check(project.settings.permissionMode === "private", "project access mode saves");
+  check(project.settings.publicAccessEnabled === true, "project public access setting saves");
   check(project.timeline.plannedLaunch === "2026-06-30", "project timeline setting saves");
   check(project.files.some((item) => item.name === "Audit PRD.pdf"), "project file setting saves");
   check(project.settings.members.some((item) => item.name === "Auditor"), "member setting saves");
@@ -488,7 +493,17 @@ async function testSettingsAnalyticsAutomation(page) {
   await page.click('[data-view="overview"]');
   check((await page.locator(".overview-panel", { hasText: "Audit PRD.pdf" }).count()) >= 1, "overview renders project files");
   check((await page.locator(".overview-panel", { hasText: "私有项目" }).count()) >= 1, "overview renders access mode");
+  check((await page.locator(".overview-panel", { hasText: "公共订阅" }).count()) >= 1, "overview renders public subscription status");
   await page.click('[data-view="board"]');
+  await page.click("#subscriptionsBtn");
+  check(await page.locator("#subscriptionsDialog[open]").isVisible(), "subscription dialog opens");
+  check((await page.locator("#icalFeedInput").inputValue()).endsWith("/calendar.ics"), "iCalendar link renders");
+  check((await page.locator("#rssFeedInput").inputValue()).endsWith("/activity.atom"), "RSS Atom link renders");
+  check(await page.locator("#copyIcalBtn").isEnabled(), "iCalendar copy action enables with public access");
+  await page.click("#copyIcalBtn");
+  check((await page.locator("#subscriptionStatus").textContent()).includes("iCalendar"), "subscription copy feedback renders");
+  check((await page.locator("#subscriptionPreviewList .subscription-preview-item").count()) >= 1, "subscription activity preview renders");
+  await page.locator('#subscriptionsDialog button[value="cancel"]').first().click();
 
   const enabledLane = project.swimlanes.find((lane) => !project.settings.disabledSwimlaneIds.includes(lane.id));
   const analyticsCard = await quickCreateCard(page, project.columns[0].id, enabledLane.id, "Analytics Audit", {

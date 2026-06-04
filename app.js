@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0814";
+const STORAGE_KEY = "kanboard-static-v0815";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -593,6 +593,15 @@ const els = {
   notificationsDialog: document.querySelector("#notificationsDialog"),
   markNotificationsBtn: document.querySelector("#markNotificationsBtn"),
   notificationList: document.querySelector("#notificationList"),
+  subscriptionsDialog: document.querySelector("#subscriptionsDialog"),
+  subscriptionSummary: document.querySelector("#subscriptionSummary"),
+  icalFeedInput: document.querySelector("#icalFeedInput"),
+  rssFeedInput: document.querySelector("#rssFeedInput"),
+  copyIcalBtn: document.querySelector("#copyIcalBtn"),
+  copyRssBtn: document.querySelector("#copyRssBtn"),
+  subscriptionPreviewSummary: document.querySelector("#subscriptionPreviewSummary"),
+  subscriptionPreviewList: document.querySelector("#subscriptionPreviewList"),
+  subscriptionStatus: document.querySelector("#subscriptionStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -620,6 +629,7 @@ const els = {
   projectSettingsForm: document.querySelector("#projectSettingsForm"),
   settingsProjectTypeInput: document.querySelector("#settingsProjectTypeInput"),
   settingsAccessModeInput: document.querySelector("#settingsAccessModeInput"),
+  settingsPublicAccessInput: document.querySelector("#settingsPublicAccessInput"),
   settingsDefaultSwimlaneInput: document.querySelector("#settingsDefaultSwimlaneInput"),
   settingsPlannedStartInput: document.querySelector("#settingsPlannedStartInput"),
   settingsPlannedLaunchInput: document.querySelector("#settingsPlannedLaunchInput"),
@@ -719,6 +729,7 @@ document.querySelector("#analyticsBtn").addEventListener("click", openAnalyticsD
 document.querySelector("#activityBtn").addEventListener("click", openActivityDialog);
 document.querySelector("#automationBtn").addEventListener("click", openAutomationDialog);
 document.querySelector("#notificationsBtn").addEventListener("click", openNotificationsDialog);
+document.querySelector("#subscriptionsBtn").addEventListener("click", openSubscriptionsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -748,6 +759,8 @@ els.automationForm.addEventListener("submit", saveAutomationDialog);
 els.addAutomationBtn.addEventListener("click", addAutomationRule);
 els.runAutomationBtn.addEventListener("click", runAutomationSimulation);
 els.markNotificationsBtn.addEventListener("click", markNotificationsRead);
+els.copyIcalBtn.addEventListener("click", () => copySubscriptionLink("ical"));
+els.copyRssBtn.addEventListener("click", () => copySubscriptionLink("rss"));
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1429,6 +1442,8 @@ function normalizeProjectSettings(project) {
   return {
     projectType: settings.projectType || "team",
     permissionMode: settings.permissionMode || (hasLearningWorkflow ? "private" : "team"),
+    publicAccessEnabled: settings.publicAccessEnabled ?? settings.permissionMode === "public-readonly",
+    publicToken: settings.publicToken || uid("public"),
     defaultSwimlaneId: defaultLaneId,
     disabledSwimlaneIds: (settings.disabledSwimlaneIds || []).filter((id) => project.swimlanes.some((lane) => lane.id === id)),
     members: sourceMembers.map((member) => ({
@@ -2179,6 +2194,10 @@ function renderOverviewView(project) {
         <strong>${escapeHtml(accessModeLabel(settings.permissionMode))}</strong>
       </div>
       <div class="overview-line">
+        <span>公共订阅</span>
+        <strong>${settings.publicAccessEnabled ? "已开启" : "未开启"}</strong>
+      </div>
+      <div class="overview-line">
         <span>成员权限</span>
         <strong>${permissionRoleSummary(settings.members || [])}</strong>
       </div>
@@ -2585,6 +2604,7 @@ function openProjectSettingsDialog() {
   };
   els.settingsProjectTypeInput.value = draftProjectSettings.projectType;
   els.settingsAccessModeInput.value = draftProjectSettings.permissionMode;
+  els.settingsPublicAccessInput.checked = Boolean(draftProjectSettings.publicAccessEnabled);
   els.settingsPlannedStartInput.value = project.timeline?.plannedStart || "";
   els.settingsPlannedLaunchInput.value = project.timeline?.plannedLaunch || "";
   els.settingsActualStartInput.value = project.timeline?.actualStart || "";
@@ -2604,6 +2624,7 @@ function saveProjectSettings(event) {
     ...settings,
     projectType: els.settingsProjectTypeInput.value,
     permissionMode: els.settingsAccessModeInput.value,
+    publicAccessEnabled: els.settingsPublicAccessInput.checked,
     defaultSwimlaneId: els.settingsDefaultSwimlaneInput.value
   };
   project.timeline = normalizeProjectTimeline({
@@ -3147,6 +3168,73 @@ function markNotificationsRead() {
   });
   persist();
   renderNotifications();
+}
+
+function openSubscriptionsDialog() {
+  renderSubscriptions();
+  els.subscriptionsDialog.showModal();
+}
+
+function renderSubscriptions() {
+  const project = activeProject();
+  const settings = project.settings || {};
+  const enabled = Boolean(settings.publicAccessEnabled);
+  const links = buildSubscriptionLinks(project);
+  const scheduledCards = allCards(project).filter((card) => card.dueDate || card.schedule?.plannedEnd || card.schedule?.actualEnd);
+  const activityItems = buildProjectActivity(project);
+  els.subscriptionSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>公共访问</span>
+      <strong>${enabled ? "已开启" : "未开启"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>iCal 任务</span>
+      <strong>${scheduledCards.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>RSS 活动</span>
+      <strong>${activityItems.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>访问 token</span>
+      <strong>${enabled ? "已生成" : "未公开"}</strong>
+    </div>
+  `;
+  els.icalFeedInput.value = enabled ? links.ical : "需要在项目设置中开启公共访问与订阅";
+  els.rssFeedInput.value = enabled ? links.rss : "需要在项目设置中开启公共访问与订阅";
+  els.copyIcalBtn.disabled = !enabled;
+  els.copyRssBtn.disabled = !enabled;
+  els.subscriptionStatus.textContent = enabled
+    ? "订阅链接为静态模拟地址，用于表达 Kanboard 的公共访问订阅机制。"
+    : "公共访问关闭时，iCalendar 和 RSS/Atom 订阅不可用。";
+  els.subscriptionPreviewSummary.textContent = `${Math.min(activityItems.length, 5)} 项`;
+  els.subscriptionPreviewList.innerHTML = activityItems.length
+    ? activityItems.slice(0, 5).map((item) => `
+      <div class="settings-item subscription-preview-item">
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.body)} · ${formatTime(item.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无可订阅活动</div>`;
+}
+
+function copySubscriptionLink(type) {
+  const input = type === "ical" ? els.icalFeedInput : els.rssFeedInput;
+  input.focus();
+  input.select();
+  els.subscriptionStatus.textContent = `${type === "ical" ? "iCalendar" : "RSS/Atom"} 链接已选中，可直接复制。`;
+}
+
+function buildSubscriptionLinks(project) {
+  const token = project.settings?.publicToken || "public-token";
+  const projectSlug = encodeURIComponent(project.name.replace(/\s+/g, "-").toLowerCase());
+  const base = `https://kanboard.local/public/${projectSlug}/${token}`;
+  return {
+    ical: `${base}/calendar.ics`,
+    rss: `${base}/activity.atom`
+  };
 }
 
 function deleteActiveProject() {

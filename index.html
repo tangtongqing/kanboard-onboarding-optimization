@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.14 文件权限补齐</title>
+  <title>Kanboard V0.8.15 公共订阅补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.14 文件权限补齐版</p>
+          <p>V0.8.15 公共订阅补齐版</p>
         </div>
       </div>
 
@@ -41,6 +41,7 @@
           <button class="secondary-button" id="activityBtn" type="button">活动</button>
           <button class="secondary-button" id="automationBtn" type="button">自动化</button>
           <button class="secondary-button" id="notificationsBtn" type="button">通知</button>
+          <button class="secondary-button" id="subscriptionsBtn" type="button">订阅</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -202,6 +203,10 @@
           <label>
             <span>默认泳道</span>
             <select id="settingsDefaultSwimlaneInput"></select>
+          </label>
+          <label class="checkbox-control settings-checkbox">
+            <input id="settingsPublicAccessInput" type="checkbox">
+            <span>开启公共访问与订阅</span>
           </label>
         </div>
       </section>
@@ -398,7 +403,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.14</span>
+          <span>静态模拟 V0.8.15</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -488,6 +493,49 @@
         </div>
         <div class="settings-list" id="notificationList"></div>
       </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="subscriptionsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>公共访问与订阅</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="subscriptionSummary"></section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>iCalendar</h4>
+          <span>项目任务日期</span>
+        </div>
+        <div class="subscription-link">
+          <input id="icalFeedInput" readonly>
+          <button class="secondary-button" id="copyIcalBtn" type="button">复制链接</button>
+        </div>
+        <p class="helper-text">只读订阅，适合导入 Outlook、Apple Calendar、Google Calendar 等日历工具。</p>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>RSS / Atom</h4>
+          <span>项目活动流</span>
+        </div>
+        <div class="subscription-link">
+          <input id="rssFeedInput" readonly>
+          <button class="secondary-button" id="copyRssBtn" type="button">复制链接</button>
+        </div>
+        <p class="helper-text">只读订阅，适合追踪任务创建、更新、附件和通知等项目活动。</p>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>订阅预览</h4>
+          <span id="subscriptionPreviewSummary">0 项</span>
+        </div>
+        <div class="settings-list" id="subscriptionPreviewList"></div>
+      </section>
+      <p class="subscription-status" id="subscriptionStatus"></p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>
