@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0813";
+const STORAGE_KEY = "kanboard-static-v0814";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -619,15 +619,25 @@ const els = {
   projectSettingsDialog: document.querySelector("#projectSettingsDialog"),
   projectSettingsForm: document.querySelector("#projectSettingsForm"),
   settingsProjectTypeInput: document.querySelector("#settingsProjectTypeInput"),
+  settingsAccessModeInput: document.querySelector("#settingsAccessModeInput"),
   settingsDefaultSwimlaneInput: document.querySelector("#settingsDefaultSwimlaneInput"),
   settingsPlannedStartInput: document.querySelector("#settingsPlannedStartInput"),
   settingsPlannedLaunchInput: document.querySelector("#settingsPlannedLaunchInput"),
   settingsActualStartInput: document.querySelector("#settingsActualStartInput"),
   settingsActualLaunchInput: document.querySelector("#settingsActualLaunchInput"),
+  projectFileNameInput: document.querySelector("#projectFileNameInput"),
+  projectFileMetaInput: document.querySelector("#projectFileMetaInput"),
+  projectFileOwnerInput: document.querySelector("#projectFileOwnerInput"),
+  addProjectFileBtn: document.querySelector("#addProjectFileBtn"),
+  projectFileList: document.querySelector("#projectFileList"),
   memberNameInput: document.querySelector("#memberNameInput"),
   memberRoleInput: document.querySelector("#memberRoleInput"),
   addMemberBtn: document.querySelector("#addMemberBtn"),
   memberList: document.querySelector("#memberList"),
+  groupNameInput: document.querySelector("#groupNameInput"),
+  groupRoleInput: document.querySelector("#groupRoleInput"),
+  addGroupBtn: document.querySelector("#addGroupBtn"),
+  groupList: document.querySelector("#groupList"),
   categoryNameInput: document.querySelector("#categoryNameInput"),
   addCategoryBtn: document.querySelector("#addCategoryBtn"),
   categoryList: document.querySelector("#categoryList"),
@@ -729,6 +739,8 @@ els.projectModeInputs.forEach((input) => input.addEventListener("change", render
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
 els.projectSettingsForm.addEventListener("submit", saveProjectSettings);
 els.addMemberBtn.addEventListener("click", addDraftMember);
+els.addProjectFileBtn.addEventListener("click", addDraftProjectFile);
+els.addGroupBtn.addEventListener("click", addDraftGroup);
 els.addCategoryBtn.addEventListener("click", addDraftCategory);
 els.addTagBtn.addEventListener("click", addDraftTag);
 els.addFilterBtn.addEventListener("click", addDraftCustomFilter);
@@ -1208,6 +1220,11 @@ function createDemoState() {
           actualLaunch: "",
           phasePlans: Object.fromEntries(columns.map((column) => [column.key, DEFAULT_PHASE_PLAN_DAYS[column.key] ?? 2]))
         },
+        files: [
+          { id: uid("file"), name: "产品机会池与需求调研摘要.md", type: "Markdown", owner: "PM", createdAt: new Date().toISOString() },
+          { id: uid("file"), name: "PRD-v1.0-评审版.pdf", type: "PDF · 2.4MB", owner: "PM", createdAt: new Date().toISOString() },
+          { id: uid("file"), name: "上线检查清单.xlsx", type: "Excel", owner: "运营", createdAt: new Date().toISOString() }
+        ],
         swimlanes: [laneMain],
         columns
       },
@@ -1259,6 +1276,7 @@ function normalizeState() {
     if (!project.swimlanes?.length) {
       project.swimlanes = [{ id: uid("lane"), title: "默认泳道", description: "默认任务分组" }];
     }
+    project.files = normalizeProjectFiles(project);
     project.settings = normalizeProjectSettings(project);
     project.timeline = normalizeProjectTimeline(project);
     project.automations = normalizeAutomations(project);
@@ -1303,6 +1321,37 @@ function normalizeSchedule(schedule = {}) {
     actualStart: schedule.actualStart || "",
     actualEnd: schedule.actualEnd || ""
   };
+}
+
+function normalizeProjectFiles(project) {
+  const existingFiles = (project.files || [])
+    .filter((file) => file.name)
+    .map((file) => ({
+      id: file.id || uid("file"),
+      name: file.name,
+      type: file.type || "文档",
+      owner: file.owner || "未指定",
+      createdAt: file.createdAt || new Date().toISOString()
+    }));
+  if (existingFiles.length) return existingFiles;
+
+  const hasPmWorkflow = project.columns.some((column) => ["intake", "prd", "launch", "iterate"].includes(column.key));
+  const hasLearningWorkflow = project.columns.some((column) => ["learn", "practice", "mastered"].includes(column.key));
+  const now = new Date().toISOString();
+  if (hasPmWorkflow) {
+    return [
+      { id: uid("file"), name: "产品机会池与需求调研摘要.md", type: "Markdown", owner: "PM", createdAt: now },
+      { id: uid("file"), name: "PRD-v1.0-评审版.pdf", type: "PDF · 2.4MB", owner: "PM", createdAt: now },
+      { id: uid("file"), name: "上线检查清单.xlsx", type: "Excel", owner: "运营", createdAt: now }
+    ];
+  }
+  if (hasLearningWorkflow) {
+    return [
+      { id: uid("file"), name: "从0成为优秀产品经理学习路线.md", type: "Markdown", owner: "我", createdAt: now },
+      { id: uid("file"), name: "产品作品集素材清单.xlsx", type: "Excel", owner: "我", createdAt: now }
+    ];
+  }
+  return [];
 }
 
 function normalizeProjectTimeline(project) {
@@ -1363,12 +1412,35 @@ function normalizeProjectSettings(project) {
   const defaultLaneId = project.swimlanes.some((lane) => lane.id === settings.defaultSwimlaneId)
     ? settings.defaultSwimlaneId
     : project.swimlanes[0].id;
+  const hasPmWorkflow = project.columns.some((column) => ["intake", "prd", "launch", "iterate"].includes(column.key));
+  const hasLearningWorkflow = project.columns.some((column) => ["learn", "practice", "mastered"].includes(column.key));
+  const defaultGroups = hasPmWorkflow
+    ? [
+      { id: uid("group"), name: "产品研发测试小组", role: "成员" },
+      { id: uid("group"), name: "运营观察组", role: "访客" }
+    ]
+    : hasLearningWorkflow
+      ? [{ id: uid("group"), name: "学习搭子", role: "访客" }]
+      : [];
+  const sourceMembers = settings.members?.length
+    ? settings.members
+    : derivedMembers.map((name) => ({ id: uid("member"), name, role: name === "PM" ? "管理员" : "成员" }));
 
   return {
     projectType: settings.projectType || "team",
+    permissionMode: settings.permissionMode || (hasLearningWorkflow ? "private" : "team"),
     defaultSwimlaneId: defaultLaneId,
     disabledSwimlaneIds: (settings.disabledSwimlaneIds || []).filter((id) => project.swimlanes.some((lane) => lane.id === id)),
-    members: (settings.members?.length ? settings.members : derivedMembers.map((name) => ({ id: uid("member"), name, role: name === "PM" ? "管理员" : "成员" }))),
+    members: sourceMembers.map((member) => ({
+      id: member.id || uid("member"),
+      name: member.name,
+      role: member.role || "成员"
+    })),
+    groups: (settings.groups?.length ? settings.groups : defaultGroups).map((group) => ({
+      id: group.id || uid("group"),
+      name: group.name,
+      role: group.role || "成员"
+    })),
     categories: unique([...(settings.categories || []), ...derivedCategories]),
     tags: unique([...(settings.tags || []), ...derivedTags]),
     customFilters: settings.customFilters?.length ? settings.customFilters : [
@@ -2043,6 +2115,8 @@ function renderOverviewView(project) {
   }));
   const byAssignee = groupCounts(openCards.map((card) => card.assignee || "未分配"));
   const urgent = openCards.filter((card) => ["高", "紧急"].includes(card.priority)).slice(0, 6);
+  const files = project.files || [];
+  const settings = project.settings || {};
 
   const overview = document.createElement("section");
   overview.className = "overview-view";
@@ -2063,6 +2137,14 @@ function renderOverviewView(project) {
       <span>高优先级</span>
       <strong>${urgent.length}</strong>
     </article>
+    <article class="overview-panel">
+      <span>项目文件</span>
+      <strong>${files.length}</strong>
+    </article>
+    <article class="overview-panel">
+      <span>成员 / 用户组</span>
+      <strong>${(settings.members || []).length} / ${(settings.groups || []).length}</strong>
+    </article>
     <article class="overview-panel wide">
       <h3>列分布</h3>
       ${byColumn.map((item) => `
@@ -2080,6 +2162,30 @@ function renderOverviewView(project) {
           <strong>${item.count}</strong>
         </div>
       `).join("") || `<div class="empty-state">暂无负责人数据</div>`}
+    </article>
+    <article class="overview-panel wide">
+      <h3>项目文件</h3>
+      ${files.length ? files.slice(0, 5).map((file) => `
+        <div class="overview-line">
+          <span>${escapeHtml(file.name)}</span>
+          <strong>${escapeHtml(file.type || "文档")} · ${escapeHtml(file.owner || "未指定")}</strong>
+        </div>
+      `).join("") : `<div class="empty-state">暂无项目文件</div>`}
+    </article>
+    <article class="overview-panel wide">
+      <h3>访问权限</h3>
+      <div class="overview-line">
+        <span>访问范围</span>
+        <strong>${escapeHtml(accessModeLabel(settings.permissionMode))}</strong>
+      </div>
+      <div class="overview-line">
+        <span>成员权限</span>
+        <strong>${permissionRoleSummary(settings.members || [])}</strong>
+      </div>
+      <div class="overview-line">
+        <span>用户组权限</span>
+        <strong>${permissionRoleSummary(settings.groups || [])}</strong>
+      </div>
     </article>
     <article class="overview-panel full">
       <h3>高优先级任务</h3>
@@ -2474,9 +2580,11 @@ function openProjectSettingsDialog() {
   const project = activeProject();
   draftProjectSettings = {
     ...clone(project.settings),
-    swimlanes: clone(project.swimlanes)
+    swimlanes: clone(project.swimlanes),
+    files: clone(project.files || [])
   };
   els.settingsProjectTypeInput.value = draftProjectSettings.projectType;
+  els.settingsAccessModeInput.value = draftProjectSettings.permissionMode;
   els.settingsPlannedStartInput.value = project.timeline?.plannedStart || "";
   els.settingsPlannedLaunchInput.value = project.timeline?.plannedLaunch || "";
   els.settingsActualStartInput.value = project.timeline?.actualStart || "";
@@ -2489,11 +2597,13 @@ function saveProjectSettings(event) {
   if (event.submitter?.value === "cancel") return;
   event.preventDefault();
   const project = activeProject();
-  const { swimlanes, ...settings } = draftProjectSettings;
+  const { swimlanes, files, ...settings } = draftProjectSettings;
   project.swimlanes = swimlanes;
+  project.files = files;
   project.settings = {
     ...settings,
     projectType: els.settingsProjectTypeInput.value,
+    permissionMode: els.settingsAccessModeInput.value,
     defaultSwimlaneId: els.settingsDefaultSwimlaneInput.value
   };
   project.timeline = normalizeProjectTimeline({
@@ -2524,10 +2634,33 @@ function renderProjectSettings() {
     renderProjectSettings();
   };
   renderMemberSettings();
+  renderProjectFileSettings();
+  renderGroupSettings();
   renderSimpleSettingList(els.categoryList, draftProjectSettings.categories, "category");
   renderSimpleSettingList(els.tagList, draftProjectSettings.tags, "tag");
   renderCustomFilterSettings();
   renderSwimlaneSettings();
+}
+
+function renderProjectFileSettings() {
+  els.projectFileList.innerHTML = draftProjectSettings.files.length
+    ? draftProjectSettings.files.map((file) => `
+      <div class="settings-item project-file-item" data-id="${file.id}">
+        <div>
+          <strong>${escapeHtml(file.name)}</strong>
+          <span>${escapeHtml(file.type || "文档")} · ${escapeHtml(file.owner || "未指定")} · ${formatTime(file.createdAt)}</span>
+        </div>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除文件">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无项目文件</div>`;
+
+  els.projectFileList.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector('[data-action="remove"]').addEventListener("click", () => {
+      draftProjectSettings.files = draftProjectSettings.files.filter((item) => item.id !== row.dataset.id);
+      renderProjectSettings();
+    });
+  });
 }
 
 function renderMemberSettings() {
@@ -2550,6 +2683,31 @@ function renderMemberSettings() {
     });
     row.querySelector('[data-action="remove"]').addEventListener("click", () => {
       draftProjectSettings.members = draftProjectSettings.members.filter((item) => item.id !== row.dataset.id);
+      renderProjectSettings();
+    });
+  });
+}
+
+function renderGroupSettings() {
+  els.groupList.innerHTML = draftProjectSettings.groups.length
+    ? draftProjectSettings.groups.map((group) => `
+      <div class="settings-item permission-item" data-id="${group.id}">
+        <strong>${escapeHtml(group.name)}</strong>
+        <select data-action="role">
+          ${["管理员", "成员", "访客"].map((role) => `<option value="${role}" ${group.role === role ? "selected" : ""}>${role}</option>`).join("")}
+        </select>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除用户组">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无用户组权限</div>`;
+
+  els.groupList.querySelectorAll(".settings-item").forEach((row) => {
+    row.querySelector('[data-action="role"]').addEventListener("change", (event) => {
+      const group = draftProjectSettings.groups.find((item) => item.id === row.dataset.id);
+      group.role = event.target.value;
+    });
+    row.querySelector('[data-action="remove"]').addEventListener("click", () => {
+      draftProjectSettings.groups = draftProjectSettings.groups.filter((item) => item.id !== row.dataset.id);
       renderProjectSettings();
     });
   });
@@ -2619,11 +2777,35 @@ function renderSwimlaneSettings() {
   });
 }
 
+function addDraftProjectFile() {
+  const name = els.projectFileNameInput.value.trim();
+  if (!name || draftProjectSettings.files.some((file) => file.name === name)) return;
+  draftProjectSettings.files.unshift({
+    id: uid("file"),
+    name,
+    type: els.projectFileMetaInput.value.trim() || "文档",
+    owner: els.projectFileOwnerInput.value.trim() || "未指定",
+    createdAt: new Date().toISOString()
+  });
+  els.projectFileNameInput.value = "";
+  els.projectFileMetaInput.value = "";
+  els.projectFileOwnerInput.value = "";
+  renderProjectSettings();
+}
+
 function addDraftMember() {
   const name = els.memberNameInput.value.trim();
   if (!name || draftProjectSettings.members.some((member) => member.name === name)) return;
   draftProjectSettings.members.push({ id: uid("member"), name, role: els.memberRoleInput.value });
   els.memberNameInput.value = "";
+  renderProjectSettings();
+}
+
+function addDraftGroup() {
+  const name = els.groupNameInput.value.trim();
+  if (!name || draftProjectSettings.groups.some((group) => group.name === name)) return;
+  draftProjectSettings.groups.push({ id: uid("group"), name, role: els.groupRoleInput.value });
+  els.groupNameInput.value = "";
   renderProjectSettings();
 }
 
@@ -2759,6 +2941,13 @@ function buildProjectActivity(project) {
       title: notification.title,
       body: notification.body,
       createdAt: notification.createdAt
+    });
+  });
+  (project.files || []).forEach((file) => {
+    items.push({
+      title: project.name,
+      body: `项目文件：${file.name}（${file.type || "文档"}）`,
+      createdAt: file.createdAt
     });
   });
   return items
@@ -3533,6 +3722,20 @@ function cloneCardForCopy(card) {
     createdAt: now,
     updatedAt: now
   };
+}
+
+function accessModeLabel(mode) {
+  return {
+    private: "私有项目",
+    team: "团队可见",
+    "public-readonly": "公开只读"
+  }[mode] || "团队可见";
+}
+
+function permissionRoleSummary(items) {
+  if (!items.length) return "暂无";
+  const counts = groupCounts(items.map((item) => item.role || "成员"));
+  return counts.map((item) => `${item.label} ${item.count}`).join(" · ");
 }
 
 function groupCounts(values) {

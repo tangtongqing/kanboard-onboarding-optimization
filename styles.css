@@ -1605,6 +1605,14 @@ textarea:focus {
   grid-template-columns: 160px 160px minmax(180px, 1fr) auto;
 }
 
+.settings-add-row.project-file-row {
+  grid-template-columns: minmax(180px, 1.2fr) minmax(130px, 0.7fr) minmax(100px, 0.5fr) auto;
+}
+
+.settings-add-row.group-row {
+  grid-template-columns: minmax(0, 1fr) 150px auto;
+}
+
 .settings-add-row.attachment-row {
   grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 0.8fr) auto;
 }
@@ -1642,6 +1650,14 @@ textarea:focus {
 
 .filter-item {
   grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr) auto;
+}
+
+.project-file-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.permission-item {
+  grid-template-columns: minmax(0, 1fr) 150px auto;
 }
 
 .swimlane-setting {
@@ -1927,6 +1943,8 @@ kbd {
   .settings-add-row,
   .settings-add-row.filter-row,
   .settings-add-row.automation-row,
+  .settings-add-row.project-file-row,
+  .settings-add-row.group-row,
   .settings-add-row.attachment-row,
   .settings-add-row.time-row,
   .analytics-grid,

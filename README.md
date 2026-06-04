@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.13 活动附件快捷键补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.14 项目文件与权限补齐
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -53,6 +53,7 @@
 - [x] 泳道建模逻辑修正 V0.8.11
 - [x] Calendar / Gantt / 菜单补齐 V0.8.12
 - [x] 活动 / 附件 / 快捷键补齐 V0.8.13
+- [x] 项目文件 / 访问范围 / 用户组权限补齐 V0.8.14
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -71,7 +72,7 @@
 | `项目配置与协作补齐说明-V0.7.md` | 项目设置、成员角色、分类标签、自定义筛选和泳道配置说明 |
 | `分析时间与自动化补齐说明-V0.8.md` | 项目分析、时间跟踪、循环任务、自动化和通知中心说明 |
 | `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
-| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 121 个核心检查项 |
+| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 129 个核心检查项 |
 | `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
 | `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
 | `PM工作流看板说明-V0.8.3.md` | 用 Kanboard 复现完整产品开发流程的列、泳道、卡片和产品判断 |
@@ -85,6 +86,7 @@
 | `泳道建模逻辑修正说明-V0.8.11.md` | 根据 Kanboard 官方泳道模型修正主 PM 项目默认泳道设计 |
 | `视图与菜单补齐说明-V0.8.12.md` | 根据 Kanboard 官方项目视图补齐 Calendar、Gantt 和 Board 菜单 |
 | `活动附件快捷键补齐说明-V0.8.13.md` | 根据 Kanboard 官网与官方文档补齐项目活动流、任务附件和快捷键 |
+| `项目文件与权限补齐说明-V0.8.14.md` | 根据 Kanboard 官方 Project Overview、Project File API 和 Project Permission API 补齐项目文件库与权限配置 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -108,6 +110,8 @@
 | `设计图/kanboard-v0.8.12-gantt-view.png` | V0.8.12 Gantt 甘特视图截图 |
 | `设计图/kanboard-v0.8.13-task-attachments.png` | V0.8.13 任务附件截图 |
 | `设计图/kanboard-v0.8.13-activity-stream.png` | V0.8.13 项目活动流截图 |
+| `设计图/kanboard-v0.8.14-project-files-permissions.png` | V0.8.14 项目文件与用户组权限设置截图 |
+| `设计图/kanboard-v0.8.14-overview-permissions.png` | V0.8.14 Overview 文件与访问权限摘要截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -135,6 +139,7 @@
 | V0.8.11 | 泳道建模逻辑修正 | 已完成 |
 | V0.8.12 | Calendar / Gantt / 菜单补齐 | 已完成 |
 | V0.8.13 | 活动 / 附件 / 快捷键补齐 | 已完成 |
+| V0.8.14 | 项目文件 / 访问范围 / 用户组权限补齐 | 已完成 |
 | V0.9 | Figma 高保真原型 | 下一步 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
@@ -154,4 +159,4 @@ Figma 高保真原型推迟到完整复现补齐之后。
 
 ## 当前截图
 
-![Kanboard 项目活动流 V0.8.13](设计图/kanboard-v0.8.13-activity-stream.png)
+![Kanboard Overview 文件与访问权限摘要 V0.8.14](设计图/kanboard-v0.8.14-overview-permissions.png)

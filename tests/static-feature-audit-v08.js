@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0813";
+const STORAGE_KEY = "kanboard-static-v0814";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -100,6 +100,9 @@ async function testInitialShell(page) {
   check(project.timeline.plannedStart === "2026-05-20" && project.timeline.plannedLaunch === "2026-06-11", "demo has project timeline");
   check(allCards(project).some((card) => card.schedule?.plannedEnd), "demo cards have schedule dates");
   check(Boolean(project.settings), "project settings normalized");
+  check(project.settings.permissionMode === "team", "project permission mode normalized");
+  check(project.settings.groups.length >= 1, "project group permissions normalized");
+  check(project.files.length >= 2, "project files normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -449,11 +452,19 @@ async function testSettingsAnalyticsAutomation(page) {
   await saveForm(page, "#swimlaneForm");
   await page.click("#projectSettingsBtn");
   await page.selectOption("#settingsProjectTypeInput", "personal");
+  await page.selectOption("#settingsAccessModeInput", "private");
   await page.fill("#settingsPlannedStartInput", "2026-06-01");
   await page.fill("#settingsPlannedLaunchInput", "2026-06-30");
   await page.fill("#settingsActualStartInput", "2026-06-02");
+  await page.fill("#projectFileNameInput", "Audit PRD.pdf");
+  await page.fill("#projectFileMetaInput", "PDF · 500KB");
+  await page.fill("#projectFileOwnerInput", "Auditor");
+  await page.click("#addProjectFileBtn");
   await page.fill("#memberNameInput", "Auditor");
   await page.click("#addMemberBtn");
+  await page.fill("#groupNameInput", "Audit Group");
+  await page.selectOption("#groupRoleInput", "访客");
+  await page.click("#addGroupBtn");
   await page.fill("#categoryNameInput", "AuditCat");
   await page.click("#addCategoryBtn");
   await page.fill("#tagNameInput", "audit-tag");
@@ -465,12 +476,19 @@ async function testSettingsAnalyticsAutomation(page) {
   await saveForm(page, "#projectSettingsForm");
   let project = await getActiveProject(page);
   check(project.settings.projectType === "personal", "project type setting saves");
+  check(project.settings.permissionMode === "private", "project access mode saves");
   check(project.timeline.plannedLaunch === "2026-06-30", "project timeline setting saves");
+  check(project.files.some((item) => item.name === "Audit PRD.pdf"), "project file setting saves");
   check(project.settings.members.some((item) => item.name === "Auditor"), "member setting saves");
+  check(project.settings.groups.some((item) => item.name === "Audit Group" && item.role === "访客"), "group permission setting saves");
   check(project.settings.categories.includes("AuditCat"), "category setting saves");
   check(project.settings.tags.includes("audit-tag"), "tag setting saves");
   check(project.settings.customFilters.some((item) => item.name === "Audit Open"), "custom filter setting saves");
   check(project.settings.disabledSwimlaneIds.length === 1, "swimlane disable setting saves");
+  await page.click('[data-view="overview"]');
+  check((await page.locator(".overview-panel", { hasText: "Audit PRD.pdf" }).count()) >= 1, "overview renders project files");
+  check((await page.locator(".overview-panel", { hasText: "私有项目" }).count()) >= 1, "overview renders access mode");
+  await page.click('[data-view="board"]');
 
   const enabledLane = project.swimlanes.find((lane) => !project.settings.disabledSwimlaneIds.includes(lane.id));
   const analyticsCard = await quickCreateCard(page, project.columns[0].id, enabledLane.id, "Analytics Audit", {

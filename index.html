@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.13 活动附件快捷键补齐</title>
+  <title>Kanboard V0.8.14 文件权限补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.13 基础能力补齐版</p>
+          <p>V0.8.14 文件权限补齐版</p>
         </div>
       </div>
 
@@ -192,6 +192,14 @@
             </select>
           </label>
           <label>
+            <span>访问范围</span>
+            <select id="settingsAccessModeInput">
+              <option value="private">私有项目</option>
+              <option value="team">团队可见</option>
+              <option value="public-readonly">公开只读</option>
+            </select>
+          </label>
+          <label>
             <span>默认泳道</span>
             <select id="settingsDefaultSwimlaneInput"></select>
           </label>
@@ -225,6 +233,20 @@
 
       <section class="detail-section">
         <div class="detail-heading">
+          <h4>项目文件</h4>
+          <span>静态文件库</span>
+        </div>
+        <div class="settings-add-row project-file-row">
+          <input id="projectFileNameInput" maxlength="80" placeholder="文件名或链接，例如 PRD-v1.pdf">
+          <input id="projectFileMetaInput" maxlength="40" placeholder="类型 / 大小，例如 PDF · 2MB">
+          <input id="projectFileOwnerInput" maxlength="24" placeholder="负责人">
+          <button class="secondary-button" id="addProjectFileBtn" type="button">添加文件</button>
+        </div>
+        <div class="settings-list" id="projectFileList"></div>
+      </section>
+
+      <section class="detail-section">
+        <div class="detail-heading">
           <h4>成员与角色</h4>
           <span>静态权限配置</span>
         </div>
@@ -238,6 +260,23 @@
           <button class="secondary-button" id="addMemberBtn" type="button">添加成员</button>
         </div>
         <div class="settings-list" id="memberList"></div>
+      </section>
+
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>用户组权限</h4>
+          <span>用户 / 组级访问</span>
+        </div>
+        <div class="settings-add-row group-row">
+          <input id="groupNameInput" maxlength="32" placeholder="用户组名称">
+          <select id="groupRoleInput">
+            <option value="管理员">管理员</option>
+            <option value="成员">成员</option>
+            <option value="访客">访客</option>
+          </select>
+          <button class="secondary-button" id="addGroupBtn" type="button">添加用户组</button>
+        </div>
+        <div class="settings-list" id="groupList"></div>
       </section>
 
       <section class="settings-two-column">
@@ -359,7 +398,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.13</span>
+          <span>静态模拟 V0.8.14</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
