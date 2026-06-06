@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0816";
+const STORAGE_KEY = "kanboard-static-v0817";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -105,12 +105,15 @@ async function testInitialShell(page) {
   check(Boolean(project.settings.publicToken), "project public token normalized");
   check(project.settings.groups.length >= 1, "project group permissions normalized");
   check(project.files.length >= 2, "project files normalized");
+  check(state.plugins.config.installerEnabled === false, "plugin installer disabled by default");
+  check(state.plugins.catalog.some((plugin) => plugin.status === "installed"), "plugin catalog has installed plugin");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
   check(await page.locator("#activityBtn").isVisible(), "activity entry renders");
   check(await page.locator("#subscriptionsBtn").isVisible(), "subscription entry renders");
   check(await page.locator("#importExportBtn").isVisible(), "import export entry renders");
+  check(await page.locator("#pluginsBtn").isVisible(), "plugins entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -583,7 +586,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0816", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0817", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -596,6 +599,29 @@ async function testImportExport(page) {
   check(importedProject.name.endsWith(" - 导入"), "JSON import renames project copy");
   check(importedProject.columns.length === parsed.project.columns.length, "JSON import keeps column count");
   check(allCards(importedProject).length === allCards(parsed.project).length, "JSON import keeps task count");
+}
+
+async function testPlugins(page) {
+  await fresh(page);
+  await page.click("#pluginsBtn");
+  check(await page.locator("#pluginsDialog[open]").isVisible(), "plugins dialog opens");
+  check(await page.locator("#availablePluginList [data-action='install']").first().isDisabled(), "plugin install disabled by default");
+  await page.check("#pluginInstallerInput");
+  check(await page.locator("#availablePluginList [data-action='install']").first().isEnabled(), "plugin install enables when requirements pass");
+  await page.locator("#availablePluginList [data-action='install']").first().click();
+  await pause();
+  let state = await getState(page);
+  check(state.plugins.catalog.filter((plugin) => plugin.status === "installed").length >= 2, "plugin install saves state");
+  await page.locator("#installedPluginList [data-action='upgrade']:not([disabled])").first().click();
+  await pause();
+  state = await getState(page);
+  const budgetPlugin = state.plugins.catalog.find((plugin) => plugin.id === "budget");
+  check(budgetPlugin.version === budgetPlugin.latestVersion, "plugin upgrade saves latest version");
+  await page.locator("#installedPluginList [data-action='uninstall']").first().click();
+  await pause();
+  state = await getState(page);
+  check(state.plugins.catalog.some((plugin) => plugin.status === "available"), "plugin uninstall returns plugin to catalog");
+  check((await page.locator("#pluginStatus").textContent()).includes("安装器可用"), "plugin status explains installer availability");
 }
 
 async function testMobileDialogBounds(page) {
@@ -655,6 +681,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testTaskActionsLinksAndMove(page);
     await testSettingsAnalyticsAutomation(page);
     await testImportExport(page);
+    await testPlugins(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.16 导入导出补齐</title>
+  <title>Kanboard V0.8.17 插件管理补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.16 导入导出补齐版</p>
+          <p>V0.8.17 插件管理补齐版</p>
         </div>
       </div>
 
@@ -43,6 +43,7 @@
           <button class="secondary-button" id="notificationsBtn" type="button">通知</button>
           <button class="secondary-button" id="subscriptionsBtn" type="button">订阅</button>
           <button class="secondary-button" id="importExportBtn" type="button">导入导出</button>
+          <button class="secondary-button" id="pluginsBtn" type="button">插件</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -404,7 +405,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.16</span>
+          <span>静态模拟 V0.8.17</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -580,6 +581,61 @@
           </div>
         </div>
       </section>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pluginsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>插件管理</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="pluginSummary"></section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>安装器配置</h4>
+          <span>管理员 / 安全前置条件</span>
+        </div>
+        <div class="plugin-config-grid">
+          <label class="checkbox-control">
+            <input id="pluginInstallerInput" type="checkbox">
+            <span>允许 Web UI 安装插件</span>
+          </label>
+          <label class="checkbox-control">
+            <input id="pluginDirectoryInput" type="checkbox">
+            <span>插件目录可写</span>
+          </label>
+          <label class="checkbox-control">
+            <input id="pluginZipInput" type="checkbox">
+            <span>PHP Zip 扩展可用</span>
+          </label>
+          <label>
+            <span>插件目录 URL</span>
+            <input id="pluginApiUrlInput" maxlength="120">
+          </label>
+        </div>
+        <p class="helper-text">Kanboard 从 1.2.8 起默认关闭 Web UI 插件安装；实例所有者需要自行验证插件来源与合法性。</p>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>已安装插件</h4>
+            <span id="installedPluginSummary">0 个</span>
+          </div>
+          <div class="settings-list" id="installedPluginList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>插件目录</h4>
+            <span id="availablePluginSummary">0 个</span>
+          </div>
+          <div class="settings-list" id="availablePluginList"></div>
+        </div>
+      </section>
+      <p class="subscription-status" id="pluginStatus">插件安装器默认关闭。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

@@ -1,4 +1,33 @@
-const STORAGE_KEY = "kanboard-static-v0816";
+const STORAGE_KEY = "kanboard-static-v0817";
+const DEFAULT_PLUGIN_CATALOG = [
+  {
+    id: "github-auth",
+    name: "Github Authentication",
+    version: "1.0.1",
+    latestVersion: "1.0.1",
+    author: "Kanboard Community",
+    description: "使用 GitHub 账号登录 Kanboard 的认证插件。",
+    status: "available"
+  },
+  {
+    id: "budget",
+    name: "Budget Planning",
+    version: "1.3.0",
+    latestVersion: "1.4.0",
+    author: "Kanboard Community",
+    description: "为项目补充预算和成本跟踪能力。",
+    status: "installed"
+  },
+  {
+    id: "calendar-plus",
+    name: "Calendar Plus",
+    version: "0.9.0",
+    latestVersion: "0.9.0",
+    author: "Kanboard Community",
+    description: "扩展日历视图与外部日历同步字段。",
+    status: "available"
+  }
+];
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -613,6 +642,17 @@ const els = {
   previewImportBtn: document.querySelector("#previewImportBtn"),
   importProjectBtn: document.querySelector("#importProjectBtn"),
   importExportStatus: document.querySelector("#importExportStatus"),
+  pluginsDialog: document.querySelector("#pluginsDialog"),
+  pluginSummary: document.querySelector("#pluginSummary"),
+  pluginInstallerInput: document.querySelector("#pluginInstallerInput"),
+  pluginDirectoryInput: document.querySelector("#pluginDirectoryInput"),
+  pluginZipInput: document.querySelector("#pluginZipInput"),
+  pluginApiUrlInput: document.querySelector("#pluginApiUrlInput"),
+  installedPluginSummary: document.querySelector("#installedPluginSummary"),
+  availablePluginSummary: document.querySelector("#availablePluginSummary"),
+  installedPluginList: document.querySelector("#installedPluginList"),
+  availablePluginList: document.querySelector("#availablePluginList"),
+  pluginStatus: document.querySelector("#pluginStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -742,6 +782,7 @@ document.querySelector("#automationBtn").addEventListener("click", openAutomatio
 document.querySelector("#notificationsBtn").addEventListener("click", openNotificationsDialog);
 document.querySelector("#subscriptionsBtn").addEventListener("click", openSubscriptionsDialog);
 document.querySelector("#importExportBtn").addEventListener("click", openImportExportDialog);
+document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -777,6 +818,10 @@ els.generateExportBtn.addEventListener("click", generateExportPreview);
 els.copyExportBtn.addEventListener("click", copyExportPreview);
 els.previewImportBtn.addEventListener("click", previewImportProject);
 els.importProjectBtn.addEventListener("click", importProjectFromDialog);
+els.pluginInstallerInput.addEventListener("change", updatePluginConfigFromDialog);
+els.pluginDirectoryInput.addEventListener("change", updatePluginConfigFromDialog);
+els.pluginZipInput.addEventListener("change", updatePluginConfigFromDialog);
+els.pluginApiUrlInput.addEventListener("input", updatePluginConfigFromDialog);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1294,6 +1339,7 @@ function makeCard(options) {
 function normalizeState() {
   if (!state.projects?.length) state = createDemoState();
   state.ui ||= {};
+  state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
   state.ui.showClosed ??= false;
@@ -1349,6 +1395,33 @@ function normalizeSchedule(schedule = {}) {
     plannedEnd: schedule.plannedEnd || "",
     actualStart: schedule.actualStart || "",
     actualEnd: schedule.actualEnd || ""
+  };
+}
+
+function normalizePlugins(existing = {}) {
+  const byId = new Map((existing.catalog || []).map((plugin) => [plugin.id, plugin]));
+  DEFAULT_PLUGIN_CATALOG.forEach((plugin) => {
+    byId.set(plugin.id, {
+      ...plugin,
+      ...(byId.get(plugin.id) || {})
+    });
+  });
+  return {
+    config: {
+      installerEnabled: existing.config?.installerEnabled ?? false,
+      directoryWritable: existing.config?.directoryWritable ?? true,
+      zipExtensionAvailable: existing.config?.zipExtensionAvailable ?? true,
+      apiUrl: existing.config?.apiUrl || "https://kanboard.org/plugins.json"
+    },
+    catalog: [...byId.values()].map((plugin) => ({
+      id: plugin.id,
+      name: plugin.name,
+      version: plugin.version || plugin.latestVersion || "1.0.0",
+      latestVersion: plugin.latestVersion || plugin.version || "1.0.0",
+      author: plugin.author || "Unknown",
+      description: plugin.description || "",
+      status: plugin.status || "available"
+    }))
   };
 }
 
@@ -3296,7 +3369,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0816",
+      exportVersion: "kanboard-static-v0817",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -3456,6 +3529,136 @@ function remapImportedProject(project) {
     automations: (project.automations || []).map((rule) => ({ ...rule, id: uid("automation"), lastRunAt: "" })),
     notifications: []
   };
+}
+
+function openPluginsDialog() {
+  renderPluginsDialog();
+  els.pluginsDialog.showModal();
+}
+
+function renderPluginsDialog() {
+  const plugins = state.plugins;
+  const installed = plugins.catalog.filter((plugin) => plugin.status === "installed");
+  const available = plugins.catalog.filter((plugin) => plugin.status !== "installed");
+  const updates = installed.filter((plugin) => plugin.version !== plugin.latestVersion);
+  const canInstall = canUsePluginInstaller();
+  els.pluginInstallerInput.checked = plugins.config.installerEnabled;
+  els.pluginDirectoryInput.checked = plugins.config.directoryWritable;
+  els.pluginZipInput.checked = plugins.config.zipExtensionAvailable;
+  els.pluginApiUrlInput.value = plugins.config.apiUrl;
+  els.pluginSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>安装器</span>
+      <strong>${canInstall ? "可用" : "关闭"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>已安装</span>
+      <strong>${installed.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>可安装</span>
+      <strong>${available.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>可更新</span>
+      <strong>${updates.length}</strong>
+    </div>
+  `;
+  els.installedPluginSummary.textContent = `${installed.length} 个`;
+  els.availablePluginSummary.textContent = `${available.length} 个`;
+  els.pluginStatus.textContent = pluginInstallerStatusText();
+  renderInstalledPlugins(installed);
+  renderAvailablePlugins(available, canInstall);
+}
+
+function renderInstalledPlugins(plugins) {
+  els.installedPluginList.innerHTML = plugins.length
+    ? plugins.map((plugin) => {
+      const canUpdate = plugin.version !== plugin.latestVersion;
+      return `
+        <div class="settings-item plugin-item" data-id="${plugin.id}">
+          <div>
+            <strong>${escapeHtml(plugin.name)}</strong>
+            <span>${escapeHtml(plugin.description)} · v${escapeHtml(plugin.version)}${canUpdate ? ` → v${escapeHtml(plugin.latestVersion)}` : ""}</span>
+          </div>
+          <span class="role-pill">${canUpdate ? "可更新" : "已安装"}</span>
+          <button class="secondary-button" type="button" data-action="upgrade" ${canUpdate ? "" : "disabled"}>更新</button>
+          <button class="mini-button" type="button" data-action="uninstall" aria-label="卸载插件">×</button>
+        </div>
+      `;
+    }).join("")
+    : `<div class="empty-state">暂无已安装插件</div>`;
+
+  els.installedPluginList.querySelectorAll(".plugin-item").forEach((row) => {
+    row.querySelector('[data-action="upgrade"]').addEventListener("click", () => upgradePlugin(row.dataset.id));
+    row.querySelector('[data-action="uninstall"]').addEventListener("click", () => uninstallPlugin(row.dataset.id));
+  });
+}
+
+function renderAvailablePlugins(plugins, canInstall) {
+  els.availablePluginList.innerHTML = plugins.length
+    ? plugins.map((plugin) => `
+      <div class="settings-item plugin-item" data-id="${plugin.id}">
+        <div>
+          <strong>${escapeHtml(plugin.name)}</strong>
+          <span>${escapeHtml(plugin.description)} · ${escapeHtml(plugin.author)} · v${escapeHtml(plugin.latestVersion)}</span>
+        </div>
+        <span class="role-pill">${canInstall ? "可安装" : "需开启"}</span>
+        <button class="secondary-button" type="button" data-action="install" ${canInstall ? "" : "disabled"}>安装</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无可安装插件</div>`;
+
+  els.availablePluginList.querySelectorAll(".plugin-item").forEach((row) => {
+    row.querySelector('[data-action="install"]').addEventListener("click", () => installPlugin(row.dataset.id));
+  });
+}
+
+function updatePluginConfigFromDialog() {
+  state.plugins.config.installerEnabled = els.pluginInstallerInput.checked;
+  state.plugins.config.directoryWritable = els.pluginDirectoryInput.checked;
+  state.plugins.config.zipExtensionAvailable = els.pluginZipInput.checked;
+  state.plugins.config.apiUrl = els.pluginApiUrlInput.value.trim() || "https://kanboard.org/plugins.json";
+  persist();
+  renderPluginsDialog();
+}
+
+function installPlugin(pluginId) {
+  if (!canUsePluginInstaller()) return;
+  const plugin = state.plugins.catalog.find((item) => item.id === pluginId);
+  plugin.status = "installed";
+  plugin.version = plugin.latestVersion;
+  persist();
+  renderPluginsDialog();
+}
+
+function upgradePlugin(pluginId) {
+  const plugin = state.plugins.catalog.find((item) => item.id === pluginId);
+  if (!plugin) return;
+  plugin.version = plugin.latestVersion;
+  persist();
+  renderPluginsDialog();
+}
+
+function uninstallPlugin(pluginId) {
+  const plugin = state.plugins.catalog.find((item) => item.id === pluginId);
+  if (!plugin) return;
+  plugin.status = "available";
+  persist();
+  renderPluginsDialog();
+}
+
+function canUsePluginInstaller() {
+  const config = state.plugins.config;
+  return Boolean(config.installerEnabled && config.directoryWritable && config.zipExtensionAvailable);
+}
+
+function pluginInstallerStatusText() {
+  const config = state.plugins.config;
+  if (!config.installerEnabled) return "Web UI 插件安装器关闭。Kanboard 1.2.8 起默认关闭此能力。";
+  if (!config.directoryWritable) return "插件目录不可写，无法从界面安装或更新插件。";
+  if (!config.zipExtensionAvailable) return "PHP Zip 扩展不可用，无法解压插件包。";
+  return "安装器可用。仍需由实例所有者验证插件来源与安全性。";
 }
 
 function deleteActiveProject() {

@@ -1626,6 +1626,12 @@ textarea:focus {
   grid-template-columns: minmax(180px, 1fr) auto auto;
 }
 
+.plugin-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .settings-add-row.attachment-row {
   grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 0.8fr) auto;
 }
@@ -1671,6 +1677,10 @@ textarea:focus {
 
 .permission-item {
   grid-template-columns: minmax(0, 1fr) 150px auto;
+}
+
+.plugin-item {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
 }
 
 .swimlane-setting {
@@ -2016,6 +2026,7 @@ kbd {
   .settings-add-row.time-row,
   .analytics-grid,
   .subscription-link,
+  .plugin-config-grid,
   .operation-grid,
   .link-add,
   .overview-view {
