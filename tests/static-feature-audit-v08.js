@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0817";
+const STORAGE_KEY = "kanboard-static-v0818";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -107,6 +107,8 @@ async function testInitialShell(page) {
   check(project.files.length >= 2, "project files normalized");
   check(state.plugins.config.installerEnabled === false, "plugin installer disabled by default");
   check(state.plugins.catalog.some((plugin) => plugin.status === "installed"), "plugin catalog has installed plugin");
+  check(state.identity.users.some((user) => user.role === "app-admin"), "identity directory has administrator");
+  check(state.identity.groups.length >= 2, "identity directory has groups");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -114,6 +116,7 @@ async function testInitialShell(page) {
   check(await page.locator("#subscriptionsBtn").isVisible(), "subscription entry renders");
   check(await page.locator("#importExportBtn").isVisible(), "import export entry renders");
   check(await page.locator("#pluginsBtn").isVisible(), "plugins entry renders");
+  check(await page.locator("#userManagementBtn").isVisible(), "user management entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -586,7 +589,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0817", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0818", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -622,6 +625,51 @@ async function testPlugins(page) {
   state = await getState(page);
   check(state.plugins.catalog.some((plugin) => plugin.status === "available"), "plugin uninstall returns plugin to catalog");
   check((await page.locator("#pluginStatus").textContent()).includes("安装器可用"), "plugin status explains installer availability");
+}
+
+async function testIdentityManagement(page) {
+  await fresh(page);
+  await page.click("#userManagementBtn");
+  check(await page.locator("#identityDialog[open]").isVisible(), "identity dialog opens");
+  check((await page.locator("#identityUserList .identity-user-item").count()) >= 4, "identity user list renders");
+  check((await page.locator("#identityGroupList .identity-group-item").count()) >= 2, "identity group list renders");
+  await page.fill("#identityUsernameInput", "audit_user");
+  await page.fill("#identityDisplayNameInput", "审计用户");
+  await page.fill("#identityEmailInput", "audit@example.com");
+  await page.selectOption("#identityUserRoleInput", "app-manager");
+  await page.fill("#identitySecretInput", "123456");
+  await page.click("#addIdentityUserBtn");
+  await pause();
+  let state = await getState(page);
+  const auditUser = state.identity.users.find((user) => user.username === "audit_user");
+  check(Boolean(auditUser) && auditUser.role === "app-manager", "identity local user create saves");
+  await page.fill("#identityGroupNameInput", "Audit Group");
+  await page.fill("#identityGroupExternalInput", "external-audit");
+  await page.click("#addIdentityGroupBtn");
+  await pause();
+  state = await getState(page);
+  const auditGroup = state.identity.groups.find((group) => group.name === "Audit Group");
+  check(Boolean(auditGroup), "identity group create saves");
+  await page.selectOption("#identityGroupSelect", auditGroup.id);
+  await page.selectOption("#identityGroupUserSelect", auditUser.id);
+  await page.click("#addIdentityGroupMemberBtn");
+  await pause();
+  state = await getState(page);
+  check(state.identity.groups.find((group) => group.id === auditGroup.id).memberIds.includes(auditUser.id), "identity group member add saves");
+  await page.locator(`#identityUserList [data-id="${auditUser.id}"] [data-action="twofactor"]`).check();
+  await pause();
+  state = await getState(page);
+  const securedUser = state.identity.users.find((user) => user.id === auditUser.id);
+  check(securedUser.twoFactor && securedUser.apiKeyRequired, "identity 2FA marks API key requirement");
+  await page.locator(`#identityUserList [data-id="${auditUser.id}"] [data-action="toggle"]`).click();
+  await pause();
+  state = await getState(page);
+  check(state.identity.users.find((user) => user.id === auditUser.id).active === false, "identity user disable saves");
+  await page.locator(`#identityGroupList [data-id="${auditGroup.id}"] [data-user-id="${auditUser.id}"]`).click();
+  await pause();
+  state = await getState(page);
+  check(!state.identity.groups.find((group) => group.id === auditGroup.id).memberIds.includes(auditUser.id), "identity group member remove saves");
+  check((await page.locator("#identityStatus").textContent()).length > 0, "identity status feedback renders");
 }
 
 async function testMobileDialogBounds(page) {
@@ -682,6 +730,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testSettingsAnalyticsAutomation(page);
     await testImportExport(page);
     await testPlugins(page);
+    await testIdentityManagement(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);

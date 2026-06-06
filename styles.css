@@ -1626,10 +1626,20 @@ textarea:focus {
   grid-template-columns: minmax(180px, 1fr) auto auto;
 }
 
-.plugin-config-grid {
+.plugin-config-grid,
+.identity-user-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.identity-user-grid .secondary-button {
+  align-self: end;
+}
+
+.settings-add-row.identity-group-row,
+.settings-add-row.identity-member-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
 }
 
 .settings-add-row.attachment-row {
@@ -1681,6 +1691,77 @@ textarea:focus {
 
 .plugin-item {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.identity-user-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.identity-user-item.disabled {
+  opacity: 0.68;
+}
+
+.identity-user-item > div {
+  flex: 1 1 220px;
+}
+
+.identity-user-item select {
+  width: 118px;
+}
+
+.compact-checkbox {
+  min-height: 35px;
+  padding: 0 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.identity-group-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.identity-group-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.identity-group-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.identity-member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 2px 7px;
+  color: #1f2937;
+  background: #eef6f4;
+  border: 1px solid #c8ded9;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.identity-member-chip button {
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.empty-inline {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .swimlane-setting {
@@ -2022,11 +2103,15 @@ kbd {
   .settings-add-row.project-file-row,
   .settings-add-row.group-row,
   .settings-add-row.import-export-row,
+  .settings-add-row.identity-group-row,
+  .settings-add-row.identity-member-row,
   .settings-add-row.attachment-row,
   .settings-add-row.time-row,
   .analytics-grid,
   .subscription-link,
   .plugin-config-grid,
+  .identity-user-grid,
+  .identity-user-item,
   .operation-grid,
   .link-add,
   .overview-view {

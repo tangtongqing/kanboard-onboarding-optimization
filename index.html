@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.17 插件管理补齐</title>
+  <title>Kanboard V0.8.18 用户组管理补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.17 插件管理补齐版</p>
+          <p>V0.8.18 用户组管理补齐版</p>
         </div>
       </div>
 
@@ -44,6 +44,7 @@
           <button class="secondary-button" id="subscriptionsBtn" type="button">订阅</button>
           <button class="secondary-button" id="importExportBtn" type="button">导入导出</button>
           <button class="secondary-button" id="pluginsBtn" type="button">插件</button>
+          <button class="secondary-button" id="userManagementBtn" type="button">用户管理</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -405,7 +406,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.17</span>
+          <span>静态模拟 V0.8.18</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -636,6 +637,87 @@
         </div>
       </section>
       <p class="subscription-status" id="pluginStatus">插件安装器默认关闭。</p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="identityDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>用户管理</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="identitySummary"></section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>新增用户</h4>
+          <span>本地 / 远程用户</span>
+        </div>
+        <div class="identity-user-grid">
+          <label>
+            <span>用户名</span>
+            <input id="identityUsernameInput" maxlength="32" placeholder="唯一登录名">
+          </label>
+          <label>
+            <span>显示名称</span>
+            <input id="identityDisplayNameInput" maxlength="32" placeholder="例如 PM">
+          </label>
+          <label>
+            <span>邮箱</span>
+            <input id="identityEmailInput" maxlength="80" placeholder="name@example.com">
+          </label>
+          <label>
+            <span>用户类型</span>
+            <select id="identityUserTypeInput">
+              <option value="local">本地用户</option>
+              <option value="remote">远程用户</option>
+            </select>
+          </label>
+          <label>
+            <span>应用角色</span>
+            <select id="identityUserRoleInput">
+              <option value="app-user">用户</option>
+              <option value="app-manager">经理</option>
+              <option value="app-admin">管理员</option>
+            </select>
+          </label>
+          <label>
+            <span>密码 / 外部 ID</span>
+            <input id="identitySecretInput" maxlength="80" placeholder="本地用户密码至少 6 位">
+          </label>
+          <button class="secondary-button" id="addIdentityUserBtn" type="button">新增用户</button>
+        </div>
+        <p class="helper-text">本地用户密码由 Kanboard 保存；远程用户来自 LDAP、反向代理或 OAuth2 等外部系统，本静态页只记录身份来源。</p>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>用户目录</h4>
+            <span id="identityUserSummary">0 个</span>
+          </div>
+          <div class="settings-list" id="identityUserList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>用户组</h4>
+            <span id="identityGroupSummary">0 个</span>
+          </div>
+          <div class="settings-add-row identity-group-row">
+            <input id="identityGroupNameInput" maxlength="32" placeholder="用户组名称">
+            <input id="identityGroupExternalInput" maxlength="60" placeholder="外部 ID，可选">
+            <button class="secondary-button" id="addIdentityGroupBtn" type="button">新增组</button>
+          </div>
+          <div class="settings-add-row identity-member-row">
+            <select id="identityGroupSelect"></select>
+            <select id="identityGroupUserSelect"></select>
+            <button class="secondary-button" id="addIdentityGroupMemberBtn" type="button">加入组</button>
+          </div>
+          <div class="settings-list" id="identityGroupList"></div>
+        </div>
+      </section>
+      <p class="subscription-status" id="identityStatus">管理员可以创建用户、用户组并分配组成员。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0817";
+const STORAGE_KEY = "kanboard-static-v0818";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -27,6 +27,15 @@ const DEFAULT_PLUGIN_CATALOG = [
     description: "扩展日历视图与外部日历同步字段。",
     status: "available"
   }
+];
+const APP_ROLES = [
+  { value: "app-admin", label: "管理员" },
+  { value: "app-manager", label: "经理" },
+  { value: "app-user", label: "用户" }
+];
+const USER_TYPES = [
+  { value: "local", label: "本地用户" },
+  { value: "remote", label: "远程用户" }
 ];
 const PROJECT_TEMPLATES = [
   {
@@ -653,6 +662,26 @@ const els = {
   installedPluginList: document.querySelector("#installedPluginList"),
   availablePluginList: document.querySelector("#availablePluginList"),
   pluginStatus: document.querySelector("#pluginStatus"),
+  identityDialog: document.querySelector("#identityDialog"),
+  identitySummary: document.querySelector("#identitySummary"),
+  identityUsernameInput: document.querySelector("#identityUsernameInput"),
+  identityDisplayNameInput: document.querySelector("#identityDisplayNameInput"),
+  identityEmailInput: document.querySelector("#identityEmailInput"),
+  identityUserTypeInput: document.querySelector("#identityUserTypeInput"),
+  identityUserRoleInput: document.querySelector("#identityUserRoleInput"),
+  identitySecretInput: document.querySelector("#identitySecretInput"),
+  addIdentityUserBtn: document.querySelector("#addIdentityUserBtn"),
+  identityUserSummary: document.querySelector("#identityUserSummary"),
+  identityUserList: document.querySelector("#identityUserList"),
+  identityGroupSummary: document.querySelector("#identityGroupSummary"),
+  identityGroupNameInput: document.querySelector("#identityGroupNameInput"),
+  identityGroupExternalInput: document.querySelector("#identityGroupExternalInput"),
+  addIdentityGroupBtn: document.querySelector("#addIdentityGroupBtn"),
+  identityGroupSelect: document.querySelector("#identityGroupSelect"),
+  identityGroupUserSelect: document.querySelector("#identityGroupUserSelect"),
+  addIdentityGroupMemberBtn: document.querySelector("#addIdentityGroupMemberBtn"),
+  identityGroupList: document.querySelector("#identityGroupList"),
+  identityStatus: document.querySelector("#identityStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -783,6 +812,7 @@ document.querySelector("#notificationsBtn").addEventListener("click", openNotifi
 document.querySelector("#subscriptionsBtn").addEventListener("click", openSubscriptionsDialog);
 document.querySelector("#importExportBtn").addEventListener("click", openImportExportDialog);
 document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialog);
+document.querySelector("#userManagementBtn").addEventListener("click", openIdentityDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -822,6 +852,9 @@ els.pluginInstallerInput.addEventListener("change", updatePluginConfigFromDialog
 els.pluginDirectoryInput.addEventListener("change", updatePluginConfigFromDialog);
 els.pluginZipInput.addEventListener("change", updatePluginConfigFromDialog);
 els.pluginApiUrlInput.addEventListener("input", updatePluginConfigFromDialog);
+els.addIdentityUserBtn.addEventListener("click", addIdentityUser);
+els.addIdentityGroupBtn.addEventListener("click", addIdentityGroup);
+els.addIdentityGroupMemberBtn.addEventListener("click", addIdentityGroupMember);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -861,6 +894,107 @@ function loadState() {
 
 function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function createDefaultIdentity() {
+  const adminId = uid("user");
+  const pmId = uid("user");
+  const designId = uid("user");
+  const devId = uid("user");
+  const qaId = uid("user");
+  const opsId = uid("user");
+  const productGroupId = uid("group");
+  const opsGroupId = uid("group");
+  return {
+    users: [
+      {
+        id: adminId,
+        username: "admin",
+        name: "系统管理员",
+        email: "admin@example.com",
+        role: "app-admin",
+        type: "local",
+        active: true,
+        twoFactor: true,
+        apiKeyRequired: true,
+        externalId: ""
+      },
+      {
+        id: pmId,
+        username: "pm",
+        name: "PM",
+        email: "pm@example.com",
+        role: "app-manager",
+        type: "local",
+        active: true,
+        twoFactor: false,
+        apiKeyRequired: false,
+        externalId: ""
+      },
+      {
+        id: designId,
+        username: "designer",
+        name: "设计",
+        email: "design@example.com",
+        role: "app-user",
+        type: "local",
+        active: true,
+        twoFactor: false,
+        apiKeyRequired: false,
+        externalId: ""
+      },
+      {
+        id: devId,
+        username: "dev",
+        name: "研发",
+        email: "dev@example.com",
+        role: "app-user",
+        type: "local",
+        active: true,
+        twoFactor: false,
+        apiKeyRequired: false,
+        externalId: ""
+      },
+      {
+        id: qaId,
+        username: "qa",
+        name: "测试",
+        email: "qa@example.com",
+        role: "app-user",
+        type: "local",
+        active: true,
+        twoFactor: false,
+        apiKeyRequired: false,
+        externalId: ""
+      },
+      {
+        id: opsId,
+        username: "ldap_ops",
+        name: "运营",
+        email: "ops@example.com",
+        role: "app-user",
+        type: "remote",
+        active: true,
+        twoFactor: false,
+        apiKeyRequired: false,
+        externalId: "uid=ops,ou=People,dc=example,dc=com"
+      }
+    ],
+    groups: [
+      {
+        id: productGroupId,
+        name: "产品研发测试小组",
+        externalId: "team-product-delivery",
+        memberIds: [pmId, designId, devId, qaId]
+      },
+      {
+        id: opsGroupId,
+        name: "运营观察组",
+        externalId: "ldap-ops-watchers",
+        memberIds: [opsId]
+      }
+    ]
+  };
 }
 
 function createDemoState() {
@@ -1281,6 +1415,7 @@ function createDemoState() {
 
   return {
     activeProjectId: projectId,
+    identity: createDefaultIdentity(),
     projects: [
       {
         id: projectId,
@@ -1339,6 +1474,7 @@ function makeCard(options) {
 function normalizeState() {
   if (!state.projects?.length) state = createDemoState();
   state.ui ||= {};
+  state.identity = normalizeIdentity(state.identity);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -1396,6 +1532,49 @@ function normalizeSchedule(schedule = {}) {
     actualStart: schedule.actualStart || "",
     actualEnd: schedule.actualEnd || ""
   };
+}
+
+function normalizeIdentity(existing = {}) {
+  const fallback = createDefaultIdentity();
+  const sourceUsers = existing.users?.length ? existing.users : fallback.users;
+  const sourceGroups = existing.groups?.length ? existing.groups : fallback.groups;
+  const seenUsernames = new Set();
+  const users = sourceUsers
+    .filter((user) => user.username || user.name)
+    .map((user) => {
+      const username = String(user.username || user.name).trim();
+      const safeUsername = seenUsernames.has(username) ? `${username}-${seenUsernames.size + 1}` : username;
+      seenUsernames.add(safeUsername);
+      const twoFactor = Boolean(user.twoFactor ?? user.twofactor_activated);
+      return {
+        id: user.id || uid("user"),
+        username: safeUsername,
+        name: user.name || safeUsername,
+        email: user.email || "",
+        role: APP_ROLES.some((role) => role.value === user.role) ? user.role : "app-user",
+        type: USER_TYPES.some((type) => type.value === user.type) ? user.type : (user.is_ldap_user ? "remote" : "local"),
+        active: user.active ?? user.is_active !== "0",
+        twoFactor,
+        apiKeyRequired: user.apiKeyRequired ?? twoFactor,
+        externalId: user.externalId || user.external_id || ""
+      };
+    });
+  const validUserIds = new Set(users.map((user) => user.id));
+  const seenGroupNames = new Set();
+  const groups = sourceGroups
+    .filter((group) => group.name)
+    .map((group) => {
+      const name = String(group.name).trim();
+      const safeName = seenGroupNames.has(name) ? `${name}-${seenGroupNames.size + 1}` : name;
+      seenGroupNames.add(safeName);
+      return {
+        id: group.id || uid("group"),
+        name: safeName,
+        externalId: group.externalId || group.external_id || "",
+        memberIds: unique((group.memberIds || []).filter((id) => validUserIds.has(id)))
+      };
+    });
+  return { users, groups };
 }
 
 function normalizePlugins(existing = {}) {
@@ -1597,7 +1776,10 @@ function renderHeader() {
 function renderFilters() {
   const project = activeProject();
   const cards = allCards();
-  const assignees = unique([...project.settings.members.map((member) => member.name), ...cards.map((card) => card.assignee).filter(Boolean)]);
+  const activeIdentityUsers = state.identity.users
+    .filter((user) => user.active)
+    .map((user) => user.name || user.username);
+  const assignees = unique([...activeIdentityUsers, ...project.settings.members.map((member) => member.name), ...cards.map((card) => card.assignee).filter(Boolean)]);
   const categories = unique([...project.settings.categories, ...cards.map((card) => card.category).filter(Boolean)]);
   fillSelect(els.assigneeFilter, "全部负责人", assignees, els.assigneeFilter.value);
   fillSelect(els.categoryFilter, "全部分类", categories, els.categoryFilter.value);
@@ -3369,7 +3551,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0817",
+      exportVersion: "kanboard-static-v0818",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -3659,6 +3841,295 @@ function pluginInstallerStatusText() {
   if (!config.directoryWritable) return "插件目录不可写，无法从界面安装或更新插件。";
   if (!config.zipExtensionAvailable) return "PHP Zip 扩展不可用，无法解压插件包。";
   return "安装器可用。仍需由实例所有者验证插件来源与安全性。";
+}
+
+function openIdentityDialog() {
+  renderIdentityDialog();
+  els.identityDialog.showModal();
+}
+
+function renderIdentityDialog() {
+  const users = state.identity.users;
+  const groups = state.identity.groups;
+  const activeUsers = users.filter((user) => user.active);
+  const remoteUsers = users.filter((user) => user.type === "remote");
+  const twoFactorUsers = users.filter((user) => user.twoFactor);
+  els.identitySummary.innerHTML = `
+    <div class="analytics-card">
+      <span>用户</span>
+      <strong>${users.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>启用</span>
+      <strong>${activeUsers.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>远程用户</span>
+      <strong>${remoteUsers.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>2FA</span>
+      <strong>${twoFactorUsers.length}</strong>
+    </div>
+  `;
+  els.identityUserSummary.textContent = `${users.length} 个`;
+  els.identityGroupSummary.textContent = `${groups.length} 个`;
+  renderIdentityUsers();
+  renderIdentityGroupSelectors();
+  renderIdentityGroups();
+}
+
+function renderIdentityUsers() {
+  els.identityUserList.innerHTML = state.identity.users.length
+    ? state.identity.users.map((user) => `
+      <div class="settings-item identity-user-item ${user.active ? "" : "disabled"}" data-id="${user.id}">
+        <div>
+          <strong>${escapeHtml(identityUserLabel(user))}</strong>
+          <span>${escapeHtml(userTypeLabel(user.type))} · ${escapeHtml(user.email || "未填写邮箱")} · ${user.twoFactor ? "2FA 已开启，需 API Key" : "2FA 未开启"}</span>
+        </div>
+        <select data-action="role">
+          ${APP_ROLES.map((role) => `<option value="${role.value}" ${user.role === role.value ? "selected" : ""}>${role.label}</option>`).join("")}
+        </select>
+        <label class="checkbox-control compact-checkbox">
+          <input data-action="twofactor" type="checkbox" ${user.twoFactor ? "checked" : ""}>
+          <span>2FA</span>
+        </label>
+        <button class="secondary-button" type="button" data-action="toggle">${user.active ? "停用" : "启用"}</button>
+        <button class="mini-button" type="button" data-action="remove" aria-label="删除用户">×</button>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无用户</div>`;
+
+  els.identityUserList.querySelectorAll(".identity-user-item").forEach((row) => {
+    row.querySelector('[data-action="role"]').addEventListener("change", (event) => setIdentityUserRole(row.dataset.id, event.target.value));
+    row.querySelector('[data-action="twofactor"]').addEventListener("change", (event) => setIdentityTwoFactor(row.dataset.id, event.target.checked));
+    row.querySelector('[data-action="toggle"]').addEventListener("click", () => toggleIdentityUser(row.dataset.id));
+    row.querySelector('[data-action="remove"]').addEventListener("click", () => removeIdentityUser(row.dataset.id));
+  });
+}
+
+function renderIdentityGroupSelectors() {
+  const groups = state.identity.groups;
+  const users = state.identity.users;
+  els.identityGroupSelect.innerHTML = groups.map((group) => `<option value="${group.id}">${escapeHtml(group.name)}</option>`).join("");
+  els.identityGroupUserSelect.innerHTML = users.map((user) => `<option value="${user.id}">${escapeHtml(identityUserLabel(user))}</option>`).join("");
+  els.addIdentityGroupMemberBtn.disabled = !groups.length || !users.length;
+}
+
+function renderIdentityGroups() {
+  const usersById = new Map(state.identity.users.map((user) => [user.id, user]));
+  els.identityGroupList.innerHTML = state.identity.groups.length
+    ? state.identity.groups.map((group) => {
+      const members = group.memberIds.map((id) => usersById.get(id)).filter(Boolean);
+      return `
+        <div class="settings-item identity-group-item" data-id="${group.id}">
+          <div class="identity-group-heading">
+            <div>
+              <strong>${escapeHtml(group.name)}</strong>
+              <span>${escapeHtml(group.externalId || "无外部 ID")} · ${members.length} 个成员</span>
+            </div>
+            <button class="mini-button" type="button" data-action="remove-group" aria-label="删除用户组">×</button>
+          </div>
+          <div class="identity-group-members">
+            ${members.length ? members.map((user) => `
+              <span class="identity-member-chip">
+                ${escapeHtml(identityUserLabel(user))}
+                <button type="button" data-action="remove-member" data-user-id="${user.id}" aria-label="移出用户组">×</button>
+              </span>
+            `).join("") : `<span class="empty-inline">暂无成员</span>`}
+          </div>
+        </div>
+      `;
+    }).join("")
+    : `<div class="empty-state">暂无用户组</div>`;
+
+  els.identityGroupList.querySelectorAll(".identity-group-item").forEach((row) => {
+    row.querySelector('[data-action="remove-group"]').addEventListener("click", () => removeIdentityGroup(row.dataset.id));
+    row.querySelectorAll('[data-action="remove-member"]').forEach((button) => {
+      button.addEventListener("click", () => removeIdentityGroupMember(row.dataset.id, button.dataset.userId));
+    });
+  });
+}
+
+function addIdentityUser() {
+  const username = els.identityUsernameInput.value.trim();
+  const type = els.identityUserTypeInput.value;
+  const secret = els.identitySecretInput.value.trim();
+  if (!username) {
+    setIdentityStatus("用户名不能为空。");
+    return;
+  }
+  if (state.identity.users.some((user) => user.username === username)) {
+    setIdentityStatus("用户名必须唯一。");
+    return;
+  }
+  if (type === "local" && secret.length < 6) {
+    setIdentityStatus("本地用户密码至少需要 6 位。");
+    return;
+  }
+  state.identity.users.push({
+    id: uid("user"),
+    username,
+    name: els.identityDisplayNameInput.value.trim() || username,
+    email: els.identityEmailInput.value.trim(),
+    role: els.identityUserRoleInput.value,
+    type,
+    active: true,
+    twoFactor: false,
+    apiKeyRequired: false,
+    externalId: type === "remote" ? secret : "",
+    passwordSet: type === "local"
+  });
+  els.identityUsernameInput.value = "";
+  els.identityDisplayNameInput.value = "";
+  els.identityEmailInput.value = "";
+  els.identitySecretInput.value = "";
+  setIdentityStatus(type === "remote" ? "已新增远程用户，静态记录外部身份来源。" : "已新增本地用户，静态页不会保存明文密码。");
+  persist();
+  render();
+  renderIdentityDialog();
+}
+
+function addIdentityGroup() {
+  const name = els.identityGroupNameInput.value.trim();
+  if (!name) {
+    setIdentityStatus("用户组名称不能为空。");
+    return;
+  }
+  if (state.identity.groups.some((group) => group.name === name)) {
+    setIdentityStatus("用户组名称不能重复。");
+    return;
+  }
+  state.identity.groups.push({
+    id: uid("group"),
+    name,
+    externalId: els.identityGroupExternalInput.value.trim(),
+    memberIds: []
+  });
+  els.identityGroupNameInput.value = "";
+  els.identityGroupExternalInput.value = "";
+  setIdentityStatus("已新增用户组，可继续分配成员。");
+  persist();
+  renderIdentityDialog();
+}
+
+function addIdentityGroupMember() {
+  const group = state.identity.groups.find((item) => item.id === els.identityGroupSelect.value);
+  const userId = els.identityGroupUserSelect.value;
+  if (!group || !userId) return;
+  if (!group.memberIds.includes(userId)) {
+    group.memberIds.push(userId);
+    setIdentityStatus("已将用户加入用户组。");
+  } else {
+    setIdentityStatus("该用户已经在这个用户组中。");
+  }
+  persist();
+  renderIdentityDialog();
+}
+
+function removeIdentityGroupMember(groupId, userId) {
+  const group = state.identity.groups.find((item) => item.id === groupId);
+  if (!group) return;
+  group.memberIds = group.memberIds.filter((id) => id !== userId);
+  setIdentityStatus("已从用户组移除成员。");
+  persist();
+  renderIdentityDialog();
+}
+
+function removeIdentityGroup(groupId) {
+  const group = state.identity.groups.find((item) => item.id === groupId);
+  if (!group) return;
+  state.identity.groups = state.identity.groups.filter((item) => item.id !== groupId);
+  state.projects.forEach((project) => {
+    project.settings.groups = (project.settings.groups || []).filter((item) => item.name !== group.name);
+  });
+  setIdentityStatus("已删除用户组，并从项目权限引用中移除。");
+  persist();
+  render();
+  renderIdentityDialog();
+}
+
+function setIdentityUserRole(userId, role) {
+  const user = state.identity.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (user.role === "app-admin" && role !== "app-admin" && activeAdminCount() <= 1) {
+    setIdentityStatus("至少需要保留一个启用状态的管理员。");
+    renderIdentityDialog();
+    return;
+  }
+  user.role = role;
+  setIdentityStatus("已更新应用角色。");
+  persist();
+  renderIdentityDialog();
+}
+
+function setIdentityTwoFactor(userId, enabled) {
+  const user = state.identity.users.find((item) => item.id === userId);
+  if (!user) return;
+  user.twoFactor = enabled;
+  user.apiKeyRequired = enabled;
+  setIdentityStatus(enabled ? "已开启 2FA；Kanboard 1.2.8 起 API 访问需使用 API Key。" : "已关闭 2FA。");
+  persist();
+  renderIdentityDialog();
+}
+
+function toggleIdentityUser(userId) {
+  const user = state.identity.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (user.active && user.role === "app-admin" && activeAdminCount() <= 1) {
+    setIdentityStatus("至少需要保留一个启用状态的管理员。");
+    return;
+  }
+  user.active = !user.active;
+  setIdentityStatus(user.active ? "用户已启用。" : "用户已停用，仍保留历史任务记录。");
+  persist();
+  render();
+  renderIdentityDialog();
+}
+
+function removeIdentityUser(userId) {
+  const user = state.identity.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (user.active && user.role === "app-admin" && activeAdminCount() <= 1) {
+    setIdentityStatus("不能删除最后一个启用状态的管理员。");
+    return;
+  }
+  state.identity.users = state.identity.users.filter((item) => item.id !== userId);
+  state.identity.groups.forEach((group) => {
+    group.memberIds = group.memberIds.filter((id) => id !== userId);
+  });
+  state.projects.forEach((project) => {
+    project.settings.members = (project.settings.members || []).filter((member) => ![user.name, user.username].includes(member.name));
+    project.columns.forEach((column) => {
+      column.cards.forEach((card) => {
+        if ([user.name, user.username].includes(card.assignee)) card.assignee = "";
+      });
+    });
+  });
+  setIdentityStatus("已删除用户；分配给该用户的任务已改为未分配。");
+  persist();
+  render();
+  renderIdentityDialog();
+}
+
+function activeAdminCount() {
+  return state.identity.users.filter((user) => user.active && user.role === "app-admin").length;
+}
+
+function setIdentityStatus(message) {
+  els.identityStatus.textContent = message;
+}
+
+function identityUserLabel(user) {
+  return `${user.name || user.username} (${user.username})`;
+}
+
+function appRoleLabel(roleValue) {
+  return APP_ROLES.find((role) => role.value === roleValue)?.label || roleValue;
+}
+
+function userTypeLabel(typeValue) {
+  return USER_TYPES.find((type) => type.value === typeValue)?.label || typeValue;
 }
 
 function deleteActiveProject() {
