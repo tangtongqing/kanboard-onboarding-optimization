@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.18 用户组管理补齐</title>
+  <title>Kanboard V0.8.19 认证安全配置补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.18 用户组管理补齐版</p>
+          <p>V0.8.19 认证安全配置补齐版</p>
         </div>
       </div>
 
@@ -45,6 +45,7 @@
           <button class="secondary-button" id="importExportBtn" type="button">导入导出</button>
           <button class="secondary-button" id="pluginsBtn" type="button">插件</button>
           <button class="secondary-button" id="userManagementBtn" type="button">用户管理</button>
+          <button class="secondary-button" id="systemSettingsBtn" type="button">系统设置</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -406,7 +407,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.18</span>
+          <span>静态模拟 V0.8.19</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -718,6 +719,189 @@
         </div>
       </section>
       <p class="subscription-status" id="identityStatus">管理员可以创建用户、用户组并分配组成员。</p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="systemSettingsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>系统设置</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="systemSummary"></section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>API 认证</h4>
+            <span>JSON-RPC</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>API Endpoint</span>
+              <input id="apiEndpointInput" maxlength="80">
+            </label>
+            <label>
+              <span>应用 API 用户</span>
+              <input id="apiUserInput" maxlength="32">
+            </label>
+            <label>
+              <span>应用 API Token</span>
+              <input id="apiTokenInput" maxlength="80">
+            </label>
+            <label>
+              <span>自定义认证 Header</span>
+              <input id="apiHeaderInput" maxlength="60" placeholder="例如 X-API-Auth">
+            </label>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="apiRequireKeyInput" type="checkbox">
+            <span>2FA 用户 API 访问必须使用 API Key</span>
+          </label>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>安全策略</h4>
+            <span>登录 / SSRF</span>
+          </div>
+          <div class="system-security-grid">
+            <label>
+              <span>CAPTCHA 阈值</span>
+              <input id="bruteCaptchaInput" type="number" min="0" max="20">
+            </label>
+            <label>
+              <span>锁定阈值</span>
+              <input id="bruteLockInput" type="number" min="1" max="50">
+            </label>
+            <label>
+              <span>锁定分钟</span>
+              <input id="lockDurationInput" type="number" min="1" max="1440">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="hideLoginInput" type="checkbox">
+              <span>隐藏登录表单</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="disableLogoutInput" type="checkbox">
+              <span>禁用退出登录</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="markdownEscapeInput" type="checkbox">
+              <span>Markdown 转义 HTML</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="privateLinksInput" type="checkbox">
+              <span>允许外链元数据访问私网</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="privateWebhooksInput" type="checkbox">
+              <span>允许 Webhook 访问私网</span>
+            </label>
+          </div>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>LDAP</h4>
+            <span>外部用户目录</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="ldapEnabledInput" type="checkbox">
+            <span>启用 LDAP 认证</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>LDAP Server</span>
+              <input id="ldapServerInput" maxlength="120">
+            </label>
+            <label>
+              <span>Bind Type</span>
+              <select id="ldapBindTypeInput">
+                <option value="anonymous">anonymous</option>
+                <option value="proxy">proxy</option>
+                <option value="user">user</option>
+              </select>
+            </label>
+            <label>
+              <span>User Base DN</span>
+              <input id="ldapUserBaseInput" maxlength="140">
+            </label>
+            <label>
+              <span>User Filter</span>
+              <input id="ldapUserFilterInput" maxlength="140">
+            </label>
+            <label>
+              <span>Group Base DN</span>
+              <input id="ldapGroupBaseInput" maxlength="140">
+            </label>
+            <label>
+              <span>Group Filter</span>
+              <input id="ldapGroupFilterInput" maxlength="140">
+            </label>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="ldapUserCreationInput" type="checkbox">
+            <span>允许自动创建 LDAP 用户</span>
+          </label>
+          <label class="checkbox-control settings-checkbox">
+            <input id="ldapGroupProviderInput" type="checkbox">
+            <span>启用 LDAP 用户组同步</span>
+          </label>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>反向代理认证</h4>
+            <span>SSO Header</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="proxyEnabledInput" type="checkbox">
+            <span>启用反向代理认证</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>可信代理网络</span>
+              <input id="proxyTrustedInput" maxlength="140">
+            </label>
+            <label>
+              <span>用户 Header</span>
+              <input id="proxyUserHeaderInput" maxlength="80">
+            </label>
+            <label>
+              <span>邮箱 Header</span>
+              <input id="proxyEmailHeaderInput" maxlength="80">
+            </label>
+            <label>
+              <span>姓名 Header</span>
+              <input id="proxyNameHeaderInput" maxlength="80">
+            </label>
+            <label>
+              <span>默认管理员</span>
+              <input id="proxyAdminInput" maxlength="60">
+            </label>
+            <label>
+              <span>默认邮箱域名</span>
+              <input id="proxyDomainInput" maxlength="80">
+            </label>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="proxyStripHeadersInput" type="checkbox">
+            <span>代理层清理客户端传入认证 Header</span>
+          </label>
+        </div>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>config.php 预览</h4>
+          <span id="systemRiskSummary">静态模拟</span>
+        </div>
+        <textarea id="systemConfigPreview" rows="12" readonly></textarea>
+      </section>
+      <p class="subscription-status" id="systemStatus">系统配置已加载。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

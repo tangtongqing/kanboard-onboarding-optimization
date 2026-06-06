@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0818";
+const STORAGE_KEY = "kanboard-static-v0819";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -109,6 +109,8 @@ async function testInitialShell(page) {
   check(state.plugins.catalog.some((plugin) => plugin.status === "installed"), "plugin catalog has installed plugin");
   check(state.identity.users.some((user) => user.role === "app-admin"), "identity directory has administrator");
   check(state.identity.groups.length >= 2, "identity directory has groups");
+  check(state.system.api.endpoint === "/jsonrpc.php", "system API endpoint normalized");
+  check(state.system.reverseProxy.trustedNetworks.includes("127.0.0.1/32"), "system trusted proxy defaults normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -117,6 +119,7 @@ async function testInitialShell(page) {
   check(await page.locator("#importExportBtn").isVisible(), "import export entry renders");
   check(await page.locator("#pluginsBtn").isVisible(), "plugins entry renders");
   check(await page.locator("#userManagementBtn").isVisible(), "user management entry renders");
+  check(await page.locator("#systemSettingsBtn").isVisible(), "system settings entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -589,7 +592,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0818", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0819", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -672,6 +675,34 @@ async function testIdentityManagement(page) {
   check((await page.locator("#identityStatus").textContent()).length > 0, "identity status feedback renders");
 }
 
+async function testSystemSettings(page) {
+  await fresh(page);
+  await page.click("#systemSettingsBtn");
+  check(await page.locator("#systemSettingsDialog[open]").isVisible(), "system settings dialog opens");
+  check((await page.locator("#systemSummary .analytics-card").count()) === 4, "system settings summary renders");
+  check((await page.locator("#systemConfigPreview").inputValue()).includes("LDAP_AUTH"), "system config preview renders");
+  await page.fill("#apiHeaderInput", "X-API-Auth");
+  await page.check("#ldapEnabledInput");
+  await page.selectOption("#ldapBindTypeInput", "user");
+  await page.fill("#ldapUserBaseInput", "ou=People,dc=example,dc=com");
+  await page.check("#proxyEnabledInput");
+  await page.fill("#proxyTrustedInput", "");
+  await page.check("#hideLoginInput");
+  await pause();
+  let state = await getState(page);
+  check(state.system.api.authHeader === "X-API-Auth", "system API custom header saves");
+  check(state.system.ldap.enabled && state.system.ldap.bindType === "user", "system LDAP settings save");
+  check(state.system.reverseProxy.enabled, "system reverse proxy setting saves");
+  check((await page.locator("#systemStatus").textContent()).includes("TRUSTED_PROXY_NETWORKS"), "system risk status renders missing trusted proxy warning");
+  await page.fill("#proxyTrustedInput", "127.0.0.1/32,::1/128");
+  await page.uncheck("#proxyStripHeadersInput");
+  await pause();
+  state = await getState(page);
+  check(state.system.reverseProxy.trustedNetworks.includes("127.0.0.1/32"), "system trusted proxy networks save");
+  check(state.system.reverseProxy.stripIncomingHeaders === false, "system proxy header stripping toggle saves");
+  check((await page.locator("#systemConfigPreview").inputValue()).includes("REVERSE_PROXY_AUTH"), "system reverse proxy config preview renders");
+}
+
 async function testMobileDialogBounds(page) {
   await page.setViewportSize({ width: 390, height: 900 });
   await fresh(page);
@@ -731,6 +762,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testImportExport(page);
     await testPlugins(page);
     await testIdentityManagement(page);
+    await testSystemSettings(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);

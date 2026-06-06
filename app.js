@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0818";
+const STORAGE_KEY = "kanboard-static-v0819";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -682,6 +682,41 @@ const els = {
   addIdentityGroupMemberBtn: document.querySelector("#addIdentityGroupMemberBtn"),
   identityGroupList: document.querySelector("#identityGroupList"),
   identityStatus: document.querySelector("#identityStatus"),
+  systemSettingsDialog: document.querySelector("#systemSettingsDialog"),
+  systemSummary: document.querySelector("#systemSummary"),
+  apiEndpointInput: document.querySelector("#apiEndpointInput"),
+  apiUserInput: document.querySelector("#apiUserInput"),
+  apiTokenInput: document.querySelector("#apiTokenInput"),
+  apiHeaderInput: document.querySelector("#apiHeaderInput"),
+  apiRequireKeyInput: document.querySelector("#apiRequireKeyInput"),
+  bruteCaptchaInput: document.querySelector("#bruteCaptchaInput"),
+  bruteLockInput: document.querySelector("#bruteLockInput"),
+  lockDurationInput: document.querySelector("#lockDurationInput"),
+  hideLoginInput: document.querySelector("#hideLoginInput"),
+  disableLogoutInput: document.querySelector("#disableLogoutInput"),
+  markdownEscapeInput: document.querySelector("#markdownEscapeInput"),
+  privateLinksInput: document.querySelector("#privateLinksInput"),
+  privateWebhooksInput: document.querySelector("#privateWebhooksInput"),
+  ldapEnabledInput: document.querySelector("#ldapEnabledInput"),
+  ldapServerInput: document.querySelector("#ldapServerInput"),
+  ldapBindTypeInput: document.querySelector("#ldapBindTypeInput"),
+  ldapUserBaseInput: document.querySelector("#ldapUserBaseInput"),
+  ldapUserFilterInput: document.querySelector("#ldapUserFilterInput"),
+  ldapGroupBaseInput: document.querySelector("#ldapGroupBaseInput"),
+  ldapGroupFilterInput: document.querySelector("#ldapGroupFilterInput"),
+  ldapUserCreationInput: document.querySelector("#ldapUserCreationInput"),
+  ldapGroupProviderInput: document.querySelector("#ldapGroupProviderInput"),
+  proxyEnabledInput: document.querySelector("#proxyEnabledInput"),
+  proxyTrustedInput: document.querySelector("#proxyTrustedInput"),
+  proxyUserHeaderInput: document.querySelector("#proxyUserHeaderInput"),
+  proxyEmailHeaderInput: document.querySelector("#proxyEmailHeaderInput"),
+  proxyNameHeaderInput: document.querySelector("#proxyNameHeaderInput"),
+  proxyAdminInput: document.querySelector("#proxyAdminInput"),
+  proxyDomainInput: document.querySelector("#proxyDomainInput"),
+  proxyStripHeadersInput: document.querySelector("#proxyStripHeadersInput"),
+  systemConfigPreview: document.querySelector("#systemConfigPreview"),
+  systemRiskSummary: document.querySelector("#systemRiskSummary"),
+  systemStatus: document.querySelector("#systemStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -813,6 +848,7 @@ document.querySelector("#subscriptionsBtn").addEventListener("click", openSubscr
 document.querySelector("#importExportBtn").addEventListener("click", openImportExportDialog);
 document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialog);
 document.querySelector("#userManagementBtn").addEventListener("click", openIdentityDialog);
+document.querySelector("#systemSettingsBtn").addEventListener("click", openSystemSettingsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -855,6 +891,52 @@ els.pluginApiUrlInput.addEventListener("input", updatePluginConfigFromDialog);
 els.addIdentityUserBtn.addEventListener("click", addIdentityUser);
 els.addIdentityGroupBtn.addEventListener("click", addIdentityGroup);
 els.addIdentityGroupMemberBtn.addEventListener("click", addIdentityGroupMember);
+[
+  els.apiEndpointInput,
+  els.apiUserInput,
+  els.apiTokenInput,
+  els.apiHeaderInput,
+  els.apiRequireKeyInput,
+  els.bruteCaptchaInput,
+  els.bruteLockInput,
+  els.lockDurationInput,
+  els.hideLoginInput,
+  els.disableLogoutInput,
+  els.markdownEscapeInput,
+  els.privateLinksInput,
+  els.privateWebhooksInput,
+  els.ldapEnabledInput,
+  els.ldapServerInput,
+  els.ldapBindTypeInput,
+  els.ldapUserBaseInput,
+  els.ldapUserFilterInput,
+  els.ldapGroupBaseInput,
+  els.ldapGroupFilterInput,
+  els.ldapUserCreationInput,
+  els.ldapGroupProviderInput,
+  els.proxyEnabledInput,
+  els.proxyTrustedInput,
+  els.proxyUserHeaderInput,
+  els.proxyEmailHeaderInput,
+  els.proxyNameHeaderInput,
+  els.proxyAdminInput,
+  els.proxyDomainInput,
+  els.proxyStripHeadersInput
+].forEach((input) => input.addEventListener("input", updateSystemConfigFromDialog));
+[
+  els.apiRequireKeyInput,
+  els.hideLoginInput,
+  els.disableLogoutInput,
+  els.markdownEscapeInput,
+  els.privateLinksInput,
+  els.privateWebhooksInput,
+  els.ldapEnabledInput,
+  els.ldapBindTypeInput,
+  els.ldapUserCreationInput,
+  els.ldapGroupProviderInput,
+  els.proxyEnabledInput,
+  els.proxyStripHeadersInput
+].forEach((input) => input.addEventListener("change", updateSystemConfigFromDialog));
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -878,6 +960,12 @@ render();
 
 function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function clampNumber(value, min, max, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(number)));
 }
 
 function loadState() {
@@ -994,6 +1082,49 @@ function createDefaultIdentity() {
         memberIds: [opsId]
       }
     ]
+  };
+}
+
+function createDefaultSystemConfig() {
+  return {
+    api: {
+      endpoint: "/jsonrpc.php",
+      applicationUser: "jsonrpc",
+      applicationToken: "••••••••••••••••••••",
+      authHeader: "",
+      requireApiKeyFor2fa: true
+    },
+    ldap: {
+      enabled: false,
+      server: "ldap://ldap.example.com",
+      bindType: "proxy",
+      userBaseDn: "ou=People,dc=example,dc=com",
+      userFilter: "uid=%s",
+      userCreation: true,
+      groupProvider: true,
+      groupBaseDn: "ou=Groups,dc=example,dc=com",
+      groupFilter: "(&(objectClass=groupOfNames)(cn=%s*))"
+    },
+    reverseProxy: {
+      enabled: false,
+      trustedNetworks: "127.0.0.1/32,::1/128",
+      userHeader: "REMOTE_USER",
+      emailHeader: "REMOTE_EMAIL",
+      fullNameHeader: "REMOTE_NAME",
+      defaultAdmin: "admin",
+      defaultDomain: "example.com",
+      stripIncomingHeaders: true
+    },
+    security: {
+      hideLoginForm: false,
+      disableLogout: false,
+      markdownEscapeHtml: true,
+      bruteForceCaptcha: 3,
+      bruteForceLockdown: 6,
+      lockdownDuration: 15,
+      allowPrivateExternalLinks: false,
+      allowPrivateWebhooks: false
+    }
   };
 }
 
@@ -1416,6 +1547,7 @@ function createDemoState() {
   return {
     activeProjectId: projectId,
     identity: createDefaultIdentity(),
+    system: createDefaultSystemConfig(),
     projects: [
       {
         id: projectId,
@@ -1475,6 +1607,7 @@ function normalizeState() {
   if (!state.projects?.length) state = createDemoState();
   state.ui ||= {};
   state.identity = normalizeIdentity(state.identity);
+  state.system = normalizeSystemConfig(state.system);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -1575,6 +1708,41 @@ function normalizeIdentity(existing = {}) {
       };
     });
   return { users, groups };
+}
+
+function normalizeSystemConfig(existing = {}) {
+  const defaults = createDefaultSystemConfig();
+  return {
+    api: {
+      ...defaults.api,
+      ...(existing.api || {}),
+      endpoint: existing.api?.endpoint || defaults.api.endpoint,
+      applicationUser: existing.api?.applicationUser || defaults.api.applicationUser,
+      applicationToken: existing.api?.applicationToken || defaults.api.applicationToken,
+      authHeader: existing.api?.authHeader || "",
+      requireApiKeyFor2fa: existing.api?.requireApiKeyFor2fa ?? true
+    },
+    ldap: {
+      ...defaults.ldap,
+      ...(existing.ldap || {}),
+      bindType: ["anonymous", "proxy", "user"].includes(existing.ldap?.bindType) ? existing.ldap.bindType : defaults.ldap.bindType
+    },
+    reverseProxy: {
+      ...defaults.reverseProxy,
+      ...(existing.reverseProxy || {}),
+      userHeader: existing.reverseProxy?.userHeader || defaults.reverseProxy.userHeader,
+      trustedNetworks: existing.reverseProxy && "trustedNetworks" in existing.reverseProxy
+        ? existing.reverseProxy.trustedNetworks
+        : defaults.reverseProxy.trustedNetworks
+    },
+    security: {
+      ...defaults.security,
+      ...(existing.security || {}),
+      bruteForceCaptcha: clampNumber(existing.security?.bruteForceCaptcha, 0, 20, defaults.security.bruteForceCaptcha),
+      bruteForceLockdown: clampNumber(existing.security?.bruteForceLockdown, 1, 50, defaults.security.bruteForceLockdown),
+      lockdownDuration: clampNumber(existing.security?.lockdownDuration, 1, 1440, defaults.security.lockdownDuration)
+    }
+  };
 }
 
 function normalizePlugins(existing = {}) {
@@ -3551,7 +3719,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0818",
+      exportVersion: "kanboard-static-v0819",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -4130,6 +4298,176 @@ function appRoleLabel(roleValue) {
 
 function userTypeLabel(typeValue) {
   return USER_TYPES.find((type) => type.value === typeValue)?.label || typeValue;
+}
+
+function openSystemSettingsDialog() {
+  renderSystemSettingsDialog();
+  els.systemSettingsDialog.showModal();
+}
+
+function renderSystemSettingsDialog() {
+  const { api, ldap, reverseProxy, security } = state.system;
+  els.apiEndpointInput.value = api.endpoint;
+  els.apiUserInput.value = api.applicationUser;
+  els.apiTokenInput.value = api.applicationToken;
+  els.apiHeaderInput.value = api.authHeader;
+  els.apiRequireKeyInput.checked = Boolean(api.requireApiKeyFor2fa);
+  els.bruteCaptchaInput.value = security.bruteForceCaptcha;
+  els.bruteLockInput.value = security.bruteForceLockdown;
+  els.lockDurationInput.value = security.lockdownDuration;
+  els.hideLoginInput.checked = Boolean(security.hideLoginForm);
+  els.disableLogoutInput.checked = Boolean(security.disableLogout);
+  els.markdownEscapeInput.checked = Boolean(security.markdownEscapeHtml);
+  els.privateLinksInput.checked = Boolean(security.allowPrivateExternalLinks);
+  els.privateWebhooksInput.checked = Boolean(security.allowPrivateWebhooks);
+  els.ldapEnabledInput.checked = Boolean(ldap.enabled);
+  els.ldapServerInput.value = ldap.server;
+  els.ldapBindTypeInput.value = ldap.bindType;
+  els.ldapUserBaseInput.value = ldap.userBaseDn;
+  els.ldapUserFilterInput.value = ldap.userFilter;
+  els.ldapGroupBaseInput.value = ldap.groupBaseDn;
+  els.ldapGroupFilterInput.value = ldap.groupFilter;
+  els.ldapUserCreationInput.checked = Boolean(ldap.userCreation);
+  els.ldapGroupProviderInput.checked = Boolean(ldap.groupProvider);
+  els.proxyEnabledInput.checked = Boolean(reverseProxy.enabled);
+  els.proxyTrustedInput.value = reverseProxy.trustedNetworks;
+  els.proxyUserHeaderInput.value = reverseProxy.userHeader;
+  els.proxyEmailHeaderInput.value = reverseProxy.emailHeader;
+  els.proxyNameHeaderInput.value = reverseProxy.fullNameHeader;
+  els.proxyAdminInput.value = reverseProxy.defaultAdmin;
+  els.proxyDomainInput.value = reverseProxy.defaultDomain;
+  els.proxyStripHeadersInput.checked = Boolean(reverseProxy.stripIncomingHeaders);
+  const risks = systemRiskMessages();
+  els.systemSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>API</span>
+      <strong>${api.authHeader ? "Header" : "Basic"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>LDAP</span>
+      <strong>${ldap.enabled ? "开启" : "关闭"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>反向代理</span>
+      <strong>${reverseProxy.enabled ? "开启" : "关闭"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>安全提示</span>
+      <strong>${risks.length}</strong>
+    </div>
+  `;
+  els.systemRiskSummary.textContent = risks.length ? `${risks.length} 个风险提示` : "无高风险提示";
+  els.systemConfigPreview.value = buildSystemConfigPreview();
+  els.systemStatus.textContent = risks[0] || "系统配置已保存为静态模拟状态。";
+}
+
+function updateSystemConfigFromDialog() {
+  state.system.api = {
+    endpoint: els.apiEndpointInput.value.trim() || "/jsonrpc.php",
+    applicationUser: els.apiUserInput.value.trim() || "jsonrpc",
+    applicationToken: els.apiTokenInput.value.trim() || "••••••••••••••••••••",
+    authHeader: els.apiHeaderInput.value.trim(),
+    requireApiKeyFor2fa: els.apiRequireKeyInput.checked
+  };
+  state.system.ldap = {
+    enabled: els.ldapEnabledInput.checked,
+    server: els.ldapServerInput.value.trim() || "ldap://ldap.example.com",
+    bindType: els.ldapBindTypeInput.value,
+    userBaseDn: els.ldapUserBaseInput.value.trim(),
+    userFilter: els.ldapUserFilterInput.value.trim() || "uid=%s",
+    userCreation: els.ldapUserCreationInput.checked,
+    groupProvider: els.ldapGroupProviderInput.checked,
+    groupBaseDn: els.ldapGroupBaseInput.value.trim(),
+    groupFilter: els.ldapGroupFilterInput.value.trim()
+  };
+  state.system.reverseProxy = {
+    enabled: els.proxyEnabledInput.checked,
+    trustedNetworks: els.proxyTrustedInput.value.trim(),
+    userHeader: els.proxyUserHeaderInput.value.trim() || "REMOTE_USER",
+    emailHeader: els.proxyEmailHeaderInput.value.trim() || "REMOTE_EMAIL",
+    fullNameHeader: els.proxyNameHeaderInput.value.trim() || "REMOTE_NAME",
+    defaultAdmin: els.proxyAdminInput.value.trim(),
+    defaultDomain: els.proxyDomainInput.value.trim(),
+    stripIncomingHeaders: els.proxyStripHeadersInput.checked
+  };
+  state.system.security = {
+    hideLoginForm: els.hideLoginInput.checked,
+    disableLogout: els.disableLogoutInput.checked,
+    markdownEscapeHtml: els.markdownEscapeInput.checked,
+    bruteForceCaptcha: clampNumber(els.bruteCaptchaInput.value, 0, 20, 3),
+    bruteForceLockdown: clampNumber(els.bruteLockInput.value, 1, 50, 6),
+    lockdownDuration: clampNumber(els.lockDurationInput.value, 1, 1440, 15),
+    allowPrivateExternalLinks: els.privateLinksInput.checked,
+    allowPrivateWebhooks: els.privateWebhooksInput.checked
+  };
+  state.system = normalizeSystemConfig(state.system);
+  persist();
+  renderSystemSettingsDialog();
+}
+
+function systemRiskMessages() {
+  const { api, ldap, reverseProxy, security } = state.system;
+  const messages = [];
+  if (reverseProxy.enabled && !reverseProxy.trustedNetworks.trim()) {
+    messages.push("反向代理认证已开启，但缺少 TRUSTED_PROXY_NETWORKS。");
+  }
+  if (reverseProxy.enabled && !reverseProxy.stripIncomingHeaders) {
+    messages.push("反向代理认证已开启，应清理客户端传入的认证 Header。");
+  }
+  if (security.hideLoginForm && !ldap.enabled && !reverseProxy.enabled) {
+    messages.push("隐藏登录表单前应先启用 LDAP 或反向代理认证。");
+  }
+  if (security.allowPrivateExternalLinks || security.allowPrivateWebhooks) {
+    messages.push("允许私网访问可能带来 SSRF 风险。");
+  }
+  if (!api.requireApiKeyFor2fa && state.identity.users.some((user) => user.twoFactor)) {
+    messages.push("已有 2FA 用户，API 访问仍应要求 API Key。");
+  }
+  if (ldap.enabled && !ldap.userBaseDn.trim()) {
+    messages.push("LDAP 已开启，但 User Base DN 为空。");
+  }
+  return messages;
+}
+
+function buildSystemConfigPreview() {
+  const { api, ldap, reverseProxy, security } = state.system;
+  return [
+    "<?php",
+    `define('API_AUTHENTICATION_HEADER', '${escapeConfigValue(api.authHeader)}');`,
+    `define('API_AUTHENTICATION_TOKEN', '${escapeConfigValue(api.applicationToken)}');`,
+    `define('LDAP_AUTH', ${phpBool(ldap.enabled)});`,
+    `define('LDAP_SERVER', '${escapeConfigValue(ldap.server)}');`,
+    `define('LDAP_BIND_TYPE', '${escapeConfigValue(ldap.bindType)}');`,
+    `define('LDAP_USER_BASE_DN', '${escapeConfigValue(ldap.userBaseDn)}');`,
+    `define('LDAP_USER_FILTER', '${escapeConfigValue(ldap.userFilter)}');`,
+    `define('LDAP_USER_CREATION', ${phpBool(ldap.userCreation)});`,
+    `define('LDAP_GROUP_PROVIDER', ${phpBool(ldap.groupProvider)});`,
+    `define('LDAP_GROUP_BASE_DN', '${escapeConfigValue(ldap.groupBaseDn)}');`,
+    `define('LDAP_GROUP_FILTER', '${escapeConfigValue(ldap.groupFilter)}');`,
+    `define('REVERSE_PROXY_AUTH', ${phpBool(reverseProxy.enabled)});`,
+    `define('TRUSTED_PROXY_NETWORKS', '${escapeConfigValue(reverseProxy.trustedNetworks)}');`,
+    `define('REVERSE_PROXY_USER_HEADER', '${escapeConfigValue(reverseProxy.userHeader)}');`,
+    `define('REVERSE_PROXY_EMAIL_HEADER', '${escapeConfigValue(reverseProxy.emailHeader)}');`,
+    `define('REVERSE_PROXY_FULLNAME_HEADER', '${escapeConfigValue(reverseProxy.fullNameHeader)}');`,
+    `define('REVERSE_PROXY_DEFAULT_ADMIN', '${escapeConfigValue(reverseProxy.defaultAdmin)}');`,
+    `define('REVERSE_PROXY_DEFAULT_DOMAIN', '${escapeConfigValue(reverseProxy.defaultDomain)}');`,
+    `define('HIDE_LOGIN_FORM', ${phpBool(security.hideLoginForm)});`,
+    `define('DISABLE_LOGOUT', ${phpBool(security.disableLogout)});`,
+    `define('MARKDOWN_ESCAPE_HTML', ${phpBool(security.markdownEscapeHtml)});`,
+    `define('BRUTEFORCE_CAPTCHA', ${security.bruteForceCaptcha});`,
+    `define('BRUTEFORCE_LOCKDOWN', ${security.bruteForceLockdown});`,
+    `define('BRUTEFORCE_LOCKDOWN_DURATION', ${security.lockdownDuration});`,
+    `define('EXTERNAL_LINK_ALLOW_PRIVATE_NETWORKS', ${phpBool(security.allowPrivateExternalLinks)});`,
+    `define('WEBHOOK_ALLOW_PRIVATE_NETWORKS', ${phpBool(security.allowPrivateWebhooks)});`
+  ].join("\n");
+}
+
+function phpBool(value) {
+  return value ? "true" : "false";
+}
+
+function escapeConfigValue(value) {
+  return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
 }
 
 function deleteActiveProject() {

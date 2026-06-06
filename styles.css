@@ -1627,7 +1627,9 @@ textarea:focus {
 }
 
 .plugin-config-grid,
-.identity-user-grid {
+.identity-user-grid,
+.system-config-grid,
+.system-security-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -1635,6 +1637,23 @@ textarea:focus {
 
 .identity-user-grid .secondary-button {
   align-self: end;
+}
+
+.system-security-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.system-toggle-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+#systemConfigPreview {
+  min-height: 260px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .settings-add-row.identity-group-row,
@@ -2112,6 +2131,8 @@ kbd {
   .plugin-config-grid,
   .identity-user-grid,
   .identity-user-item,
+  .system-config-grid,
+  .system-security-grid,
   .operation-grid,
   .link-add,
   .overview-view {
