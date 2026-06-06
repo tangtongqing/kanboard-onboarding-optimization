@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.15 公共订阅补齐</title>
+  <title>Kanboard V0.8.16 导入导出补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.15 公共订阅补齐版</p>
+          <p>V0.8.16 导入导出补齐版</p>
         </div>
       </div>
 
@@ -42,6 +42,7 @@
           <button class="secondary-button" id="automationBtn" type="button">自动化</button>
           <button class="secondary-button" id="notificationsBtn" type="button">通知</button>
           <button class="secondary-button" id="subscriptionsBtn" type="button">订阅</button>
+          <button class="secondary-button" id="importExportBtn" type="button">导入导出</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -403,7 +404,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.15</span>
+          <span>静态模拟 V0.8.16</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -536,6 +537,49 @@
         <div class="settings-list" id="subscriptionPreviewList"></div>
       </section>
       <p class="subscription-status" id="subscriptionStatus"></p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="importExportDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>导入导出</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="importExportSummary"></section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>导出数据</h4>
+          <span>CSV / JSON</span>
+        </div>
+        <div class="settings-add-row import-export-row">
+          <select id="exportTypeInput">
+            <option value="tasks-csv">任务 CSV</option>
+            <option value="subtasks-csv">子任务 CSV</option>
+            <option value="project-json">项目 JSON 备份</option>
+          </select>
+          <button class="secondary-button" id="generateExportBtn" type="button">生成预览</button>
+          <button class="secondary-button" id="copyExportBtn" type="button">选中内容</button>
+        </div>
+        <textarea id="exportPreviewInput" class="export-preview" readonly rows="8"></textarea>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>导入项目</h4>
+          <span>粘贴项目 JSON</span>
+        </div>
+        <textarea id="importJsonInput" class="export-preview" rows="6" placeholder="粘贴由“项目 JSON 备份”生成的内容"></textarea>
+        <div class="modal-actions between">
+          <p class="subscription-status" id="importExportStatus">未读取导入内容</p>
+          <div>
+            <button class="secondary-button" id="previewImportBtn" type="button">预览导入</button>
+            <button class="primary-action compact" id="importProjectBtn" type="button" disabled>导入为新项目</button>
+          </div>
+        </div>
+      </section>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

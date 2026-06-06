@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0815";
+const STORAGE_KEY = "kanboard-static-v0816";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -110,6 +110,7 @@ async function testInitialShell(page) {
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
   check(await page.locator("#activityBtn").isVisible(), "activity entry renders");
   check(await page.locator("#subscriptionsBtn").isVisible(), "subscription entry renders");
+  check(await page.locator("#importExportBtn").isVisible(), "import export entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -566,6 +567,37 @@ async function testSettingsAnalyticsAutomation(page) {
   check(project.notifications.every((item) => item.read), "notification center marks all read");
 }
 
+async function testImportExport(page) {
+  await fresh(page);
+  const initialState = await getState(page);
+  const initialProjectCount = initialState.projects.length;
+  await page.click("#importExportBtn");
+  check(await page.locator("#importExportDialog[open]").isVisible(), "import export dialog opens");
+  check((await page.locator("#exportPreviewInput").inputValue()).startsWith("id,title,column"), "tasks CSV export preview renders");
+  await page.click("#copyExportBtn");
+  check((await page.locator("#importExportStatus").textContent()).includes("导出内容已选中"), "export copy feedback renders");
+  await page.selectOption("#exportTypeInput", "subtasks-csv");
+  await page.click("#generateExportBtn");
+  check((await page.locator("#exportPreviewInput").inputValue()).startsWith("cardId,cardTitle"), "subtasks CSV export preview renders");
+  await page.selectOption("#exportTypeInput", "project-json");
+  await page.click("#generateExportBtn");
+  const exportJson = await page.locator("#exportPreviewInput").inputValue();
+  const parsed = JSON.parse(exportJson);
+  check(parsed.exportVersion === "kanboard-static-v0816", "project JSON export version renders");
+  check(parsed.project.columns.length >= 1, "project JSON export includes columns");
+  await page.fill("#importJsonInput", exportJson);
+  await page.click("#previewImportBtn");
+  check(await page.locator("#importProjectBtn").isEnabled(), "JSON import preview enables import");
+  await page.click("#importProjectBtn");
+  await pause();
+  const importedState = await getState(page);
+  const importedProject = activeProjectFrom(importedState);
+  check(importedState.projects.length === initialProjectCount + 1, "JSON import creates a new project");
+  check(importedProject.name.endsWith(" - 导入"), "JSON import renames project copy");
+  check(importedProject.columns.length === parsed.project.columns.length, "JSON import keeps column count");
+  check(allCards(importedProject).length === allCards(parsed.project).length, "JSON import keeps task count");
+}
+
 async function testMobileDialogBounds(page) {
   await page.setViewportSize({ width: 390, height: 900 });
   await fresh(page);
@@ -622,6 +654,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testFlowSortingSearchAndViews(page);
     await testTaskActionsLinksAndMove(page);
     await testSettingsAnalyticsAutomation(page);
+    await testImportExport(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);

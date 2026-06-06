@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.15 公共访问与订阅补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.16 导入导出补齐
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -55,6 +55,7 @@
 - [x] 活动 / 附件 / 快捷键补齐 V0.8.13
 - [x] 项目文件 / 访问范围 / 用户组权限补齐 V0.8.14
 - [x] 公共访问 / iCalendar / RSS 订阅补齐 V0.8.15
+- [x] 任务 CSV / 子任务 CSV / 项目 JSON 导入导出补齐 V0.8.16
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -73,7 +74,7 @@
 | `项目配置与协作补齐说明-V0.7.md` | 项目设置、成员角色、分类标签、自定义筛选和泳道配置说明 |
 | `分析时间与自动化补齐说明-V0.8.md` | 项目分析、时间跟踪、循环任务、自动化和通知中心说明 |
 | `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
-| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 140 个核心检查项 |
+| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 152 个核心检查项 |
 | `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
 | `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
 | `PM工作流看板说明-V0.8.3.md` | 用 Kanboard 复现完整产品开发流程的列、泳道、卡片和产品判断 |
@@ -89,6 +90,7 @@
 | `活动附件快捷键补齐说明-V0.8.13.md` | 根据 Kanboard 官网与官方文档补齐项目活动流、任务附件和快捷键 |
 | `项目文件与权限补齐说明-V0.8.14.md` | 根据 Kanboard 官方 Project Overview、Project File API 和 Project Permission API 补齐项目文件库与权限配置 |
 | `公共访问与订阅补齐说明-V0.8.15.md` | 根据 Kanboard iCalendar、RSS/Atom 和公共访问机制补齐项目订阅入口 |
+| `导入导出补齐说明-V0.8.16.md` | 根据 Kanboard CLI CSV 导出和 API 迁移能力补齐静态导入导出入口 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -116,6 +118,8 @@
 | `设计图/kanboard-v0.8.14-overview-permissions.png` | V0.8.14 Overview 文件与访问权限摘要截图 |
 | `设计图/kanboard-v0.8.15-public-access-settings.png` | V0.8.15 公共访问设置截图 |
 | `设计图/kanboard-v0.8.15-subscription-links.png` | V0.8.15 iCalendar 与 RSS/Atom 订阅截图 |
+| `设计图/kanboard-v0.8.16-export-preview.png` | V0.8.16 任务 CSV 导出预览截图 |
+| `设计图/kanboard-v0.8.16-import-preview.png` | V0.8.16 项目 JSON 导入预览截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -145,6 +149,7 @@
 | V0.8.13 | 活动 / 附件 / 快捷键补齐 | 已完成 |
 | V0.8.14 | 项目文件 / 访问范围 / 用户组权限补齐 | 已完成 |
 | V0.8.15 | 公共访问 / iCalendar / RSS 订阅补齐 | 已完成 |
+| V0.8.16 | 任务 CSV / 子任务 CSV / 项目 JSON 导入导出补齐 | 已完成 |
 | V0.9 | Figma 高保真原型 | 下一步 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
@@ -164,4 +169,4 @@ Figma 高保真原型推迟到完整复现补齐之后。
 
 ## 当前截图
 
-![Kanboard iCalendar 与 RSS 订阅 V0.8.15](设计图/kanboard-v0.8.15-subscription-links.png)
+![Kanboard 导入导出 V0.8.16](设计图/kanboard-v0.8.16-import-preview.png)

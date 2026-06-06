@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0815";
+const STORAGE_KEY = "kanboard-static-v0816";
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -560,6 +560,7 @@ let draftProjectSettings = null;
 let shortcutPrefix = "";
 let shortcutPrefixTimer = null;
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
+let draftImportProject = null;
 
 const els = {
   projectList: document.querySelector("#projectList"),
@@ -602,6 +603,16 @@ const els = {
   subscriptionPreviewSummary: document.querySelector("#subscriptionPreviewSummary"),
   subscriptionPreviewList: document.querySelector("#subscriptionPreviewList"),
   subscriptionStatus: document.querySelector("#subscriptionStatus"),
+  importExportDialog: document.querySelector("#importExportDialog"),
+  importExportSummary: document.querySelector("#importExportSummary"),
+  exportTypeInput: document.querySelector("#exportTypeInput"),
+  generateExportBtn: document.querySelector("#generateExportBtn"),
+  copyExportBtn: document.querySelector("#copyExportBtn"),
+  exportPreviewInput: document.querySelector("#exportPreviewInput"),
+  importJsonInput: document.querySelector("#importJsonInput"),
+  previewImportBtn: document.querySelector("#previewImportBtn"),
+  importProjectBtn: document.querySelector("#importProjectBtn"),
+  importExportStatus: document.querySelector("#importExportStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -730,6 +741,7 @@ document.querySelector("#activityBtn").addEventListener("click", openActivityDia
 document.querySelector("#automationBtn").addEventListener("click", openAutomationDialog);
 document.querySelector("#notificationsBtn").addEventListener("click", openNotificationsDialog);
 document.querySelector("#subscriptionsBtn").addEventListener("click", openSubscriptionsDialog);
+document.querySelector("#importExportBtn").addEventListener("click", openImportExportDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -761,6 +773,10 @@ els.runAutomationBtn.addEventListener("click", runAutomationSimulation);
 els.markNotificationsBtn.addEventListener("click", markNotificationsRead);
 els.copyIcalBtn.addEventListener("click", () => copySubscriptionLink("ical"));
 els.copyRssBtn.addEventListener("click", () => copySubscriptionLink("rss"));
+els.generateExportBtn.addEventListener("click", generateExportPreview);
+els.copyExportBtn.addEventListener("click", copyExportPreview);
+els.previewImportBtn.addEventListener("click", previewImportProject);
+els.importProjectBtn.addEventListener("click", importProjectFromDialog);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -3234,6 +3250,211 @@ function buildSubscriptionLinks(project) {
   return {
     ical: `${base}/calendar.ics`,
     rss: `${base}/activity.atom`
+  };
+}
+
+function openImportExportDialog() {
+  draftImportProject = null;
+  els.importJsonInput.value = "";
+  els.importProjectBtn.disabled = true;
+  renderImportExportSummary();
+  generateExportPreview();
+  els.importExportDialog.showModal();
+}
+
+function renderImportExportSummary() {
+  const project = activeProject();
+  const cards = allCards(project);
+  const subtasks = cards.flatMap((card) => card.subtasks || []);
+  els.importExportSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>导出项目</span>
+      <strong>${escapeHtml(project.name)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>任务</span>
+      <strong>${cards.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>子任务</span>
+      <strong>${subtasks.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>项目文件</span>
+      <strong>${(project.files || []).length}</strong>
+    </div>
+  `;
+}
+
+function generateExportPreview() {
+  const project = activeProject();
+  els.exportPreviewInput.value = buildExportContent(project, els.exportTypeInput.value);
+  els.importExportStatus.textContent = "已生成导出预览，可选中内容复制。";
+}
+
+function buildExportContent(project, type) {
+  if (type === "subtasks-csv") return buildSubtasksCsv(project);
+  if (type === "project-json") {
+    return JSON.stringify({
+      exportVersion: "kanboard-static-v0816",
+      exportedAt: new Date().toISOString(),
+      project: clone(project)
+    }, null, 2);
+  }
+  return buildTasksCsv(project);
+}
+
+function buildTasksCsv(project) {
+  const headers = ["id", "title", "column", "swimlane", "assignee", "category", "priority", "dueDate", "status", "estimate", "actualTime", "tags"];
+  const rows = allCards(project).map((card) => [
+    card.id,
+    card.title,
+    card.columnTitle,
+    project.swimlanes.find((lane) => lane.id === card.swimlaneId)?.title || "",
+    card.assignee,
+    card.category,
+    card.priority,
+    card.dueDate || card.schedule?.plannedEnd || "",
+    card.isClosed ? "closed" : "open",
+    card.estimate,
+    card.actualTime,
+    (card.tags || []).join("|")
+  ]);
+  return rowsToCsv([headers, ...rows]);
+}
+
+function buildSubtasksCsv(project) {
+  const headers = ["cardId", "cardTitle", "subtaskId", "title", "done"];
+  const rows = allCards(project).flatMap((card) => (card.subtasks || []).map((subtask) => [
+    card.id,
+    card.title,
+    subtask.id,
+    subtask.title,
+    subtask.done ? "1" : "0"
+  ]));
+  return rowsToCsv([headers, ...rows]);
+}
+
+function rowsToCsv(rows) {
+  return rows.map((row) => row.map(escapeCsvCell).join(",")).join("\n");
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function copyExportPreview() {
+  els.exportPreviewInput.focus();
+  els.exportPreviewInput.select();
+  els.importExportStatus.textContent = "导出内容已选中，可直接复制。";
+}
+
+function previewImportProject() {
+  try {
+    draftImportProject = parseImportProject(els.importJsonInput.value);
+    const cards = draftImportProject.columns.flatMap((column) => column.cards || []);
+    els.importExportStatus.textContent = `可导入项目“${draftImportProject.name}”，包含 ${draftImportProject.columns.length} 列、${draftImportProject.swimlanes.length} 泳道、${cards.length} 任务。`;
+    els.importProjectBtn.disabled = false;
+  } catch (error) {
+    draftImportProject = null;
+    els.importProjectBtn.disabled = true;
+    els.importExportStatus.textContent = `导入失败：${error.message}`;
+  }
+}
+
+function parseImportProject(rawValue) {
+  const raw = rawValue.trim();
+  if (!raw) throw new Error("请先粘贴项目 JSON。");
+  const parsed = JSON.parse(raw);
+  const project = parsed.project || parsed;
+  if (!project.name || !Array.isArray(project.columns)) {
+    throw new Error("JSON 中没有有效项目名称或列数据。");
+  }
+  return clone(project);
+}
+
+function importProjectFromDialog() {
+  if (!draftImportProject) return;
+  const importedProject = remapImportedProject(draftImportProject);
+  state.projects.push(importedProject);
+  state.activeProjectId = importedProject.id;
+  draftImportProject = null;
+  els.importExportDialog.close();
+  normalizeState();
+  persist();
+  render();
+}
+
+function remapImportedProject(project) {
+  const now = new Date().toISOString();
+  const laneIdMap = new Map();
+  const cardIdMap = new Map();
+  const lanes = (project.swimlanes?.length ? project.swimlanes : [{ title: "默认泳道", description: "导入默认泳道" }]).map((lane) => {
+    const id = uid("lane");
+    laneIdMap.set(lane.id, id);
+    return { ...lane, id };
+  });
+  const fallbackLaneId = lanes[0].id;
+  const columns = (project.columns || []).map((column) => ({
+    ...column,
+    id: uid("column"),
+    cards: (column.cards || []).map((card) => {
+      const id = uid("card");
+      cardIdMap.set(card.id, id);
+      return {
+        ...clone(card),
+        id,
+        swimlaneId: laneIdMap.get(card.swimlaneId) || fallbackLaneId,
+        subtasks: (card.subtasks || []).map((subtask) => ({ ...subtask, id: uid("subtask") })),
+        attachments: (card.attachments || []).map((attachment) => ({ ...attachment, id: uid("attachment") })),
+        timeLogs: (card.timeLogs || []).map((entry) => ({ ...entry, id: uid("time") })),
+        comments: clone(card.comments || []),
+        links: clone(card.links || []),
+        activity: addActivity(card.activity || [], "由 JSON 导入生成"),
+        createdAt: card.createdAt || now,
+        updatedAt: now
+      };
+    })
+  }));
+  columns.forEach((column) => {
+    column.cards.forEach((card) => {
+      card.links = (card.links || []).map((link) => ({
+        ...link,
+        id: link.id || uid("link"),
+        targetId: cardIdMap.get(link.targetId) || link.targetId
+      }));
+    });
+  });
+  const settings = normalizeProjectSettings({
+    ...project,
+    swimlanes: lanes,
+    columns,
+    settings: {
+      ...(project.settings || {}),
+      publicToken: uid("public")
+    }
+  });
+  settings.defaultSwimlaneId = laneIdMap.get(project.settings?.defaultSwimlaneId) || fallbackLaneId;
+  settings.disabledSwimlaneIds = (project.settings?.disabledSwimlaneIds || [])
+    .map((id) => laneIdMap.get(id))
+    .filter(Boolean);
+  return {
+    ...clone(project),
+    id: uid("project"),
+    name: `${project.name} - 导入`,
+    createdAt: now,
+    swimlanes: lanes,
+    columns,
+    files: normalizeProjectFiles({
+      ...project,
+      files: (project.files || []).map((file) => ({ ...file, id: uid("file"), createdAt: file.createdAt || now })),
+      columns
+    }),
+    settings,
+    timeline: normalizeProjectTimeline({ ...project, columns, timeline: project.timeline || {} }),
+    automations: (project.automations || []).map((rule) => ({ ...rule, id: uid("automation"), lastRunAt: "" })),
+    notifications: []
   };
 }
 

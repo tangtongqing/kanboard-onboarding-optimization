@@ -1305,6 +1305,15 @@ textarea:focus {
   border-color: var(--primary-dark);
 }
 
+.primary-action:disabled,
+.secondary-button:disabled,
+.mini-button:disabled {
+  cursor: not-allowed;
+  color: #94a3b8;
+  background: #eef2f6;
+  border-color: #d7dee8;
+}
+
 .primary-action.compact {
   width: auto;
   padding: 0 16px;
@@ -1613,6 +1622,10 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr) 150px auto;
 }
 
+.settings-add-row.import-export-row {
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+}
+
 .settings-add-row.attachment-row {
   grid-template-columns: minmax(220px, 1.4fr) minmax(150px, 0.8fr) auto;
 }
@@ -1805,6 +1818,15 @@ kbd {
   line-height: 1.6;
 }
 
+.export-preview {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .subscription-preview-item {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -1989,6 +2011,7 @@ kbd {
   .settings-add-row.automation-row,
   .settings-add-row.project-file-row,
   .settings-add-row.group-row,
+  .settings-add-row.import-export-row,
   .settings-add-row.attachment-row,
   .settings-add-row.time-row,
   .analytics-grid,
