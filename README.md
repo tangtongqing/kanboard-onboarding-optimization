@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.21 运行环境、数据库与升级检查补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.22 安装部署与访问安全补齐
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -61,6 +61,7 @@
 - [x] API / LDAP / 反向代理认证 / 安全配置补齐 V0.8.19
 - [x] 管理员 CLI / Cronjob / Worker / 邮件测试补齐 V0.8.20
 - [x] 运行环境 / 数据库配置 / 升级检查补齐 V0.8.21
+- [x] 安装部署 / Docker / URL Rewrite / 反向代理访问安全补齐 V0.8.22
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -79,7 +80,7 @@
 | `项目配置与协作补齐说明-V0.7.md` | 项目设置、成员角色、分类标签、自定义筛选和泳道配置说明 |
 | `分析时间与自动化补齐说明-V0.8.md` | 项目分析、时间跟踪、循环任务、自动化和通知中心说明 |
 | `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
-| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 221 个核心检查项 |
+| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 240 个核心检查项 |
 | `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
 | `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
 | `PM工作流看板说明-V0.8.3.md` | 用 Kanboard 复现完整产品开发流程的列、泳道、卡片和产品判断 |
@@ -101,6 +102,7 @@
 | `系统认证与安全配置补齐说明-V0.8.19.md` | 根据 Kanboard API 认证、LDAP、反向代理认证、配置文件和安全文档补齐系统配置 |
 | `运维任务与后台执行补齐说明-V0.8.20.md` | 根据 Kanboard CLI、Cronjob、Background Worker 和 Email 配置补齐运维执行层 |
 | `运行环境数据库升级补齐说明-V0.8.21.md` | 根据 Kanboard Requirements、Configuration、SQLite、Upgrade 和 Performance 文档补齐运行环境检查 |
+| `安装部署与访问安全补齐说明-V0.8.22.md` | 根据 Kanboard Installation、Docker、URL Rewriting、Reverse Proxy 和 Security 文档补齐部署检查 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -141,6 +143,8 @@
 | `设计图/kanboard-v0.8.20-operations-run-log.png` | V0.8.20 Cronjob、Worker、邮件和 CLI 运行日志截图 |
 | `设计图/kanboard-v0.8.21-runtime-default.png` | V0.8.21 运行环境默认状态截图 |
 | `设计图/kanboard-v0.8.21-runtime-upgrade-readiness.png` | V0.8.21 PostgreSQL 与升级准备状态截图 |
+| `设计图/kanboard-v0.8.22-deployment-default.png` | V0.8.22 部署检查默认状态截图 |
+| `设计图/kanboard-v0.8.22-docker-healthcheck.png` | V0.8.22 Docker 与 healthcheck 状态截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -176,15 +180,16 @@
 | V0.8.19 | API / LDAP / 反向代理认证 / 安全配置补齐 | 已完成 |
 | V0.8.20 | 管理员 CLI / Cronjob / Worker / 邮件测试补齐 | 已完成 |
 | V0.8.21 | 运行环境、数据库配置、性能提示和升级检查补齐 | 已完成 |
-| V0.8.22 | 安装部署、Docker/反向代理部署提示、Webhook/API 细节继续补齐 | 下一步 |
+| V0.8.22 | 安装部署、Docker、URL Rewrite、反向代理访问安全补齐 | 已完成 |
+| V0.8.23 | Webhook、插件开发相关入口、API procedure 更细补齐 | 下一步 |
 | V0.9 | Figma 高保真原型 | 待完整复现后进入 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
 ## 下一步
 
 继续根据 Kanboard 官网补齐剩余系统级功能：
-- 安装教程、Docker 部署、反向代理部署提示和 URL Rewrite 细节。
-- Webhook/API 更细的管理入口，以及插件开发相关能力是否需要在静态复现里表达。
+- Webhook 机制、插件开发相关管理入口，以及 API procedure 更细的使用入口。
+- Debian/Ubuntu/RHEL/Windows 等平台化安装教程是否需要进入静态复现。
 - 补齐到静态复现差距进一步收敛后，再进入 V0.9 Figma 高保真原型。
 
 ## 本地打开
@@ -193,4 +198,4 @@
 
 ## 当前截图
 
-![Kanboard 运行环境 V0.8.21](设计图/kanboard-v0.8.21-runtime-upgrade-readiness.png)
+![Kanboard 部署检查 V0.8.22](设计图/kanboard-v0.8.22-deployment-default.png)

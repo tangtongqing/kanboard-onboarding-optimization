@@ -1837,6 +1837,36 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.deployment-risk-list {
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.deployment-risk-item,
+.deployment-log-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.deployment-risk-item.pass {
+  background: #f0f8f5;
+  border-color: #cfe7dc;
+}
+
+.deployment-risk-item.fail {
+  background: #fff8ed;
+  border-color: #ead2a4;
+}
+
+#deploymentRunbookPreview {
+  width: 100%;
+  min-height: 280px;
+  resize: vertical;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .empty-inline {
   color: var(--muted);
   font-size: 12px;

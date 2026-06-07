@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0821";
+const STORAGE_KEY = "kanboard-static-v0822";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -61,6 +61,17 @@ const DB_DRIVER_OPTIONS = [
   { value: "mysql", label: "MySQL / MariaDB" },
   { value: "postgres", label: "PostgreSQL" }
 ];
+const DEPLOYMENT_METHODS = [
+  { value: "archive", label: "Archive" },
+  { value: "git", label: "Git" },
+  { value: "docker", label: "Docker" }
+];
+const DOCKER_REGISTRIES = [
+  "docker.io/kanboard/kanboard",
+  "ghcr.io/kanboard/kanboard",
+  "quay.io/kanboard/kanboard"
+];
+const DEPLOYMENT_WEB_SERVERS = ["apache", "nginx", "iis", "caddy"];
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -774,6 +785,48 @@ const els = {
   runtimeRiskSummary: document.querySelector("#runtimeRiskSummary"),
   runtimeLogList: document.querySelector("#runtimeLogList"),
   runtimeStatus: document.querySelector("#runtimeStatus"),
+  deploymentDialog: document.querySelector("#deploymentDialog"),
+  deploymentSummary: document.querySelector("#deploymentSummary"),
+  deploymentMethodInput: document.querySelector("#deploymentMethodInput"),
+  deploymentVersionInput: document.querySelector("#deploymentVersionInput"),
+  deploymentPathInput: document.querySelector("#deploymentPathInput"),
+  deploymentBaseUrlInput: document.querySelector("#deploymentBaseUrlInput"),
+  deploymentPasswordChangedInput: document.querySelector("#deploymentPasswordChangedInput"),
+  deploymentDataProtectedInput: document.querySelector("#deploymentDataProtectedInput"),
+  deploymentHtaccessInput: document.querySelector("#deploymentHtaccessInput"),
+  deploymentDataWritableInput: document.querySelector("#deploymentDataWritableInput"),
+  deploymentOutsideRootInput: document.querySelector("#deploymentOutsideRootInput"),
+  deploymentRequirementsInput: document.querySelector("#deploymentRequirementsInput"),
+  dockerEnabledInput: document.querySelector("#dockerEnabledInput"),
+  dockerRegistryInput: document.querySelector("#dockerRegistryInput"),
+  dockerTagInput: document.querySelector("#dockerTagInput"),
+  dockerPinnedInput: document.querySelector("#dockerPinnedInput"),
+  dockerDataVolumeInput: document.querySelector("#dockerDataVolumeInput"),
+  dockerPluginsVolumeInput: document.querySelector("#dockerPluginsVolumeInput"),
+  dockerSslVolumeInput: document.querySelector("#dockerSslVolumeInput"),
+  dockerEnvConfigInput: document.querySelector("#dockerEnvConfigInput"),
+  dockerCustomConfigInput: document.querySelector("#dockerCustomConfigInput"),
+  dockerHealthcheckInput: document.querySelector("#dockerHealthcheckInput"),
+  dockerComposeProfileInput: document.querySelector("#dockerComposeProfileInput"),
+  dockerSmtpInput: document.querySelector("#dockerSmtpInput"),
+  runHealthcheckBtn: document.querySelector("#runHealthcheckBtn"),
+  accessWebServerInput: document.querySelector("#accessWebServerInput"),
+  accessRewriteInput: document.querySelector("#accessRewriteInput"),
+  accessSubfolderInput: document.querySelector("#accessSubfolderInput"),
+  accessDataDenyInput: document.querySelector("#accessDataDenyInput"),
+  accessHtaccessDenyInput: document.querySelector("#accessHtaccessDenyInput"),
+  accessProxyInput: document.querySelector("#accessProxyInput"),
+  accessDirectBlockedInput: document.querySelector("#accessDirectBlockedInput"),
+  accessStripAuthInput: document.querySelector("#accessStripAuthInput"),
+  accessStripForwardedInput: document.querySelector("#accessStripForwardedInput"),
+  accessTrustedProxyInput: document.querySelector("#accessTrustedProxyInput"),
+  accessForwardProtoInput: document.querySelector("#accessForwardProtoInput"),
+  accessRateLimitInput: document.querySelector("#accessRateLimitInput"),
+  accessOutboundRestrictedInput: document.querySelector("#accessOutboundRestrictedInput"),
+  deploymentRiskList: document.querySelector("#deploymentRiskList"),
+  deploymentRunbookPreview: document.querySelector("#deploymentRunbookPreview"),
+  deploymentLogList: document.querySelector("#deploymentLogList"),
+  deploymentStatus: document.querySelector("#deploymentStatus"),
   operationsDialog: document.querySelector("#operationsDialog"),
   operationsSummary: document.querySelector("#operationsSummary"),
   cronModeInput: document.querySelector("#cronModeInput"),
@@ -933,6 +986,7 @@ document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialo
 document.querySelector("#userManagementBtn").addEventListener("click", openIdentityDialog);
 document.querySelector("#systemSettingsBtn").addEventListener("click", openSystemSettingsDialog);
 document.querySelector("#runtimeBtn").addEventListener("click", openRuntimeDialog);
+document.querySelector("#deploymentBtn").addEventListener("click", openDeploymentDialog);
 document.querySelector("#operationsBtn").addEventListener("click", openOperationsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
@@ -1095,6 +1149,75 @@ els.runtimeUpgradeList.addEventListener("change", updateRuntimeFromDialog);
 els.runDbBackupBtn.addEventListener("click", runDatabaseBackupSimulation);
 els.runDbMigrationBtn.addEventListener("click", runDatabaseMigrationSimulation);
 els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
+[
+  els.deploymentMethodInput,
+  els.deploymentVersionInput,
+  els.deploymentPathInput,
+  els.deploymentBaseUrlInput,
+  els.deploymentPasswordChangedInput,
+  els.deploymentDataProtectedInput,
+  els.deploymentHtaccessInput,
+  els.deploymentDataWritableInput,
+  els.deploymentOutsideRootInput,
+  els.deploymentRequirementsInput,
+  els.dockerEnabledInput,
+  els.dockerRegistryInput,
+  els.dockerTagInput,
+  els.dockerPinnedInput,
+  els.dockerDataVolumeInput,
+  els.dockerPluginsVolumeInput,
+  els.dockerSslVolumeInput,
+  els.dockerEnvConfigInput,
+  els.dockerCustomConfigInput,
+  els.dockerHealthcheckInput,
+  els.dockerComposeProfileInput,
+  els.dockerSmtpInput,
+  els.accessWebServerInput,
+  els.accessRewriteInput,
+  els.accessSubfolderInput,
+  els.accessDataDenyInput,
+  els.accessHtaccessDenyInput,
+  els.accessProxyInput,
+  els.accessDirectBlockedInput,
+  els.accessStripAuthInput,
+  els.accessStripForwardedInput,
+  els.accessTrustedProxyInput,
+  els.accessForwardProtoInput,
+  els.accessRateLimitInput,
+  els.accessOutboundRestrictedInput
+].forEach((input) => input.addEventListener("input", updateDeploymentFromDialog));
+[
+  els.deploymentMethodInput,
+  els.deploymentPasswordChangedInput,
+  els.deploymentDataProtectedInput,
+  els.deploymentHtaccessInput,
+  els.deploymentDataWritableInput,
+  els.deploymentOutsideRootInput,
+  els.deploymentRequirementsInput,
+  els.dockerEnabledInput,
+  els.dockerRegistryInput,
+  els.dockerPinnedInput,
+  els.dockerDataVolumeInput,
+  els.dockerPluginsVolumeInput,
+  els.dockerSslVolumeInput,
+  els.dockerEnvConfigInput,
+  els.dockerCustomConfigInput,
+  els.dockerHealthcheckInput,
+  els.dockerComposeProfileInput,
+  els.dockerSmtpInput,
+  els.accessWebServerInput,
+  els.accessRewriteInput,
+  els.accessDataDenyInput,
+  els.accessHtaccessDenyInput,
+  els.accessProxyInput,
+  els.accessDirectBlockedInput,
+  els.accessStripAuthInput,
+  els.accessStripForwardedInput,
+  els.accessForwardProtoInput,
+  els.accessRateLimitInput,
+  els.accessOutboundRestrictedInput
+].forEach((input) => input.addEventListener("change", updateDeploymentFromDialog));
+els.runHealthcheckBtn.addEventListener("click", runDeploymentHealthcheckSimulation);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1374,6 +1497,54 @@ function createDefaultRuntime() {
       maintenanceMode: false,
       sessionsFlushed: false,
       pluginsChecked: false
+    },
+    logs: []
+  };
+}
+
+function createDefaultDeployment() {
+  return {
+    install: {
+      method: "archive",
+      sourceVersion: "1.2.46",
+      installPath: "/var/www/kanboard",
+      baseUrl: "https://kanboard.example.com",
+      defaultPasswordChanged: false,
+      dataDirectoryProtected: true,
+      htaccessOrWebConfigEnabled: true,
+      dataDirectoryWritable: true,
+      outsideDocumentRoot: false,
+      requirementsChecked: true
+    },
+    docker: {
+      enabled: false,
+      registry: "docker.io/kanboard/kanboard",
+      imageTag: "v1.2.46",
+      versionPinned: true,
+      dataVolume: true,
+      pluginsVolume: true,
+      sslVolume: true,
+      envConfig: true,
+      customConfigInData: true,
+      healthcheckEnabled: true,
+      healthStatus: "未检查",
+      composeProfile: "sqlite",
+      smtpTransportPlanned: true
+    },
+    access: {
+      webServer: "nginx",
+      urlRewrite: true,
+      subfolder: "",
+      dataDenyRule: true,
+      htaccessDenyRule: true,
+      behindReverseProxy: true,
+      directAccessBlocked: true,
+      stripAuthHeaders: true,
+      stripForwardedHeaders: true,
+      trustedProxyNetworks: "127.0.0.1/32,::1/128",
+      forwardedProto: true,
+      rateLimitEnabled: true,
+      outboundNetworkRestricted: true
     },
     logs: []
   };
@@ -1801,6 +1972,7 @@ function createDemoState() {
     system: createDefaultSystemConfig(),
     operations: createDefaultOperations(),
     runtime: createDefaultRuntime(),
+    deployment: createDefaultDeployment(),
     projects: [
       {
         id: projectId,
@@ -1863,6 +2035,7 @@ function normalizeState() {
   state.system = normalizeSystemConfig(state.system);
   state.operations = normalizeOperations(state.operations);
   state.runtime = normalizeRuntime(state.runtime);
+  state.deployment = normalizeDeployment(state.deployment);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -2084,6 +2257,49 @@ function normalizeRuntime(existing = {}) {
       ...defaults.upgrade,
       ...(existing.upgrade || {}),
       targetVersion: existing.upgrade?.targetVersion || defaults.upgrade.targetVersion
+    },
+    logs: (existing.logs || defaults.logs).slice(0, 12)
+  };
+}
+
+function normalizeDeployment(existing = {}) {
+  const defaults = createDefaultDeployment();
+  const method = DEPLOYMENT_METHODS.some((item) => item.value === existing.install?.method)
+    ? existing.install.method
+    : defaults.install.method;
+  const registry = DOCKER_REGISTRIES.includes(existing.docker?.registry)
+    ? existing.docker.registry
+    : defaults.docker.registry;
+  const webServer = DEPLOYMENT_WEB_SERVERS.includes(existing.access?.webServer)
+    ? existing.access.webServer
+    : defaults.access.webServer;
+  return {
+    install: {
+      ...defaults.install,
+      ...(existing.install || {}),
+      method,
+      sourceVersion: existing.install?.sourceVersion || defaults.install.sourceVersion,
+      installPath: existing.install?.installPath || defaults.install.installPath,
+      baseUrl: existing.install?.baseUrl || defaults.install.baseUrl
+    },
+    docker: {
+      ...defaults.docker,
+      ...(existing.docker || {}),
+      registry,
+      imageTag: existing.docker?.imageTag || defaults.docker.imageTag,
+      composeProfile: ["sqlite", "mysql", "postgres"].includes(existing.docker?.composeProfile)
+        ? existing.docker.composeProfile
+        : defaults.docker.composeProfile,
+      healthStatus: existing.docker?.healthStatus || defaults.docker.healthStatus
+    },
+    access: {
+      ...defaults.access,
+      ...(existing.access || {}),
+      webServer,
+      subfolder: existing.access?.subfolder || "",
+      trustedProxyNetworks: existing.access && "trustedProxyNetworks" in existing.access
+        ? existing.access.trustedProxyNetworks
+        : defaults.access.trustedProxyNetworks
     },
     logs: (existing.logs || defaults.logs).slice(0, 12)
   };
@@ -4063,7 +4279,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0821",
+      exportVersion: "kanboard-static-v0822",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -5093,6 +5309,258 @@ function phpVersionBelow(current, minimum) {
 
 function dbDriverLabel(value) {
   return DB_DRIVER_OPTIONS.find((option) => option.value === value)?.label || value;
+}
+
+function openDeploymentDialog() {
+  renderDeploymentDialog();
+  els.deploymentDialog.showModal();
+}
+
+function renderDeploymentDialog() {
+  const { install, docker, access } = state.deployment;
+  els.deploymentMethodInput.value = install.method;
+  els.deploymentVersionInput.value = install.sourceVersion;
+  els.deploymentPathInput.value = install.installPath;
+  els.deploymentBaseUrlInput.value = install.baseUrl;
+  els.deploymentPasswordChangedInput.checked = Boolean(install.defaultPasswordChanged);
+  els.deploymentDataProtectedInput.checked = Boolean(install.dataDirectoryProtected);
+  els.deploymentHtaccessInput.checked = Boolean(install.htaccessOrWebConfigEnabled);
+  els.deploymentDataWritableInput.checked = Boolean(install.dataDirectoryWritable);
+  els.deploymentOutsideRootInput.checked = Boolean(install.outsideDocumentRoot);
+  els.deploymentRequirementsInput.checked = Boolean(install.requirementsChecked);
+  els.dockerEnabledInput.checked = Boolean(docker.enabled);
+  els.dockerRegistryInput.value = docker.registry;
+  els.dockerTagInput.value = docker.imageTag;
+  els.dockerPinnedInput.checked = Boolean(docker.versionPinned);
+  els.dockerDataVolumeInput.checked = Boolean(docker.dataVolume);
+  els.dockerPluginsVolumeInput.checked = Boolean(docker.pluginsVolume);
+  els.dockerSslVolumeInput.checked = Boolean(docker.sslVolume);
+  els.dockerEnvConfigInput.checked = Boolean(docker.envConfig);
+  els.dockerCustomConfigInput.checked = Boolean(docker.customConfigInData);
+  els.dockerHealthcheckInput.checked = Boolean(docker.healthcheckEnabled);
+  els.dockerComposeProfileInput.value = docker.composeProfile;
+  els.dockerSmtpInput.checked = Boolean(docker.smtpTransportPlanned);
+  els.accessWebServerInput.value = access.webServer;
+  els.accessRewriteInput.checked = Boolean(access.urlRewrite);
+  els.accessSubfolderInput.value = access.subfolder;
+  els.accessDataDenyInput.checked = Boolean(access.dataDenyRule);
+  els.accessHtaccessDenyInput.checked = Boolean(access.htaccessDenyRule);
+  els.accessProxyInput.checked = Boolean(access.behindReverseProxy);
+  els.accessDirectBlockedInput.checked = Boolean(access.directAccessBlocked);
+  els.accessStripAuthInput.checked = Boolean(access.stripAuthHeaders);
+  els.accessStripForwardedInput.checked = Boolean(access.stripForwardedHeaders);
+  els.accessTrustedProxyInput.value = access.trustedProxyNetworks;
+  els.accessForwardProtoInput.checked = Boolean(access.forwardedProto);
+  els.accessRateLimitInput.checked = Boolean(access.rateLimitEnabled);
+  els.accessOutboundRestrictedInput.checked = Boolean(access.outboundNetworkRestricted);
+  renderDeploymentSummary();
+  renderDeploymentRisks();
+  renderDeploymentLogs();
+  els.deploymentRunbookPreview.value = buildDeploymentRunbookPreview();
+  const risks = deploymentRiskMessages();
+  els.deploymentStatus.textContent = risks[0] || "部署检查已通过，安装、访问和反向代理配置处于可发布状态。";
+}
+
+function renderDeploymentSummary() {
+  const { install, docker, access } = state.deployment;
+  const risks = deploymentRiskMessages();
+  els.deploymentSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>安装方式</span>
+      <strong>${deploymentMethodLabel(install.method)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>Docker</span>
+      <strong>${docker.enabled ? docker.imageTag : "未启用"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>访问层</span>
+      <strong>${access.webServer.toUpperCase()}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>风险</span>
+      <strong>${risks.length}</strong>
+    </div>
+  `;
+}
+
+function renderDeploymentRisks() {
+  const risks = deploymentRiskMessages();
+  els.deploymentRiskList.innerHTML = risks.length
+    ? risks.map((message) => `
+      <div class="settings-item deployment-risk-item fail">
+        <div>
+          <strong>待处理</strong>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="settings-item deployment-risk-item pass"><div><strong>检查通过</strong><span>安装、Docker、访问和安全暴露面暂无高风险提示。</span></div></div>`;
+}
+
+function renderDeploymentLogs() {
+  els.deploymentLogList.innerHTML = state.deployment.logs.length
+    ? state.deployment.logs.map((entry) => `
+      <div class="settings-item deployment-log-item">
+        <div>
+          <strong>${escapeHtml(entry.action)}</strong>
+          <span>${escapeHtml(entry.result)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无部署检查日志</div>`;
+}
+
+function updateDeploymentFromDialog() {
+  state.deployment.install = {
+    ...state.deployment.install,
+    method: els.deploymentMethodInput.value,
+    sourceVersion: els.deploymentVersionInput.value.trim() || "1.2.46",
+    installPath: els.deploymentPathInput.value.trim() || "/var/www/kanboard",
+    baseUrl: els.deploymentBaseUrlInput.value.trim() || "https://kanboard.example.com",
+    defaultPasswordChanged: els.deploymentPasswordChangedInput.checked,
+    dataDirectoryProtected: els.deploymentDataProtectedInput.checked,
+    htaccessOrWebConfigEnabled: els.deploymentHtaccessInput.checked,
+    dataDirectoryWritable: els.deploymentDataWritableInput.checked,
+    outsideDocumentRoot: els.deploymentOutsideRootInput.checked,
+    requirementsChecked: els.deploymentRequirementsInput.checked
+  };
+  state.deployment.docker = {
+    ...state.deployment.docker,
+    enabled: els.dockerEnabledInput.checked || els.deploymentMethodInput.value === "docker",
+    registry: els.dockerRegistryInput.value,
+    imageTag: els.dockerTagInput.value.trim() || "v1.2.46",
+    versionPinned: els.dockerPinnedInput.checked,
+    dataVolume: els.dockerDataVolumeInput.checked,
+    pluginsVolume: els.dockerPluginsVolumeInput.checked,
+    sslVolume: els.dockerSslVolumeInput.checked,
+    envConfig: els.dockerEnvConfigInput.checked,
+    customConfigInData: els.dockerCustomConfigInput.checked,
+    healthcheckEnabled: els.dockerHealthcheckInput.checked,
+    composeProfile: els.dockerComposeProfileInput.value,
+    smtpTransportPlanned: els.dockerSmtpInput.checked
+  };
+  state.deployment.access = {
+    ...state.deployment.access,
+    webServer: els.accessWebServerInput.value,
+    urlRewrite: els.accessRewriteInput.checked,
+    subfolder: els.accessSubfolderInput.value.trim(),
+    dataDenyRule: els.accessDataDenyInput.checked,
+    htaccessDenyRule: els.accessHtaccessDenyInput.checked,
+    behindReverseProxy: els.accessProxyInput.checked,
+    directAccessBlocked: els.accessDirectBlockedInput.checked,
+    stripAuthHeaders: els.accessStripAuthInput.checked,
+    stripForwardedHeaders: els.accessStripForwardedInput.checked,
+    trustedProxyNetworks: els.accessTrustedProxyInput.value.trim(),
+    forwardedProto: els.accessForwardProtoInput.checked,
+    rateLimitEnabled: els.accessRateLimitInput.checked,
+    outboundNetworkRestricted: els.accessOutboundRestrictedInput.checked
+  };
+  state.deployment = normalizeDeployment(state.deployment);
+  persist();
+  renderDeploymentDialog();
+}
+
+function runDeploymentHealthcheckSimulation() {
+  const { docker } = state.deployment;
+  const ok = docker.enabled && docker.healthcheckEnabled && docker.dataVolume;
+  state.deployment.docker.healthStatus = ok ? "200 OK" : "503 Service Unavailable";
+  addDeploymentLog("healthcheck.php", ok ? "Database connection is OK" : "Health check failed: missing Docker healthcheck or data volume");
+  persist();
+  renderDeploymentDialog();
+}
+
+function addDeploymentLog(action, result) {
+  state.deployment.logs.unshift({
+    id: uid("deployment-log"),
+    action,
+    result,
+    createdAt: new Date().toISOString()
+  });
+  state.deployment.logs = state.deployment.logs.slice(0, 12);
+}
+
+function deploymentRiskMessages() {
+  const { install, docker, access } = state.deployment;
+  const messages = [];
+  if (!install.requirementsChecked) messages.push("安装前尚未确认 Kanboard 运行要求。");
+  if (!install.defaultPasswordChanged) messages.push("默认 admin/admin 密码尚未标记为已修改。");
+  if (!install.dataDirectoryProtected) messages.push("data 目录尚未确认禁止通过 URL 公开访问。");
+  if (!install.htaccessOrWebConfigEnabled && ["apache", "iis"].includes(access.webServer)) {
+    messages.push("Apache/IIS 场景需要确认 .htaccess 或 web.config 生效。");
+  }
+  if (!install.dataDirectoryWritable) messages.push("data 目录不可写会影响 SQLite、上传文件、调试日志和缩略图。");
+  if (docker.enabled) {
+    if (!docker.versionPinned || ["latest", "nightly"].includes(docker.imageTag)) {
+      messages.push("Docker 镜像未固定具体版本，存在意外升级风险。");
+    }
+    if (!docker.dataVolume) messages.push("Docker 未配置 /var/www/app/data 持久化卷。");
+    if (!docker.pluginsVolume) messages.push("Docker 未配置 /var/www/app/plugins 持久化卷。");
+    if (!docker.healthcheckEnabled) messages.push("Docker healthcheck 未开启，无法表达存活和就绪检查。");
+    if (!docker.smtpTransportPlanned) messages.push("官方 Docker 镜像不适合使用 mail/sendmail，应规划 SMTP 或邮件服务插件。");
+  }
+  if (access.urlRewrite && access.webServer !== "apache" && !access.dataDenyRule) {
+    messages.push("非 Apache URL Rewrite 场景需要显式配置 data 目录拒绝访问规则。");
+  }
+  if (!access.dataDenyRule) messages.push("Web Server 未确认阻止 /data 目录访问。");
+  if (access.behindReverseProxy) {
+    if (!access.trustedProxyNetworks.trim()) messages.push("反向代理启用时缺少 TRUSTED_PROXY_NETWORKS。");
+    if (!access.directAccessBlocked) messages.push("Kanboard 仍可能被绕过反向代理直接访问。");
+    if (!access.stripAuthHeaders) messages.push("反向代理未确认清理客户端传入的认证 Header。");
+    if (!access.stripForwardedHeaders) messages.push("反向代理未确认覆盖客户端传入的 X-Forwarded-* Header。");
+    if (!access.forwardedProto) messages.push("反向代理未确认转发 X-Forwarded-Proto，可能影响 HTTPS 链接。");
+  }
+  if (!access.rateLimitEnabled) messages.push("未在 Web Server 或反向代理层规划登录限流。");
+  if (!access.outboundNetworkRestricted) messages.push("未限制 Webhook、插件或外链抓取的出站网络访问，存在 SSRF 风险。");
+  return messages;
+}
+
+function buildDeploymentRunbookPreview() {
+  const { install, docker, access } = state.deployment;
+  const image = `${docker.registry}:${docker.imageTag}`;
+  const subfolder = access.subfolder ? access.subfolder.replace(/\/$/, "") : "";
+  const lines = [
+    "# Kanboard deployment runbook",
+    `install_method=${install.method}`,
+    `source_version=${install.sourceVersion}`,
+    `install_path=${install.installPath}`,
+    `base_url=${install.baseUrl}`,
+    "",
+    "# Installation checklist",
+    `requirements_checked=${install.requirementsChecked}`,
+    `default_password_changed=${install.defaultPasswordChanged}`,
+    `data_directory_protected=${install.dataDirectoryProtected}`,
+    `data_directory_writable=${install.dataDirectoryWritable}`,
+    "",
+    "# URL rewrite",
+    `define('ENABLE_URL_REWRITE', ${phpBool(access.urlRewrite)});`,
+    access.webServer === "nginx"
+      ? `try_files $uri $uri/ ${subfolder || ""}/index.php$is_args$args;`
+      : access.webServer === "apache"
+        ? "AllowOverride FileInfo Options=All,MultiViews AuthConfig"
+        : access.webServer === "iis"
+          ? "web.config rewrite rule: index.php appendQueryString=true"
+          : "configure equivalent rewrite rules in the selected web server",
+    "deny /data and dotfiles from public access",
+    "",
+    "# Reverse proxy hardening",
+    `TRUSTED_PROXY_NETWORKS=${access.trustedProxyNetworks}`,
+    `strip_auth_headers=${access.stripAuthHeaders}`,
+    `strip_forwarded_headers=${access.stripForwardedHeaders}`,
+    `direct_access_blocked=${access.directAccessBlocked}`,
+    "",
+    "# Docker",
+    `image=${image}`,
+    `docker run -d --name kanboard -p 80:80 -t ${image}`,
+    `volumes=data:${docker.dataVolume},plugins:${docker.pluginsVolume},ssl:${docker.sslVolume}`,
+    `healthcheck=${docker.healthcheckEnabled ? "curl http://localhost/healthcheck.php" : "disabled"}`,
+    `compose_profile=${docker.composeProfile}`
+  ];
+  return lines.join("\n");
+}
+
+function deploymentMethodLabel(value) {
+  return DEPLOYMENT_METHODS.find((item) => item.value === value)?.label || value;
 }
 
 function openOperationsDialog() {

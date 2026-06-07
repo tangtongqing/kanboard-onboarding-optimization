@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.21 运行环境补齐</title>
+  <title>Kanboard V0.8.22 部署检查补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.21 运行环境补齐版</p>
+          <p>V0.8.22 部署检查补齐版</p>
         </div>
       </div>
 
@@ -47,6 +47,7 @@
           <button class="secondary-button" id="userManagementBtn" type="button">用户管理</button>
           <button class="secondary-button" id="systemSettingsBtn" type="button">系统设置</button>
           <button class="secondary-button" id="runtimeBtn" type="button">运行环境</button>
+          <button class="secondary-button" id="deploymentBtn" type="button">部署检查</button>
           <button class="secondary-button" id="operationsBtn" type="button">运维任务</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
@@ -409,7 +410,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.21</span>
+          <span>静态模拟 V0.8.22</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -1081,6 +1082,245 @@
         </div>
       </section>
       <p class="subscription-status" id="runtimeStatus">运行环境状态已加载。</p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="deploymentDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>部署检查</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="deploymentSummary"></section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>安装与首启</h4>
+            <span>Archive / Git / Docker</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>安装方式</span>
+              <select id="deploymentMethodInput">
+                <option value="archive">Archive</option>
+                <option value="git">Git</option>
+                <option value="docker">Docker</option>
+              </select>
+            </label>
+            <label>
+              <span>版本</span>
+              <input id="deploymentVersionInput" maxlength="24">
+            </label>
+            <label>
+              <span>安装路径</span>
+              <input id="deploymentPathInput" maxlength="140">
+            </label>
+            <label>
+              <span>访问地址</span>
+              <input id="deploymentBaseUrlInput" maxlength="160">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentRequirementsInput" type="checkbox">
+              <span>安装前已确认 Requirements</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentPasswordChangedInput" type="checkbox">
+              <span>已修改默认 admin/admin 密码</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentDataProtectedInput" type="checkbox">
+              <span>data 目录禁止 URL 访问</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentHtaccessInput" type="checkbox">
+              <span>.htaccess / web.config 已生效</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentDataWritableInput" type="checkbox">
+              <span>data 目录可写</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="deploymentOutsideRootInput" type="checkbox">
+              <span>安装在 DocumentRoot 之外</span>
+            </label>
+          </div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Docker 镜像</h4>
+            <span>Registry / Volume / Healthcheck</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="dockerEnabledInput" type="checkbox">
+            <span>使用 Docker 部署</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>Registry</span>
+              <select id="dockerRegistryInput">
+                <option value="docker.io/kanboard/kanboard">Docker Hub</option>
+                <option value="ghcr.io/kanboard/kanboard">GitHub Container Registry</option>
+                <option value="quay.io/kanboard/kanboard">Quay.io</option>
+              </select>
+            </label>
+            <label>
+              <span>Image Tag</span>
+              <input id="dockerTagInput" maxlength="40">
+            </label>
+            <label>
+              <span>Compose 数据库</span>
+              <select id="dockerComposeProfileInput">
+                <option value="sqlite">SQLite</option>
+                <option value="mysql">MariaDB</option>
+                <option value="postgres">PostgreSQL</option>
+              </select>
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerPinnedInput" type="checkbox">
+              <span>固定具体镜像版本</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerDataVolumeInput" type="checkbox">
+              <span>挂载 /var/www/app/data</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerPluginsVolumeInput" type="checkbox">
+              <span>挂载 /var/www/app/plugins</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerSslVolumeInput" type="checkbox">
+              <span>挂载 /etc/nginx/ssl</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerEnvConfigInput" type="checkbox">
+              <span>通过环境变量配置</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerCustomConfigInput" type="checkbox">
+              <span>data 卷内存放 config.php</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerHealthcheckInput" type="checkbox">
+              <span>启用 healthcheck.php</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="dockerSmtpInput" type="checkbox">
+              <span>Docker 邮件使用 SMTP 或邮件插件</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runHealthcheckBtn" type="button">模拟 Health Check</button>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>URL 与访问层</h4>
+            <span>Rewrite / data deny</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>Web Server</span>
+              <select id="accessWebServerInput">
+                <option value="apache">Apache</option>
+                <option value="nginx">Nginx</option>
+                <option value="iis">IIS</option>
+                <option value="caddy">Caddy</option>
+              </select>
+            </label>
+            <label>
+              <span>子目录</span>
+              <input id="accessSubfolderInput" maxlength="80" placeholder="/kanboard">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessRewriteInput" type="checkbox">
+              <span>启用 URL Rewrite</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessDataDenyInput" type="checkbox">
+              <span>Web Server 阻止 /data</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessHtaccessDenyInput" type="checkbox">
+              <span>阻止 .htaccess / 隐藏文件访问</span>
+            </label>
+          </div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>反向代理暴露面</h4>
+            <span>Header / Trusted Proxy / SSRF</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="accessProxyInput" type="checkbox">
+            <span>位于反向代理之后</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>TRUSTED_PROXY_NETWORKS</span>
+              <input id="accessTrustedProxyInput" maxlength="140">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessDirectBlockedInput" type="checkbox">
+              <span>阻止绕过代理直连 Kanboard</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessStripAuthInput" type="checkbox">
+              <span>清理客户端认证 Header</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessStripForwardedInput" type="checkbox">
+              <span>覆盖客户端 X-Forwarded-* Header</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessForwardProtoInput" type="checkbox">
+              <span>转发 X-Forwarded-Proto</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessRateLimitInput" type="checkbox">
+              <span>代理或 Web Server 已限流</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="accessOutboundRestrictedInput" type="checkbox">
+              <span>限制 Webhook / 插件出站网络</span>
+            </label>
+          </div>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>部署风险</h4>
+            <span>安装 / Docker / 访问安全</span>
+          </div>
+          <div class="settings-list deployment-risk-list" id="deploymentRiskList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>部署 Runbook</h4>
+            <span>命令 / 配置片段</span>
+          </div>
+          <textarea id="deploymentRunbookPreview" rows="16" readonly></textarea>
+        </div>
+      </section>
+      <section class="detail-section">
+        <div class="detail-heading">
+          <h4>Healthcheck 日志</h4>
+          <span>healthcheck.php</span>
+        </div>
+        <div class="settings-list" id="deploymentLogList"></div>
+      </section>
+      <p class="subscription-status" id="deploymentStatus">部署检查状态已加载。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

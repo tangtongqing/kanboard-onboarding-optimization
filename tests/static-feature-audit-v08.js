@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0821";
+const STORAGE_KEY = "kanboard-static-v0822";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -116,6 +116,9 @@ async function testInitialShell(page) {
   check(state.runtime.database.driver === "sqlite", "runtime database driver defaults to sqlite");
   check(state.runtime.environment.phpVersion.startsWith("8."), "runtime PHP version normalized");
   check(state.runtime.php.extensions.pdo_sqlite === true, "runtime SQLite PDO extension normalized");
+  check(state.deployment.install.method === "archive", "deployment install method defaults to archive");
+  check(state.deployment.access.dataDenyRule === true, "deployment data deny rule defaults enabled");
+  check(state.deployment.docker.versionPinned === true, "deployment Docker image pinning defaults enabled");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -126,6 +129,7 @@ async function testInitialShell(page) {
   check(await page.locator("#userManagementBtn").isVisible(), "user management entry renders");
   check(await page.locator("#systemSettingsBtn").isVisible(), "system settings entry renders");
   check(await page.locator("#runtimeBtn").isVisible(), "runtime environment entry renders");
+  check(await page.locator("#deploymentBtn").isVisible(), "deployment check entry renders");
   check(await page.locator("#operationsBtn").isVisible(), "operations entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
@@ -599,7 +603,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0821", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0822", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -755,6 +759,54 @@ async function testRuntimeEnvironment(page) {
   check((await page.locator("#runtimeConfigPreview").inputValue()).includes("DB_HOSTNAME"), "runtime database config preview includes hostname");
 }
 
+async function testDeploymentChecks(page) {
+  await fresh(page);
+  await page.click("#deploymentBtn");
+  check(await page.locator("#deploymentDialog[open]").isVisible(), "deployment dialog opens");
+  check((await page.locator("#deploymentSummary .analytics-card").count()) === 4, "deployment summary renders");
+  check((await page.locator("#deploymentRunbookPreview").inputValue()).includes("ENABLE_URL_REWRITE"), "deployment runbook renders URL rewrite config");
+  check((await page.locator("#deploymentRiskList .deployment-risk-item").count()) >= 1, "deployment risk list renders");
+  await page.selectOption("#deploymentMethodInput", "docker");
+  await page.check("#dockerEnabledInput");
+  await page.selectOption("#dockerComposeProfileInput", "postgres");
+  await page.fill("#dockerTagInput", "latest");
+  await page.uncheck("#dockerPinnedInput");
+  await pause();
+  let state = await getState(page);
+  check(state.deployment.install.method === "docker", "deployment method saves docker");
+  check(state.deployment.docker.enabled === true && state.deployment.docker.composeProfile === "postgres", "deployment Docker profile saves");
+  check((await page.locator("#deploymentRiskList").textContent()).includes("Docker"), "deployment Docker pinning risk renders");
+  await page.fill("#dockerTagInput", "v1.2.46");
+  await page.check("#dockerPinnedInput");
+  await page.uncheck("#deploymentDataProtectedInput");
+  await pause();
+  check((await page.locator("#deploymentRiskList").textContent()).includes("data"), "deployment data exposure risk renders");
+  await page.check("#deploymentDataProtectedInput");
+  await page.selectOption("#accessWebServerInput", "nginx");
+  await page.uncheck("#accessDataDenyInput");
+  await pause();
+  check((await page.locator("#deploymentRiskList").textContent()).includes("data"), "deployment nginx data deny risk renders");
+  await page.check("#accessDataDenyInput");
+  await page.check("#accessProxyInput");
+  await page.fill("#accessTrustedProxyInput", "");
+  await pause();
+  check((await page.locator("#deploymentRiskList").textContent()).includes("TRUSTED_PROXY_NETWORKS"), "deployment trusted proxy risk renders");
+  await page.fill("#accessTrustedProxyInput", "127.0.0.1/32,::1/128");
+  await page.click("#runHealthcheckBtn");
+  await pause();
+  state = await getState(page);
+  check(state.deployment.docker.healthStatus === "200 OK", "deployment healthcheck simulation saves status");
+  check(state.deployment.logs.some((entry) => entry.action === "healthcheck.php"), "deployment healthcheck writes log");
+  check((await page.locator("#deploymentRunbookPreview").inputValue()).includes("docker run"), "deployment runbook renders docker command");
+  await page.check("#deploymentPasswordChangedInput");
+  await page.check("#accessStripAuthInput");
+  await page.check("#accessStripForwardedInput");
+  await pause();
+  state = await getState(page);
+  check(state.deployment.install.defaultPasswordChanged === true, "deployment password checklist saves");
+  check(state.deployment.access.stripAuthHeaders && state.deployment.access.stripForwardedHeaders, "deployment proxy header checklist saves");
+}
+
 async function testOperations(page) {
   await fresh(page);
   await page.click("#operationsBtn");
@@ -848,6 +900,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testIdentityManagement(page);
     await testSystemSettings(page);
     await testRuntimeEnvironment(page);
+    await testDeploymentChecks(page);
     await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
