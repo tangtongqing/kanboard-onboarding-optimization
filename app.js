@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0820";
+const STORAGE_KEY = "kanboard-static-v0821";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -48,6 +48,18 @@ const CLI_COMMANDS = [
   { value: "db:version", label: "db:version", preview: "./cli db:version" },
   { value: "plugin:upgrade", label: "plugin:upgrade", preview: "./cli plugin:upgrade" },
   { value: "user:reset-2fa", label: "user:reset-2fa", preview: "./cli user:reset-2fa my_user" }
+];
+const CORE_PHP_EXTENSIONS = ["gd", "mbstring", "openssl", "json", "hash", "ctype", "session", "filter", "xml", "SimpleXML", "dom"];
+const DRIVER_EXTENSION_MAP = {
+  sqlite: "pdo_sqlite",
+  mysql: "pdo_mysql",
+  postgres: "pdo_pgsql"
+};
+const OPTIONAL_PHP_EXTENSIONS = ["zip", "ldap", "curl"];
+const DB_DRIVER_OPTIONS = [
+  { value: "sqlite", label: "SQLite" },
+  { value: "mysql", label: "MySQL / MariaDB" },
+  { value: "postgres", label: "PostgreSQL" }
 ];
 const PROJECT_TEMPLATES = [
   {
@@ -729,6 +741,39 @@ const els = {
   systemConfigPreview: document.querySelector("#systemConfigPreview"),
   systemRiskSummary: document.querySelector("#systemRiskSummary"),
   systemStatus: document.querySelector("#systemStatus"),
+  runtimeDialog: document.querySelector("#runtimeDialog"),
+  runtimeSummary: document.querySelector("#runtimeSummary"),
+  runtimeDbDriverInput: document.querySelector("#runtimeDbDriverInput"),
+  runtimeSqlitePathInput: document.querySelector("#runtimeSqlitePathInput"),
+  runtimeDbHostInput: document.querySelector("#runtimeDbHostInput"),
+  runtimeDbPortInput: document.querySelector("#runtimeDbPortInput"),
+  runtimeDbNameInput: document.querySelector("#runtimeDbNameInput"),
+  runtimeDbUserInput: document.querySelector("#runtimeDbUserInput"),
+  runtimeWalInput: document.querySelector("#runtimeWalInput"),
+  runtimeAutoMigrationInput: document.querySelector("#runtimeAutoMigrationInput"),
+  runtimeSchemaCurrentInput: document.querySelector("#runtimeSchemaCurrentInput"),
+  runtimeSchemaLatestInput: document.querySelector("#runtimeSchemaLatestInput"),
+  runDbBackupBtn: document.querySelector("#runDbBackupBtn"),
+  runDbMigrationBtn: document.querySelector("#runDbMigrationBtn"),
+  runDbOptimizeBtn: document.querySelector("#runDbOptimizeBtn"),
+  runtimePhpVersionInput: document.querySelector("#runtimePhpVersionInput"),
+  runtimeWebServerInput: document.querySelector("#runtimeWebServerInput"),
+  runtimeInstallModeInput: document.querySelector("#runtimeInstallModeInput"),
+  runtimeStorageProfileInput: document.querySelector("#runtimeStorageProfileInput"),
+  runtimeDataWritableInput: document.querySelector("#runtimeDataWritableInput"),
+  runtimeFilesDirInput: document.querySelector("#runtimeFilesDirInput"),
+  runtimeCacheDriverInput: document.querySelector("#runtimeCacheDriverInput"),
+  runtimeCacheWritableInput: document.querySelector("#runtimeCacheWritableInput"),
+  runtimeOpcacheInput: document.querySelector("#runtimeOpcacheInput"),
+  runtimeUrlRewriteInput: document.querySelector("#runtimeUrlRewriteInput"),
+  runtimeDebugInput: document.querySelector("#runtimeDebugInput"),
+  runtimeRequirementList: document.querySelector("#runtimeRequirementList"),
+  runtimeUpgradeTargetInput: document.querySelector("#runtimeUpgradeTargetInput"),
+  runtimeUpgradeList: document.querySelector("#runtimeUpgradeList"),
+  runtimeConfigPreview: document.querySelector("#runtimeConfigPreview"),
+  runtimeRiskSummary: document.querySelector("#runtimeRiskSummary"),
+  runtimeLogList: document.querySelector("#runtimeLogList"),
+  runtimeStatus: document.querySelector("#runtimeStatus"),
   operationsDialog: document.querySelector("#operationsDialog"),
   operationsSummary: document.querySelector("#operationsSummary"),
   cronModeInput: document.querySelector("#cronModeInput"),
@@ -887,6 +932,7 @@ document.querySelector("#importExportBtn").addEventListener("click", openImportE
 document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialog);
 document.querySelector("#userManagementBtn").addEventListener("click", openIdentityDialog);
 document.querySelector("#systemSettingsBtn").addEventListener("click", openSystemSettingsDialog);
+document.querySelector("#runtimeBtn").addEventListener("click", openRuntimeDialog);
 document.querySelector("#operationsBtn").addEventListener("click", openOperationsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
@@ -1007,6 +1053,48 @@ els.runCronBtn.addEventListener("click", runCronSimulation);
 els.runWorkerBtn.addEventListener("click", runWorkerSimulation);
 els.sendTestMailBtn.addEventListener("click", sendTestMailSimulation);
 els.runCliBtn.addEventListener("click", runCliSimulation);
+[
+  els.runtimeDbDriverInput,
+  els.runtimeSqlitePathInput,
+  els.runtimeDbHostInput,
+  els.runtimeDbPortInput,
+  els.runtimeDbNameInput,
+  els.runtimeDbUserInput,
+  els.runtimeWalInput,
+  els.runtimeAutoMigrationInput,
+  els.runtimeSchemaCurrentInput,
+  els.runtimeSchemaLatestInput,
+  els.runtimePhpVersionInput,
+  els.runtimeWebServerInput,
+  els.runtimeInstallModeInput,
+  els.runtimeStorageProfileInput,
+  els.runtimeDataWritableInput,
+  els.runtimeFilesDirInput,
+  els.runtimeCacheDriverInput,
+  els.runtimeCacheWritableInput,
+  els.runtimeOpcacheInput,
+  els.runtimeUrlRewriteInput,
+  els.runtimeDebugInput,
+  els.runtimeUpgradeTargetInput
+].forEach((input) => input.addEventListener("input", updateRuntimeFromDialog));
+[
+  els.runtimeDbDriverInput,
+  els.runtimeWalInput,
+  els.runtimeAutoMigrationInput,
+  els.runtimeInstallModeInput,
+  els.runtimeStorageProfileInput,
+  els.runtimeDataWritableInput,
+  els.runtimeCacheDriverInput,
+  els.runtimeCacheWritableInput,
+  els.runtimeOpcacheInput,
+  els.runtimeUrlRewriteInput,
+  els.runtimeDebugInput
+].forEach((input) => input.addEventListener("change", updateRuntimeFromDialog));
+els.runtimeRequirementList.addEventListener("change", updateRuntimeFromDialog);
+els.runtimeUpgradeList.addEventListener("change", updateRuntimeFromDialog);
+els.runDbBackupBtn.addEventListener("click", runDatabaseBackupSimulation);
+els.runDbMigrationBtn.addEventListener("click", runDatabaseMigrationSimulation);
+els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1238,6 +1326,56 @@ function createDefaultOperations() {
       { id: "task-triggers", name: "每日任务触发器", command: "trigger:tasks", status: "pending" },
       { id: "plugin-upgrade", name: "插件升级检查", command: "plugin:upgrade", status: "waiting" }
     ]
+  };
+}
+
+function createDefaultRuntime() {
+  const extensions = {};
+  [...CORE_PHP_EXTENSIONS, ...Object.values(DRIVER_EXTENSION_MAP), ...OPTIONAL_PHP_EXTENSIONS].forEach((extension) => {
+    extensions[extension] = CORE_PHP_EXTENSIONS.includes(extension) || extension === "pdo_sqlite" || ["zip", "curl"].includes(extension);
+  });
+  return {
+    database: {
+      driver: "sqlite",
+      sqlitePath: "data/db.sqlite",
+      host: "localhost",
+      port: "",
+      name: "kanboard",
+      username: "kanboard",
+      walMode: true,
+      autoMigrations: true,
+      currentSchemaVersion: 95,
+      latestSchemaVersion: 96,
+      migrationStatus: "待升级",
+      lastBackupAt: "",
+      lastOptimizeAt: ""
+    },
+    environment: {
+      phpVersion: "8.3.8",
+      webServer: "Apache",
+      installMode: "archive",
+      storageProfile: "local-small",
+      dataDirectoryWritable: true,
+      filesDir: "data/files",
+      cacheDriver: "memory",
+      cacheDirectoryWritable: true,
+      opcacheEnabled: true,
+      urlRewrite: false,
+      debugMode: false
+    },
+    php: {
+      extensions
+    },
+    upgrade: {
+      targetVersion: "1.2.46",
+      changeLogReviewed: false,
+      backupVerified: false,
+      workersStopped: false,
+      maintenanceMode: false,
+      sessionsFlushed: false,
+      pluginsChecked: false
+    },
+    logs: []
   };
 }
 
@@ -1662,6 +1800,7 @@ function createDemoState() {
     identity: createDefaultIdentity(),
     system: createDefaultSystemConfig(),
     operations: createDefaultOperations(),
+    runtime: createDefaultRuntime(),
     projects: [
       {
         id: projectId,
@@ -1723,6 +1862,7 @@ function normalizeState() {
   state.identity = normalizeIdentity(state.identity);
   state.system = normalizeSystemConfig(state.system);
   state.operations = normalizeOperations(state.operations);
+  state.runtime = normalizeRuntime(state.runtime);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -1894,6 +2034,58 @@ function normalizeOperations(existing = {}) {
       status: ["pending", "running", "done", "failed", "waiting"].includes(job.status) ? job.status : "pending",
       lastRunAt: job.lastRunAt || ""
     }))
+  };
+}
+
+function normalizeRuntime(existing = {}) {
+  const defaults = createDefaultRuntime();
+  const driver = DB_DRIVER_OPTIONS.some((option) => option.value === existing.database?.driver)
+    ? existing.database.driver
+    : defaults.database.driver;
+  const extensions = {
+    ...defaults.php.extensions,
+    ...(existing.php?.extensions || {})
+  };
+  [...CORE_PHP_EXTENSIONS, ...Object.values(DRIVER_EXTENSION_MAP), ...OPTIONAL_PHP_EXTENSIONS].forEach((extension) => {
+    extensions[extension] = Boolean(extensions[extension]);
+  });
+  return {
+    database: {
+      ...defaults.database,
+      ...(existing.database || {}),
+      driver,
+      sqlitePath: existing.database?.sqlitePath || defaults.database.sqlitePath,
+      host: existing.database?.host || defaults.database.host,
+      port: existing.database?.port || "",
+      name: existing.database?.name || defaults.database.name,
+      username: existing.database?.username || defaults.database.username,
+      currentSchemaVersion: clampNumber(existing.database?.currentSchemaVersion, 0, 9999, defaults.database.currentSchemaVersion),
+      latestSchemaVersion: clampNumber(existing.database?.latestSchemaVersion, 0, 9999, defaults.database.latestSchemaVersion)
+    },
+    environment: {
+      ...defaults.environment,
+      ...(existing.environment || {}),
+      phpVersion: existing.environment?.phpVersion || defaults.environment.phpVersion,
+      webServer: existing.environment?.webServer || defaults.environment.webServer,
+      installMode: ["archive", "git", "docker"].includes(existing.environment?.installMode)
+        ? existing.environment.installMode
+        : defaults.environment.installMode,
+      storageProfile: ["local-small", "docker", "nfs", "high-availability"].includes(existing.environment?.storageProfile)
+        ? existing.environment.storageProfile
+        : defaults.environment.storageProfile,
+      cacheDriver: ["memory", "file"].includes(existing.environment?.cacheDriver)
+        ? existing.environment.cacheDriver
+        : defaults.environment.cacheDriver
+    },
+    php: {
+      extensions
+    },
+    upgrade: {
+      ...defaults.upgrade,
+      ...(existing.upgrade || {}),
+      targetVersion: existing.upgrade?.targetVersion || defaults.upgrade.targetVersion
+    },
+    logs: (existing.logs || defaults.logs).slice(0, 12)
   };
 }
 
@@ -3871,7 +4063,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0820",
+      exportVersion: "kanboard-static-v0821",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -4620,6 +4812,287 @@ function phpBool(value) {
 
 function escapeConfigValue(value) {
   return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+function openRuntimeDialog() {
+  renderRuntimeDialog();
+  els.runtimeDialog.showModal();
+}
+
+function renderRuntimeDialog() {
+  const { database, environment, upgrade } = state.runtime;
+  els.runtimeDbDriverInput.value = database.driver;
+  els.runtimeSqlitePathInput.value = database.sqlitePath;
+  els.runtimeDbHostInput.value = database.host;
+  els.runtimeDbPortInput.value = database.port;
+  els.runtimeDbNameInput.value = database.name;
+  els.runtimeDbUserInput.value = database.username;
+  els.runtimeWalInput.checked = Boolean(database.walMode);
+  els.runtimeAutoMigrationInput.checked = Boolean(database.autoMigrations);
+  els.runtimeSchemaCurrentInput.value = database.currentSchemaVersion;
+  els.runtimeSchemaLatestInput.value = database.latestSchemaVersion;
+  els.runtimePhpVersionInput.value = environment.phpVersion;
+  els.runtimeWebServerInput.value = environment.webServer;
+  els.runtimeInstallModeInput.value = environment.installMode;
+  els.runtimeStorageProfileInput.value = environment.storageProfile;
+  els.runtimeDataWritableInput.checked = Boolean(environment.dataDirectoryWritable);
+  els.runtimeFilesDirInput.value = environment.filesDir;
+  els.runtimeCacheDriverInput.value = environment.cacheDriver;
+  els.runtimeCacheWritableInput.checked = Boolean(environment.cacheDirectoryWritable);
+  els.runtimeOpcacheInput.checked = Boolean(environment.opcacheEnabled);
+  els.runtimeUrlRewriteInput.checked = Boolean(environment.urlRewrite);
+  els.runtimeDebugInput.checked = Boolean(environment.debugMode);
+  els.runtimeUpgradeTargetInput.value = upgrade.targetVersion;
+  renderRuntimeSummary();
+  renderRuntimeRequirementList();
+  renderRuntimeUpgradeChecklist();
+  renderRuntimeLogs();
+  els.runtimeConfigPreview.value = buildRuntimeConfigPreview();
+  const risks = runtimeRiskMessages();
+  els.runtimeRiskSummary.textContent = risks.length ? `${risks.length} 个风险提示` : "运行环境检查通过";
+  els.runtimeStatus.textContent = risks[0] || "运行环境、数据库和升级准备已保存为静态模拟状态。";
+}
+
+function renderRuntimeSummary() {
+  const { database, environment } = state.runtime;
+  const required = runtimeRequiredExtensions(database.driver);
+  const passed = required.filter((extension) => state.runtime.php.extensions[extension]).length;
+  const schemaReady = database.currentSchemaVersion >= database.latestSchemaVersion;
+  els.runtimeSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>数据库</span>
+      <strong>${dbDriverLabel(database.driver)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>PHP</span>
+      <strong>${escapeHtml(environment.phpVersion)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>扩展</span>
+      <strong>${passed}/${required.length}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>Schema</span>
+      <strong>${schemaReady ? "已同步" : "待迁移"}</strong>
+    </div>
+  `;
+}
+
+function renderRuntimeRequirementList() {
+  const required = new Set(runtimeRequiredExtensions(state.runtime.database.driver));
+  const extensions = [...required, ...OPTIONAL_PHP_EXTENSIONS].filter((extension, index, list) => list.indexOf(extension) === index);
+  els.runtimeRequirementList.innerHTML = extensions.map((extension) => {
+    const checked = Boolean(state.runtime.php.extensions[extension]);
+    const isRequired = required.has(extension);
+    return `
+      <label class="settings-item runtime-requirement-item ${checked ? "pass" : "fail"}">
+        <input type="checkbox" data-extension="${escapeHtml(extension)}" ${checked ? "checked" : ""}>
+        <div>
+          <strong>${escapeHtml(extension)}</strong>
+          <span>${isRequired ? "必需扩展" : "可选扩展"}</span>
+        </div>
+        <span class="role-pill">${checked ? "可用" : "缺失"}</span>
+      </label>
+    `;
+  }).join("");
+}
+
+function renderRuntimeUpgradeChecklist() {
+  const items = [
+    { key: "changeLogReviewed", label: "已阅读 ChangeLog 与破坏性变更" },
+    { key: "backupVerified", label: "已完成并验证备份" },
+    { key: "workersStopped", label: "已停止 Background Worker" },
+    { key: "maintenanceMode", label: "已进入维护模式" },
+    { key: "sessionsFlushed", label: "已清理用户会话" },
+    { key: "pluginsChecked", label: "已检查插件兼容性" }
+  ];
+  els.runtimeUpgradeList.innerHTML = items.map((item) => {
+    const checked = Boolean(state.runtime.upgrade[item.key]);
+    return `
+      <label class="settings-item runtime-upgrade-item ${checked ? "pass" : "fail"}">
+        <input type="checkbox" data-upgrade-key="${item.key}" ${checked ? "checked" : ""}>
+        <div>
+          <strong>${item.label}</strong>
+          <span>${checked ? "已完成" : "升级前待确认"}</span>
+        </div>
+      </label>
+    `;
+  }).join("");
+}
+
+function renderRuntimeLogs() {
+  els.runtimeLogList.innerHTML = state.runtime.logs.length
+    ? state.runtime.logs.map((entry) => `
+      <div class="settings-item runtime-log-item">
+        <div>
+          <strong>${escapeHtml(entry.action)}</strong>
+          <span>${escapeHtml(entry.result)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无环境操作日志</div>`;
+}
+
+function updateRuntimeFromDialog() {
+  document.querySelectorAll("#runtimeRequirementList [data-extension]").forEach((input) => {
+    state.runtime.php.extensions[input.dataset.extension] = input.checked;
+  });
+  document.querySelectorAll("#runtimeUpgradeList [data-upgrade-key]").forEach((input) => {
+    state.runtime.upgrade[input.dataset.upgradeKey] = input.checked;
+  });
+  state.runtime.database = {
+    ...state.runtime.database,
+    driver: els.runtimeDbDriverInput.value,
+    sqlitePath: els.runtimeSqlitePathInput.value.trim() || "data/db.sqlite",
+    host: els.runtimeDbHostInput.value.trim() || "localhost",
+    port: els.runtimeDbPortInput.value.trim(),
+    name: els.runtimeDbNameInput.value.trim() || "kanboard",
+    username: els.runtimeDbUserInput.value.trim() || "kanboard",
+    walMode: els.runtimeWalInput.checked,
+    autoMigrations: els.runtimeAutoMigrationInput.checked,
+    currentSchemaVersion: clampNumber(els.runtimeSchemaCurrentInput.value, 0, 9999, 0),
+    latestSchemaVersion: clampNumber(els.runtimeSchemaLatestInput.value, 0, 9999, 0),
+    migrationStatus: Number(els.runtimeSchemaCurrentInput.value) >= Number(els.runtimeSchemaLatestInput.value) ? "已同步" : "待升级"
+  };
+  state.runtime.environment = {
+    ...state.runtime.environment,
+    phpVersion: els.runtimePhpVersionInput.value.trim() || "8.1.0",
+    webServer: els.runtimeWebServerInput.value.trim() || "Apache",
+    installMode: els.runtimeInstallModeInput.value,
+    storageProfile: els.runtimeStorageProfileInput.value,
+    dataDirectoryWritable: els.runtimeDataWritableInput.checked,
+    filesDir: els.runtimeFilesDirInput.value.trim() || "data/files",
+    cacheDriver: els.runtimeCacheDriverInput.value,
+    cacheDirectoryWritable: els.runtimeCacheWritableInput.checked,
+    opcacheEnabled: els.runtimeOpcacheInput.checked,
+    urlRewrite: els.runtimeUrlRewriteInput.checked,
+    debugMode: els.runtimeDebugInput.checked
+  };
+  state.runtime.upgrade.targetVersion = els.runtimeUpgradeTargetInput.value.trim() || "1.2.46";
+  state.runtime = normalizeRuntime(state.runtime);
+  persist();
+  renderRuntimeDialog();
+}
+
+function runDatabaseBackupSimulation() {
+  const now = new Date().toISOString();
+  state.runtime.database.lastBackupAt = now;
+  state.runtime.upgrade.backupVerified = true;
+  addRuntimeLog("db:backup", `${dbDriverLabel(state.runtime.database.driver)} 备份已模拟完成`);
+  persist();
+  renderRuntimeDialog();
+}
+
+function runDatabaseMigrationSimulation() {
+  const now = new Date().toISOString();
+  state.runtime.database.currentSchemaVersion = state.runtime.database.latestSchemaVersion;
+  state.runtime.database.migrationStatus = "已同步";
+  state.runtime.upgrade.maintenanceMode = true;
+  addRuntimeLog("db:migrate", `Schema 已迁移到 ${state.runtime.database.latestSchemaVersion} · ${now.slice(0, 10)}`);
+  persist();
+  renderRuntimeDialog();
+}
+
+function runDatabaseOptimizeSimulation() {
+  const now = new Date().toISOString();
+  state.runtime.database.lastOptimizeAt = now;
+  const result = state.runtime.database.driver === "sqlite"
+    ? "SQLite VACUUM 优化已模拟完成"
+    : `${dbDriverLabel(state.runtime.database.driver)} 连接与索引检查已模拟完成`;
+  addRuntimeLog("db:optimize", result);
+  persist();
+  renderRuntimeDialog();
+}
+
+function addRuntimeLog(action, result) {
+  state.runtime.logs.unshift({
+    id: uid("runtime-log"),
+    action,
+    result,
+    createdAt: new Date().toISOString()
+  });
+  state.runtime.logs = state.runtime.logs.slice(0, 12);
+}
+
+function runtimeRiskMessages() {
+  const { database, environment, php, upgrade } = state.runtime;
+  const messages = [];
+  if (phpVersionBelow(environment.phpVersion, "8.1.0")) {
+    messages.push("PHP 版本低于 Kanboard 当前要求的 8.1。");
+  }
+  runtimeRequiredExtensions(database.driver).forEach((extension) => {
+    if (!php.extensions[extension]) messages.push(`缺少 PHP 扩展：${extension}。`);
+  });
+  if (database.driver === "sqlite" && ["docker", "nfs", "high-availability"].includes(environment.storageProfile)) {
+    messages.push("SQLite 不适合 Docker、NFS 或高可用/高并发部署。");
+  }
+  if (!environment.dataDirectoryWritable) {
+    messages.push("data 目录不可写会影响 SQLite、上传文件、缓存和日志。");
+  }
+  if (environment.cacheDriver === "file" && !environment.cacheDirectoryWritable) {
+    messages.push("文件缓存目录不可写，缓存配置不可用。");
+  }
+  if (!environment.opcacheEnabled) {
+    messages.push("未开启 OpCode 缓存，生产环境性能会下降。");
+  }
+  if (environment.debugMode) {
+    messages.push("DEBUG 已开启，生产环境应关闭调试日志。");
+  }
+  if (!database.lastBackupAt && database.currentSchemaVersion < database.latestSchemaVersion) {
+    messages.push("存在待迁移 Schema，升级前应先完成数据库备份。");
+  }
+  if (upgrade.targetVersion && !upgrade.changeLogReviewed) {
+    messages.push("升级前需要阅读 ChangeLog 并确认破坏性变更。");
+  }
+  if (upgrade.targetVersion && !upgrade.workersStopped) {
+    messages.push("升级前应停止 Background Worker。");
+  }
+  if (upgrade.targetVersion && !upgrade.maintenanceMode) {
+    messages.push("升级迁移期间应开启维护模式。");
+  }
+  return messages;
+}
+
+function runtimeRequiredExtensions(driver) {
+  return [...CORE_PHP_EXTENSIONS, DRIVER_EXTENSION_MAP[driver] || DRIVER_EXTENSION_MAP.sqlite];
+}
+
+function buildRuntimeConfigPreview() {
+  const { database, environment } = state.runtime;
+  const portValue = database.port ? Number(database.port) : "null";
+  return [
+    "<?php",
+    `define('DB_RUN_MIGRATIONS', ${phpBool(database.autoMigrations)});`,
+    `define('DB_DRIVER', '${escapeConfigValue(database.driver)}');`,
+    `define('DB_WAL_MODE', ${phpBool(database.walMode)});`,
+    `define('DB_FILENAME', '${escapeConfigValue(database.sqlitePath)}');`,
+    `define('DB_USERNAME', '${escapeConfigValue(database.username)}');`,
+    "define('DB_PASSWORD', '********');",
+    `define('DB_HOSTNAME', '${escapeConfigValue(database.host)}');`,
+    `define('DB_NAME', '${escapeConfigValue(database.name)}');`,
+    `define('DB_PORT', ${portValue});`,
+    `define('FILES_DIR', '${escapeConfigValue(environment.filesDir)}');`,
+    `define('CACHE_DRIVER', '${escapeConfigValue(environment.cacheDriver)}');`,
+    "define('CACHE_DIR', DATA_DIR.DIRECTORY_SEPARATOR.'cache');",
+    `define('ENABLE_URL_REWRITE', ${phpBool(environment.urlRewrite)});`,
+    `define('DEBUG', ${phpBool(environment.debugMode)});`,
+    "define('LOG_DRIVER', 'file');"
+  ].join("\n");
+}
+
+function phpVersionBelow(current, minimum) {
+  const parse = (value) => String(value).split(".").map((part) => Number.parseInt(part, 10) || 0);
+  const currentParts = parse(current);
+  const minimumParts = parse(minimum);
+  for (let index = 0; index < 3; index += 1) {
+    if (currentParts[index] < minimumParts[index]) return true;
+    if (currentParts[index] > minimumParts[index]) return false;
+  }
+  return false;
+}
+
+function dbDriverLabel(value) {
+  return DB_DRIVER_OPTIONS.find((option) => option.value === value)?.label || value;
 }
 
 function openOperationsDialog() {

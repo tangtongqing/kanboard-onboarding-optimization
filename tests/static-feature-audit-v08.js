@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0820";
+const STORAGE_KEY = "kanboard-static-v0821";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -113,6 +113,9 @@ async function testInitialShell(page) {
   check(state.system.reverseProxy.trustedNetworks.includes("127.0.0.1/32"), "system trusted proxy defaults normalized");
   check(state.operations.cron.schedule === "0 8 * * *", "operations cron defaults normalized");
   check(state.operations.jobs.length >= 3, "operations job queue normalized");
+  check(state.runtime.database.driver === "sqlite", "runtime database driver defaults to sqlite");
+  check(state.runtime.environment.phpVersion.startsWith("8."), "runtime PHP version normalized");
+  check(state.runtime.php.extensions.pdo_sqlite === true, "runtime SQLite PDO extension normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -122,6 +125,7 @@ async function testInitialShell(page) {
   check(await page.locator("#pluginsBtn").isVisible(), "plugins entry renders");
   check(await page.locator("#userManagementBtn").isVisible(), "user management entry renders");
   check(await page.locator("#systemSettingsBtn").isVisible(), "system settings entry renders");
+  check(await page.locator("#runtimeBtn").isVisible(), "runtime environment entry renders");
   check(await page.locator("#operationsBtn").isVisible(), "operations entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
@@ -595,7 +599,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0820", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0821", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -706,6 +710,51 @@ async function testSystemSettings(page) {
   check((await page.locator("#systemConfigPreview").inputValue()).includes("REVERSE_PROXY_AUTH"), "system reverse proxy config preview renders");
 }
 
+async function testRuntimeEnvironment(page) {
+  await fresh(page);
+  await page.click("#runtimeBtn");
+  check(await page.locator("#runtimeDialog[open]").isVisible(), "runtime dialog opens");
+  check((await page.locator("#runtimeSummary .analytics-card").count()) === 4, "runtime summary renders");
+  check((await page.locator("#runtimeRequirementList .runtime-requirement-item").count()) >= 12, "runtime PHP requirement list renders");
+  check((await page.locator("#runtimeConfigPreview").inputValue()).includes("DB_DRIVER"), "runtime config preview renders");
+  await page.selectOption("#runtimeDbDriverInput", "postgres");
+  await page.fill("#runtimeDbHostInput", "db.internal");
+  await page.fill("#runtimeDbPortInput", "5432");
+  await page.fill("#runtimeDbNameInput", "kanboard_pm");
+  await pause();
+  let state = await getState(page);
+  check(state.runtime.database.driver === "postgres", "runtime database driver saves");
+  check(state.runtime.database.host === "db.internal" && state.runtime.database.name === "kanboard_pm", "runtime remote database fields save");
+  check((await page.locator("#runtimeStatus").textContent()).includes("pdo_pgsql"), "runtime missing driver extension risk renders");
+  await page.locator('#runtimeRequirementList [data-extension="pdo_pgsql"]').check();
+  await pause();
+  state = await getState(page);
+  check(state.runtime.php.extensions.pdo_pgsql === true, "runtime driver extension toggle saves");
+  await page.uncheck("#runtimeOpcacheInput");
+  await pause();
+  check((await page.locator("#runtimeStatus").textContent()).includes("OpCode"), "runtime performance warning renders");
+  await page.click("#runDbBackupBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.runtime.database.lastBackupAt), "runtime backup simulation saves timestamp");
+  check(state.runtime.upgrade.backupVerified === true, "runtime backup marks upgrade checklist");
+  await page.click("#runDbMigrationBtn");
+  await pause();
+  state = await getState(page);
+  check(state.runtime.database.currentSchemaVersion === state.runtime.database.latestSchemaVersion, "runtime migration syncs schema version");
+  await page.click("#runDbOptimizeBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.runtime.database.lastOptimizeAt), "runtime optimize simulation saves timestamp");
+  check(state.runtime.logs.length >= 3, "runtime operation logs render");
+  await page.locator('#runtimeUpgradeList [data-upgrade-key="changeLogReviewed"]').check();
+  await page.locator('#runtimeUpgradeList [data-upgrade-key="workersStopped"]').check();
+  await pause();
+  state = await getState(page);
+  check(state.runtime.upgrade.changeLogReviewed && state.runtime.upgrade.workersStopped, "runtime upgrade checklist saves");
+  check((await page.locator("#runtimeConfigPreview").inputValue()).includes("DB_HOSTNAME"), "runtime database config preview includes hostname");
+}
+
 async function testOperations(page) {
   await fresh(page);
   await page.click("#operationsBtn");
@@ -798,6 +847,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testPlugins(page);
     await testIdentityManagement(page);
     await testSystemSettings(page);
+    await testRuntimeEnvironment(page);
     await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);

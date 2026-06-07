@@ -1792,6 +1792,51 @@ textarea:focus {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.runtime-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.runtime-check-list {
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.runtime-requirement-item,
+.runtime-upgrade-item {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  cursor: pointer;
+}
+
+.runtime-upgrade-item {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.runtime-requirement-item input,
+.runtime-upgrade-item input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+.runtime-requirement-item.pass,
+.runtime-upgrade-item.pass {
+  background: #f0f8f5;
+  border-color: #cfe7dc;
+}
+
+.runtime-requirement-item.fail,
+.runtime-upgrade-item.fail {
+  background: #fff8ed;
+  border-color: #ead2a4;
+}
+
+.runtime-log-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .empty-inline {
   color: var(--muted);
   font-size: 12px;
