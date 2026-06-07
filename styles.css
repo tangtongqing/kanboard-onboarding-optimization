@@ -1778,6 +1778,20 @@ textarea:focus {
   line-height: 1;
 }
 
+.operation-job-item.done {
+  background: #f0f8f5;
+  border-color: #cfe7dc;
+}
+
+.operation-job-item.failed {
+  background: #fff5f5;
+  border-color: #f3b8b8;
+}
+
+.operation-log-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .empty-inline {
   color: var(--muted);
   font-size: 12px;

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0819";
+const STORAGE_KEY = "kanboard-static-v0820";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -36,6 +36,18 @@ const APP_ROLES = [
 const USER_TYPES = [
   { value: "local", label: "本地用户" },
   { value: "remote", label: "远程用户" }
+];
+const CLI_COMMANDS = [
+  { value: "cronjob", label: "cronjob", preview: "./cli cronjob" },
+  { value: "notification:overdue-tasks", label: "notification:overdue-tasks", preview: "./cli notification:overdue-tasks --group --show" },
+  { value: "projects:daily-stats", label: "projects:daily-stats", preview: "./cli projects:daily-stats" },
+  { value: "trigger:tasks", label: "trigger:tasks", preview: "./cli trigger:tasks" },
+  { value: "worker", label: "worker", preview: "./cli worker" },
+  { value: "job", label: "job", preview: "echo 'RAW_JOB_DATA' | ./cli job" },
+  { value: "db:migrate", label: "db:migrate", preview: "./cli db:migrate" },
+  { value: "db:version", label: "db:version", preview: "./cli db:version" },
+  { value: "plugin:upgrade", label: "plugin:upgrade", preview: "./cli plugin:upgrade" },
+  { value: "user:reset-2fa", label: "user:reset-2fa", preview: "./cli user:reset-2fa my_user" }
 ];
 const PROJECT_TEMPLATES = [
   {
@@ -717,6 +729,32 @@ const els = {
   systemConfigPreview: document.querySelector("#systemConfigPreview"),
   systemRiskSummary: document.querySelector("#systemRiskSummary"),
   systemStatus: document.querySelector("#systemStatus"),
+  operationsDialog: document.querySelector("#operationsDialog"),
+  operationsSummary: document.querySelector("#operationsSummary"),
+  cronModeInput: document.querySelector("#cronModeInput"),
+  cronScheduleInput: document.querySelector("#cronScheduleInput"),
+  cronWindowsInput: document.querySelector("#cronWindowsInput"),
+  cronUrlInput: document.querySelector("#cronUrlInput"),
+  runCronBtn: document.querySelector("#runCronBtn"),
+  mailTransportInput: document.querySelector("#mailTransportInput"),
+  mailFromInput: document.querySelector("#mailFromInput"),
+  mailHostInput: document.querySelector("#mailHostInput"),
+  mailPortInput: document.querySelector("#mailPortInput"),
+  mailEncryptionInput: document.querySelector("#mailEncryptionInput"),
+  mailUserInput: document.querySelector("#mailUserInput"),
+  mailAppUrlInput: document.querySelector("#mailAppUrlInput"),
+  mailTestRecipientInput: document.querySelector("#mailTestRecipientInput"),
+  sendTestMailBtn: document.querySelector("#sendTestMailBtn"),
+  workerEnabledInput: document.querySelector("#workerEnabledInput"),
+  workerQueueInput: document.querySelector("#workerQueueInput"),
+  workerSupervisorInput: document.querySelector("#workerSupervisorInput"),
+  runWorkerBtn: document.querySelector("#runWorkerBtn"),
+  jobQueueList: document.querySelector("#jobQueueList"),
+  cliCommandInput: document.querySelector("#cliCommandInput"),
+  cliPreviewInput: document.querySelector("#cliPreviewInput"),
+  runCliBtn: document.querySelector("#runCliBtn"),
+  cliLogList: document.querySelector("#cliLogList"),
+  operationsStatus: document.querySelector("#operationsStatus"),
   searchInput: document.querySelector("#searchInput"),
   assigneeFilter: document.querySelector("#assigneeFilter"),
   categoryFilter: document.querySelector("#categoryFilter"),
@@ -849,6 +887,7 @@ document.querySelector("#importExportBtn").addEventListener("click", openImportE
 document.querySelector("#pluginsBtn").addEventListener("click", openPluginsDialog);
 document.querySelector("#userManagementBtn").addEventListener("click", openIdentityDialog);
 document.querySelector("#systemSettingsBtn").addEventListener("click", openSystemSettingsDialog);
+document.querySelector("#operationsBtn").addEventListener("click", openOperationsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
 document.querySelector("#deleteProjectBtn").addEventListener("click", deleteActiveProject);
@@ -937,6 +976,37 @@ els.addIdentityGroupMemberBtn.addEventListener("click", addIdentityGroupMember);
   els.proxyEnabledInput,
   els.proxyStripHeadersInput
 ].forEach((input) => input.addEventListener("change", updateSystemConfigFromDialog));
+[
+  els.cronModeInput,
+  els.cronScheduleInput,
+  els.cronWindowsInput,
+  els.cronUrlInput,
+  els.mailTransportInput,
+  els.mailFromInput,
+  els.mailHostInput,
+  els.mailPortInput,
+  els.mailEncryptionInput,
+  els.mailUserInput,
+  els.mailAppUrlInput,
+  els.mailTestRecipientInput,
+  els.workerEnabledInput,
+  els.workerQueueInput,
+  els.workerSupervisorInput,
+  els.cliCommandInput
+].forEach((input) => input.addEventListener("input", updateOperationsFromDialog));
+[
+  els.cronModeInput,
+  els.mailTransportInput,
+  els.mailEncryptionInput,
+  els.workerEnabledInput,
+  els.workerQueueInput,
+  els.workerSupervisorInput,
+  els.cliCommandInput
+].forEach((input) => input.addEventListener("change", updateOperationsFromDialog));
+els.runCronBtn.addEventListener("click", runCronSimulation);
+els.runWorkerBtn.addEventListener("click", runWorkerSimulation);
+els.sendTestMailBtn.addEventListener("click", sendTestMailSimulation);
+els.runCliBtn.addEventListener("click", runCliSimulation);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1125,6 +1195,49 @@ function createDefaultSystemConfig() {
       allowPrivateExternalLinks: false,
       allowPrivateWebhooks: false
     }
+  };
+}
+
+function createDefaultOperations() {
+  return {
+    cron: {
+      mode: "cli",
+      schedule: "0 8 * * *",
+      windowsTask: "Kanboard Daily Cron",
+      url: "https://kanboard.example.com/cronjob?token=WEBHOOK_TOKEN",
+      lastRunAt: "",
+      status: "未运行"
+    },
+    worker: {
+      enabled: false,
+      queueDriver: "none",
+      supervisor: "systemd",
+      status: "未启动",
+      processed: 0,
+      failed: 0
+    },
+    mail: {
+      transport: "smtp",
+      from: "notifications@kanboard.local",
+      hostname: "mail.example.com",
+      port: 587,
+      encryption: "tls",
+      username: "kanboard",
+      sendmailCommand: "/usr/sbin/sendmail -bs",
+      appUrl: "https://kanboard.example.com",
+      testRecipient: "pm@example.com",
+      lastTestAt: ""
+    },
+    cli: {
+      selectedCommand: "cronjob",
+      logs: []
+    },
+    jobs: [
+      { id: "daily-stats", name: "项目每日统计", command: "projects:daily-stats", status: "pending" },
+      { id: "overdue-notifications", name: "逾期任务通知", command: "notification:overdue-tasks --group", status: "pending" },
+      { id: "task-triggers", name: "每日任务触发器", command: "trigger:tasks", status: "pending" },
+      { id: "plugin-upgrade", name: "插件升级检查", command: "plugin:upgrade", status: "waiting" }
+    ]
   };
 }
 
@@ -1548,6 +1661,7 @@ function createDemoState() {
     activeProjectId: projectId,
     identity: createDefaultIdentity(),
     system: createDefaultSystemConfig(),
+    operations: createDefaultOperations(),
     projects: [
       {
         id: projectId,
@@ -1608,6 +1722,7 @@ function normalizeState() {
   state.ui ||= {};
   state.identity = normalizeIdentity(state.identity);
   state.system = normalizeSystemConfig(state.system);
+  state.operations = normalizeOperations(state.operations);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -1742,6 +1857,43 @@ function normalizeSystemConfig(existing = {}) {
       bruteForceLockdown: clampNumber(existing.security?.bruteForceLockdown, 1, 50, defaults.security.bruteForceLockdown),
       lockdownDuration: clampNumber(existing.security?.lockdownDuration, 1, 1440, defaults.security.lockdownDuration)
     }
+  };
+}
+
+function normalizeOperations(existing = {}) {
+  const defaults = createDefaultOperations();
+  const existingJobs = existing.jobs?.length ? existing.jobs : defaults.jobs;
+  return {
+    cron: {
+      ...defaults.cron,
+      ...(existing.cron || {}),
+      mode: ["cli", "url", "windows"].includes(existing.cron?.mode) ? existing.cron.mode : defaults.cron.mode
+    },
+    worker: {
+      ...defaults.worker,
+      ...(existing.worker || {}),
+      processed: Math.max(0, Number(existing.worker?.processed || 0)),
+      failed: Math.max(0, Number(existing.worker?.failed || 0))
+    },
+    mail: {
+      ...defaults.mail,
+      ...(existing.mail || {}),
+      port: clampNumber(existing.mail?.port, 1, 65535, defaults.mail.port),
+      transport: ["smtp", "sendmail", "mail"].includes(existing.mail?.transport) ? existing.mail.transport : defaults.mail.transport,
+      encryption: ["", "null", "ssl", "tls"].includes(existing.mail?.encryption) ? existing.mail.encryption : defaults.mail.encryption
+    },
+    cli: {
+      ...defaults.cli,
+      ...(existing.cli || {}),
+      logs: (existing.cli?.logs || defaults.cli.logs).slice(0, 12)
+    },
+    jobs: existingJobs.map((job) => ({
+      id: job.id || uid("job"),
+      name: job.name || "后台任务",
+      command: job.command || "job",
+      status: ["pending", "running", "done", "failed", "waiting"].includes(job.status) ? job.status : "pending",
+      lastRunAt: job.lastRunAt || ""
+    }))
   };
 }
 
@@ -3719,7 +3871,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0819",
+      exportVersion: "kanboard-static-v0820",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -4468,6 +4620,210 @@ function phpBool(value) {
 
 function escapeConfigValue(value) {
   return String(value ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+function openOperationsDialog() {
+  renderOperationsDialog();
+  els.operationsDialog.showModal();
+}
+
+function renderOperationsDialog() {
+  const { cron, worker, mail, cli } = state.operations;
+  els.cronModeInput.value = cron.mode;
+  els.cronScheduleInput.value = cron.schedule;
+  els.cronWindowsInput.value = cron.windowsTask;
+  els.cronUrlInput.value = cron.url;
+  els.mailTransportInput.value = mail.transport;
+  els.mailFromInput.value = mail.from;
+  els.mailHostInput.value = mail.hostname;
+  els.mailPortInput.value = mail.port;
+  els.mailEncryptionInput.value = mail.encryption;
+  els.mailUserInput.value = mail.username;
+  els.mailAppUrlInput.value = mail.appUrl;
+  els.mailTestRecipientInput.value = mail.testRecipient;
+  els.workerEnabledInput.checked = Boolean(worker.enabled);
+  els.workerQueueInput.value = worker.queueDriver;
+  els.workerSupervisorInput.value = worker.supervisor;
+  els.cliCommandInput.innerHTML = CLI_COMMANDS.map((command) => `<option value="${command.value}">${command.label}</option>`).join("");
+  els.cliCommandInput.value = CLI_COMMANDS.some((command) => command.value === cli.selectedCommand) ? cli.selectedCommand : "cronjob";
+  els.cliPreviewInput.value = cliCommandPreview(els.cliCommandInput.value);
+  renderOperationsSummary();
+  renderJobQueue();
+  renderCliLogs();
+}
+
+function renderOperationsSummary() {
+  const { cron, worker, mail, jobs } = state.operations;
+  const pendingJobs = jobs.filter((job) => ["pending", "running"].includes(job.status)).length;
+  els.operationsSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>Cronjob</span>
+      <strong>${cron.status}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>队列</span>
+      <strong>${pendingJobs}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>Worker</span>
+      <strong>${worker.enabled ? "监控" : "关闭"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>邮件</span>
+      <strong>${mail.transport}</strong>
+    </div>
+  `;
+}
+
+function renderJobQueue() {
+  els.jobQueueList.innerHTML = state.operations.jobs.length
+    ? state.operations.jobs.map((job) => `
+      <div class="settings-item operation-job-item ${job.status}" data-id="${job.id}">
+        <div>
+          <strong>${escapeHtml(job.name)}</strong>
+          <span>${escapeHtml(job.command)}${job.lastRunAt ? ` · ${formatTime(job.lastRunAt)}` : ""}</span>
+        </div>
+        <span class="role-pill">${operationStatusLabel(job.status)}</span>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无后台任务</div>`;
+}
+
+function renderCliLogs() {
+  els.cliLogList.innerHTML = state.operations.cli.logs.length
+    ? state.operations.cli.logs.map((entry) => `
+      <div class="settings-item operation-log-item">
+        <div>
+          <strong>${escapeHtml(entry.command)}</strong>
+          <span>${escapeHtml(entry.result)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无命令日志</div>`;
+}
+
+function updateOperationsFromDialog() {
+  state.operations.cron = {
+    ...state.operations.cron,
+    mode: els.cronModeInput.value,
+    schedule: els.cronScheduleInput.value.trim() || "0 8 * * *",
+    windowsTask: els.cronWindowsInput.value.trim(),
+    url: els.cronUrlInput.value.trim()
+  };
+  state.operations.mail = {
+    ...state.operations.mail,
+    transport: els.mailTransportInput.value,
+    from: els.mailFromInput.value.trim(),
+    hostname: els.mailHostInput.value.trim(),
+    port: clampNumber(els.mailPortInput.value, 1, 65535, 587),
+    encryption: els.mailEncryptionInput.value,
+    username: els.mailUserInput.value.trim(),
+    appUrl: els.mailAppUrlInput.value.trim(),
+    testRecipient: els.mailTestRecipientInput.value.trim()
+  };
+  state.operations.worker = {
+    ...state.operations.worker,
+    enabled: els.workerEnabledInput.checked,
+    queueDriver: els.workerQueueInput.value,
+    supervisor: els.workerSupervisorInput.value,
+    status: els.workerEnabledInput.checked ? "监控中" : "未启动"
+  };
+  state.operations.cli.selectedCommand = els.cliCommandInput.value;
+  state.operations = normalizeOperations(state.operations);
+  persist();
+  renderOperationsDialog();
+}
+
+function runCronSimulation() {
+  const now = new Date().toISOString();
+  let completed = 0;
+  state.operations.jobs.forEach((job) => {
+    if (["pending", "running"].includes(job.status)) {
+      job.status = "done";
+      job.lastRunAt = now;
+      completed += 1;
+    }
+  });
+  state.operations.cron.lastRunAt = now;
+  state.operations.cron.status = "已运行";
+  state.operations.worker.processed += completed;
+  addOperationLog("cronjob", `已处理 ${completed} 个每日后台任务`);
+  els.operationsStatus.textContent = "Cronjob 已模拟运行：统计、逾期通知和自动动作已更新。";
+  persist();
+  renderOperationsDialog();
+}
+
+function runWorkerSimulation() {
+  const now = new Date().toISOString();
+  state.operations.worker.enabled = true;
+  state.operations.worker.status = "监控中";
+  const job = state.operations.jobs.find((item) => ["pending", "waiting", "running"].includes(item.status));
+  if (job) {
+    job.status = "done";
+    job.lastRunAt = now;
+    state.operations.worker.processed += 1;
+    addOperationLog("worker", `队列任务完成：${job.name}`);
+    els.operationsStatus.textContent = `Worker 已处理：${job.name}`;
+  } else {
+    addOperationLog("worker", "队列为空");
+    els.operationsStatus.textContent = "Worker 队列暂无待处理任务。";
+  }
+  persist();
+  renderOperationsDialog();
+}
+
+function sendTestMailSimulation() {
+  const now = new Date().toISOString();
+  state.operations.mail.lastTestAt = now;
+  addOperationLog("mail:test", `测试邮件已发送到 ${state.operations.mail.testRecipient || "未指定收件人"}`);
+  els.operationsStatus.textContent = "测试邮件已模拟发送。";
+  persist();
+  renderOperationsDialog();
+}
+
+function runCliSimulation() {
+  const command = state.operations.cli.selectedCommand;
+  if (command === "cronjob") {
+    runCronSimulation();
+    return;
+  }
+  if (command === "worker") {
+    runWorkerSimulation();
+    return;
+  }
+  const result = command === "db:version"
+    ? "Current version: 95 / Last version: 96"
+    : command === "db:migrate"
+      ? "数据库迁移已模拟完成"
+      : "命令已模拟执行";
+  addOperationLog(command, result);
+  els.operationsStatus.textContent = result;
+  persist();
+  renderOperationsDialog();
+}
+
+function addOperationLog(command, result) {
+  state.operations.cli.logs.unshift({
+    id: uid("log"),
+    command,
+    result,
+    createdAt: new Date().toISOString()
+  });
+  state.operations.cli.logs = state.operations.cli.logs.slice(0, 12);
+}
+
+function cliCommandPreview(commandValue) {
+  return CLI_COMMANDS.find((command) => command.value === commandValue)?.preview || "./cli";
+}
+
+function operationStatusLabel(status) {
+  return {
+    pending: "待处理",
+    running: "运行中",
+    done: "已完成",
+    failed: "失败",
+    waiting: "等待"
+  }[status] || status;
 }
 
 function deleteActiveProject() {

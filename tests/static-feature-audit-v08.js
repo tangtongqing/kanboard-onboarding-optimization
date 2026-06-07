@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0819";
+const STORAGE_KEY = "kanboard-static-v0820";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -111,6 +111,8 @@ async function testInitialShell(page) {
   check(state.identity.groups.length >= 2, "identity directory has groups");
   check(state.system.api.endpoint === "/jsonrpc.php", "system API endpoint normalized");
   check(state.system.reverseProxy.trustedNetworks.includes("127.0.0.1/32"), "system trusted proxy defaults normalized");
+  check(state.operations.cron.schedule === "0 8 * * *", "operations cron defaults normalized");
+  check(state.operations.jobs.length >= 3, "operations job queue normalized");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
   check((await page.locator("#viewSwitcher button").count()) === 5, "project view switcher exposes five views");
@@ -120,6 +122,7 @@ async function testInitialShell(page) {
   check(await page.locator("#pluginsBtn").isVisible(), "plugins entry renders");
   check(await page.locator("#userManagementBtn").isVisible(), "user management entry renders");
   check(await page.locator("#systemSettingsBtn").isVisible(), "system settings entry renders");
+  check(await page.locator("#operationsBtn").isVisible(), "operations entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
   check(state.ui.hideEmptyColumns === true, "empty columns are hidden by default");
@@ -592,7 +595,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0819", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0820", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -703,6 +706,38 @@ async function testSystemSettings(page) {
   check((await page.locator("#systemConfigPreview").inputValue()).includes("REVERSE_PROXY_AUTH"), "system reverse proxy config preview renders");
 }
 
+async function testOperations(page) {
+  await fresh(page);
+  await page.click("#operationsBtn");
+  check(await page.locator("#operationsDialog[open]").isVisible(), "operations dialog opens");
+  check((await page.locator("#operationsSummary .analytics-card").count()) === 4, "operations summary renders");
+  check((await page.locator("#jobQueueList .operation-job-item").count()) >= 3, "operations job queue renders");
+  await page.selectOption("#cronModeInput", "url");
+  await page.fill("#cronUrlInput", "https://kanboard.example.com/cronjob?token=test");
+  await page.click("#runCronBtn");
+  await pause();
+  let state = await getState(page);
+  check(state.operations.cron.status === "已运行", "operations cron run saves status");
+  check(state.operations.jobs.filter((job) => job.status === "done").length >= 3, "operations cron completes daily jobs");
+  await page.click("#runWorkerBtn");
+  await pause();
+  state = await getState(page);
+  check(state.operations.worker.enabled === true && state.operations.worker.processed >= 1, "operations worker simulation saves progress");
+  await page.selectOption("#mailTransportInput", "smtp");
+  await page.fill("#mailTestRecipientInput", "ops@example.com");
+  await page.click("#sendTestMailBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.operations.mail.lastTestAt), "operations test mail saves timestamp");
+  await page.selectOption("#cliCommandInput", "db:version");
+  check((await page.locator("#cliPreviewInput").inputValue()).includes("db:version"), "operations CLI preview changes");
+  await page.click("#runCliBtn");
+  await pause();
+  state = await getState(page);
+  check(state.operations.cli.logs.some((entry) => entry.command === "db:version"), "operations CLI run writes log");
+  check((await page.locator("#operationsStatus").textContent()).length > 0, "operations status feedback renders");
+}
+
 async function testMobileDialogBounds(page) {
   await page.setViewportSize({ width: 390, height: 900 });
   await fresh(page);
@@ -763,6 +798,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testPlugins(page);
     await testIdentityManagement(page);
     await testSystemSettings(page);
+    await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
     console.log(`\n${passed} checks passed.`);

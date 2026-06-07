@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.19 认证安全配置补齐</title>
+  <title>Kanboard V0.8.20 运维任务补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.19 认证安全配置补齐版</p>
+          <p>V0.8.20 运维任务补齐版</p>
         </div>
       </div>
 
@@ -46,6 +46,7 @@
           <button class="secondary-button" id="pluginsBtn" type="button">插件</button>
           <button class="secondary-button" id="userManagementBtn" type="button">用户管理</button>
           <button class="secondary-button" id="systemSettingsBtn" type="button">系统设置</button>
+          <button class="secondary-button" id="operationsBtn" type="button">运维任务</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
           <button class="secondary-button" id="addSwimlaneBtn" type="button">新增泳道</button>
@@ -407,7 +408,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.19</span>
+          <span>静态模拟 V0.8.20</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -902,6 +903,145 @@
         <textarea id="systemConfigPreview" rows="12" readonly></textarea>
       </section>
       <p class="subscription-status" id="systemStatus">系统配置已加载。</p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="operationsDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>运维任务</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="operationsSummary"></section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Cronjob</h4>
+            <span>每日后台任务</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>执行方式</span>
+              <select id="cronModeInput">
+                <option value="cli">CLI</option>
+                <option value="url">URL</option>
+                <option value="windows">Windows 计划任务</option>
+              </select>
+            </label>
+            <label>
+              <span>Cron 表达式</span>
+              <input id="cronScheduleInput" maxlength="40">
+            </label>
+            <label>
+              <span>Windows 任务名</span>
+              <input id="cronWindowsInput" maxlength="80">
+            </label>
+            <label>
+              <span>Cron URL</span>
+              <input id="cronUrlInput" maxlength="160">
+            </label>
+          </div>
+          <button class="secondary-button" id="runCronBtn" type="button">模拟运行 Cronjob</button>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>邮件配置</h4>
+            <span>通知发送</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>传输方式</span>
+              <select id="mailTransportInput">
+                <option value="smtp">smtp</option>
+                <option value="sendmail">sendmail</option>
+                <option value="mail">mail</option>
+              </select>
+            </label>
+            <label>
+              <span>From</span>
+              <input id="mailFromInput" maxlength="100">
+            </label>
+            <label>
+              <span>SMTP Host</span>
+              <input id="mailHostInput" maxlength="100">
+            </label>
+            <label>
+              <span>SMTP Port</span>
+              <input id="mailPortInput" type="number" min="1" max="65535">
+            </label>
+            <label>
+              <span>加密</span>
+              <select id="mailEncryptionInput">
+                <option value="null">null</option>
+                <option value="ssl">ssl</option>
+                <option value="tls">tls</option>
+              </select>
+            </label>
+            <label>
+              <span>SMTP 用户</span>
+              <input id="mailUserInput" maxlength="80">
+            </label>
+            <label>
+              <span>应用 URL</span>
+              <input id="mailAppUrlInput" maxlength="120">
+            </label>
+            <label>
+              <span>测试收件人</span>
+              <input id="mailTestRecipientInput" maxlength="100">
+            </label>
+          </div>
+          <button class="secondary-button" id="sendTestMailBtn" type="button">模拟测试邮件</button>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Background Worker</h4>
+            <span>可选队列</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="workerEnabledInput" type="checkbox">
+            <span>启用 Worker 监控</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>队列驱动</span>
+              <select id="workerQueueInput">
+                <option value="none">none</option>
+                <option value="beanstalk">beanstalk</option>
+                <option value="rabbitmq">rabbitmq</option>
+              </select>
+            </label>
+            <label>
+              <span>Supervisor</span>
+              <select id="workerSupervisorInput">
+                <option value="systemd">systemd</option>
+                <option value="supervisord">supervisord</option>
+                <option value="windows-service">windows-service</option>
+              </select>
+            </label>
+          </div>
+          <button class="secondary-button" id="runWorkerBtn" type="button">处理一个队列任务</button>
+          <div class="settings-list" id="jobQueueList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>CLI</h4>
+            <span>本机命令</span>
+          </div>
+          <label>
+            <span>命令</span>
+            <select id="cliCommandInput"></select>
+          </label>
+          <textarea id="cliPreviewInput" rows="3" readonly></textarea>
+          <button class="secondary-button" id="runCliBtn" type="button">模拟执行命令</button>
+          <div class="settings-list" id="cliLogList"></div>
+        </div>
+      </section>
+      <p class="subscription-status" id="operationsStatus">运维任务状态已加载。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>
