@@ -1373,6 +1373,10 @@ textarea:focus {
   width: min(840px, calc(100vw - 32px));
 }
 
+#developerDialog.modal.wide {
+  width: min(1080px, calc(100vw - 32px));
+}
+
 .modal::backdrop {
   background: rgba(17, 24, 39, 0.46);
 }
@@ -1858,13 +1862,66 @@ textarea:focus {
   border-color: #ead2a4;
 }
 
-#deploymentRunbookPreview {
+#deploymentRunbookPreview,
+#webhookPayloadPreview,
+#apiRequestPreview,
+#pluginSkeletonPreview {
   width: 100%;
   min-height: 280px;
   resize: vertical;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
   line-height: 1.5;
+}
+
+#webhookPayloadPreview,
+#apiRequestPreview {
+  min-height: 250px;
+}
+
+#pluginSkeletonPreview {
+  min-height: 460px;
+}
+
+.developer-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0;
+}
+
+.developer-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.developer-scroll-list {
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.developer-risk-list {
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.developer-index-item,
+.developer-log-item,
+.developer-risk-item,
+.developer-doc-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.developer-risk-item.pass {
+  background: #f0f8f5;
+  border-color: #cfe7dc;
+}
+
+.developer-risk-item.fail {
+  background: #fff8ed;
+  border-color: #ead2a4;
 }
 
 .empty-inline {

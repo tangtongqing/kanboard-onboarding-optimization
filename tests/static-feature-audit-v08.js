@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0822";
+const STORAGE_KEY = "kanboard-static-v0823";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -118,6 +118,10 @@ async function testInitialShell(page) {
   check(state.runtime.php.extensions.pdo_sqlite === true, "runtime SQLite PDO extension normalized");
   check(state.deployment.install.method === "archive", "deployment install method defaults to archive");
   check(state.deployment.access.dataDenyRule === true, "deployment data deny rule defaults enabled");
+  check(state.developer.webhooks.selectedEvent === "task.create", "developer webhook event defaults to task.create");
+  check(state.developer.api.selectedProcedure === "getVersion", "developer API procedure defaults to getVersion");
+  check(state.developer.pluginDev.name === "PmWorkflow", "developer plugin skeleton defaults normalized");
+  check(await page.locator("#developerBtn").isVisible(), "developer entry renders in topbar");
   check(state.deployment.docker.versionPinned === true, "deployment Docker image pinning defaults enabled");
   check(project.automations.length >= 2, "default automation rules normalized");
   check((await page.locator("#projectList .project-item").count()) === 2, "project list renders");
@@ -603,7 +607,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0822", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0823", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -807,6 +811,68 @@ async function testDeploymentChecks(page) {
   check(state.deployment.access.stripAuthHeaders && state.deployment.access.stripForwardedHeaders, "deployment proxy header checklist saves");
 }
 
+async function testDeveloperIntegrations(page) {
+  await fresh(page);
+  await page.click("#developerBtn");
+  check(await page.locator("#developerDialog[open]").isVisible(), "developer dialog opens");
+  check((await page.locator("#developerSummary .analytics-card").count()) === 4, "developer summary renders");
+  check((await page.locator("#apiProcedureIndex .developer-index-item").count()) >= 6, "developer API procedure index renders");
+  check((await page.locator("#webhookPayloadPreview").inputValue()).includes("event_name"), "developer webhook payload preview renders");
+  check((await page.locator("#apiRequestPreview").inputValue()).includes("jsonrpc"), "developer API request preview renders");
+  check((await page.locator("#pluginSkeletonPreview").inputValue()).includes("class Plugin"), "developer plugin skeleton preview renders");
+
+  await page.check("#webhookEnabledInput");
+  await page.fill("#webhookUrlInput", "https://hooks.example.com/kanboard");
+  await page.fill("#webhookTokenInput", "secret-token");
+  await page.selectOption("#webhookEventInput", "task.update");
+  await page.fill("#webhookTimeoutInput", "1500");
+  await pause();
+  let state = await getState(page);
+  check(state.developer.webhooks.selectedEvent === "task.update", "developer webhook event saves");
+  check(state.developer.webhooks.timeoutBudgetMs === 1500, "developer webhook timeout saves");
+  check((await page.locator("#developerRiskList .developer-risk-item.fail").count()) >= 1, "developer webhook risk renders");
+  await page.click("#sendWebhookBtn");
+  await pause();
+  state = await getState(page);
+  check(state.developer.webhooks.receiverStatus === "200 OK", "developer webhook simulation saves status");
+  check(state.developer.webhooks.deliveries.length === 1, "developer webhook delivery log saves");
+
+  await page.fill("#apiEndpointDeveloperInput", "https://kanboard.example.com/jsonrpc.php");
+  await page.selectOption("#apiAccessTypeInput", "user");
+  await page.selectOption("#apiAuthMethodInput", "header");
+  await page.fill("#apiCustomHeaderDeveloperInput", "X-API-Auth");
+  await page.selectOption("#apiProcedureInput", "createTask");
+  await page.check("#apiBatchModeInput");
+  await pause();
+  check((await page.locator("#apiRequestPreview").inputValue()).includes("createTask"), "developer API preview updates selected method");
+  await page.click("#runApiProcedureBtn");
+  await pause();
+  state = await getState(page);
+  check(state.developer.api.selectedProcedure === "createTask", "developer API procedure saves");
+  check(state.developer.api.logs.length === 1, "developer API call log saves");
+
+  await page.fill("#pluginNameInput", "bad plugin");
+  await pause();
+  check((await page.locator("#developerRiskList .developer-risk-item.fail").count()) >= 1, "developer plugin naming risk renders");
+  await page.fill("#pluginNameInput", "PmWorkflowPlus");
+  await page.fill("#pluginNamespaceInput", "PmWorkflowPlus");
+  await page.check("#pluginSchemaInput");
+  await page.check("#pluginMetadataInput");
+  await page.check("#pluginApiMethodInput");
+  await page.check("#pluginHookInput");
+  await page.selectOption("#pluginHookSelect", "template:layout:css");
+  await page.selectOption("#pluginEventSelect", "task.close");
+  await page.fill("#pluginProcedureNameInput", "pm_workflow_export");
+  await page.click("#generatePluginBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.developer.pluginDev.lastGeneratedAt), "developer plugin skeleton generation timestamp saves");
+  const skeleton = await page.locator("#pluginSkeletonPreview").inputValue();
+  check(skeleton.includes("getCompatibleVersion"), "developer plugin skeleton includes compatibility method");
+  check(skeleton.includes("pm_workflow_export"), "developer plugin skeleton includes API method");
+  check((await page.locator("#developerStatus").textContent()).length > 0, "developer status feedback renders");
+}
+
 async function testOperations(page) {
   await fresh(page);
   await page.click("#operationsBtn");
@@ -849,6 +915,14 @@ async function testMobileDialogBounds(page) {
   });
   check(analyticsFits, "analytics dialog fits mobile viewport");
   await page.locator('#analyticsDialog .modal-actions button[value="cancel"]').click();
+  await pause();
+  await page.click("#developerBtn");
+  const developerFits = await page.evaluate(() => {
+    const dialog = document.querySelector("#developerDialog");
+    return dialog.getBoundingClientRect().width <= window.innerWidth;
+  });
+  check(developerFits, "developer dialog fits mobile viewport");
+  await page.locator('#developerDialog .modal-actions button[value="cancel"]').click();
   await pause();
   await page.setViewportSize({ width: 1280, height: 900 });
 }
@@ -901,6 +975,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testSystemSettings(page);
     await testRuntimeEnvironment(page);
     await testDeploymentChecks(page);
+    await testDeveloperIntegrations(page);
     await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0822";
+const STORAGE_KEY = "kanboard-static-v0823";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -72,6 +72,45 @@ const DOCKER_REGISTRIES = [
   "quay.io/kanboard/kanboard"
 ];
 const DEPLOYMENT_WEB_SERVERS = ["apache", "nginx", "iis", "caddy"];
+const WEBHOOK_EVENTS = [
+  "comment.create",
+  "comment.update",
+  "comment.delete",
+  "task.file.create",
+  "task.move.project",
+  "task.move.column",
+  "task.move.position",
+  "task.move.swimlane",
+  "task.update",
+  "task.create",
+  "task.close",
+  "task.open",
+  "task.assignee_change",
+  "subtask.update",
+  "subtask.create",
+  "subtask.delete",
+  "task_internal_link.create_update",
+  "task_internal_link.delete"
+];
+const API_PROCEDURE_GROUPS = [
+  { group: "Application", procedures: ["getVersion", "getTimezone", "getColorList", "getApplicationRoles", "getProjectRoles"] },
+  { group: "Project", procedures: ["getAllProjects", "getProjectById", "createProject", "updateProject", "removeProject"] },
+  { group: "Board", procedures: ["getBoard", "getColumns", "changeTaskPosition"] },
+  { group: "Task", procedures: ["createTask", "getTask", "updateTask", "closeTask", "openTask", "removeTask"] },
+  { group: "Subtask", procedures: ["createSubtask", "updateSubtask", "removeSubtask", "getAllSubtasks"] },
+  { group: "User/Group", procedures: ["getAllUsers", "createUser", "getAllGroups", "createGroup", "addGroupMember"] },
+  { group: "Metadata/File", procedures: ["getTaskMetadata", "saveTaskMetadata", "getAllTaskFiles", "downloadTaskFile"] }
+];
+const PLUGIN_HOOK_OPTIONS = [
+  "template:layout:css",
+  "template:layout:js",
+  "template:dashboard:sidebar",
+  "controller:task:form:default",
+  "controller:calendar:project:events",
+  "formatter:board:query",
+  "model:task:creation:prepare",
+  "model:task:creation:aftersave"
+];
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -827,6 +866,45 @@ const els = {
   deploymentRunbookPreview: document.querySelector("#deploymentRunbookPreview"),
   deploymentLogList: document.querySelector("#deploymentLogList"),
   deploymentStatus: document.querySelector("#deploymentStatus"),
+  developerDialog: document.querySelector("#developerDialog"),
+  developerSummary: document.querySelector("#developerSummary"),
+  webhookEnabledInput: document.querySelector("#webhookEnabledInput"),
+  webhookUrlInput: document.querySelector("#webhookUrlInput"),
+  webhookTokenInput: document.querySelector("#webhookTokenInput"),
+  webhookEventInput: document.querySelector("#webhookEventInput"),
+  webhookTimeoutInput: document.querySelector("#webhookTimeoutInput"),
+  webhookPrivateNetworkInput: document.querySelector("#webhookPrivateNetworkInput"),
+  sendWebhookBtn: document.querySelector("#sendWebhookBtn"),
+  webhookPayloadPreview: document.querySelector("#webhookPayloadPreview"),
+  webhookDeliveryList: document.querySelector("#webhookDeliveryList"),
+  apiEndpointDeveloperInput: document.querySelector("#apiEndpointDeveloperInput"),
+  apiAccessTypeInput: document.querySelector("#apiAccessTypeInput"),
+  apiAuthMethodInput: document.querySelector("#apiAuthMethodInput"),
+  apiUsernameDeveloperInput: document.querySelector("#apiUsernameDeveloperInput"),
+  apiCustomHeaderDeveloperInput: document.querySelector("#apiCustomHeaderDeveloperInput"),
+  apiProcedureInput: document.querySelector("#apiProcedureInput"),
+  apiBatchModeInput: document.querySelector("#apiBatchModeInput"),
+  runApiProcedureBtn: document.querySelector("#runApiProcedureBtn"),
+  apiProcedureIndex: document.querySelector("#apiProcedureIndex"),
+  apiRequestPreview: document.querySelector("#apiRequestPreview"),
+  apiLogList: document.querySelector("#apiLogList"),
+  pluginNameInput: document.querySelector("#pluginNameInput"),
+  pluginNamespaceInput: document.querySelector("#pluginNamespaceInput"),
+  pluginAuthorInput: document.querySelector("#pluginAuthorInput"),
+  pluginVersionInput: document.querySelector("#pluginVersionInput"),
+  pluginCompatibleInput: document.querySelector("#pluginCompatibleInput"),
+  pluginHomepageInput: document.querySelector("#pluginHomepageInput"),
+  pluginSchemaInput: document.querySelector("#pluginSchemaInput"),
+  pluginMetadataInput: document.querySelector("#pluginMetadataInput"),
+  pluginApiMethodInput: document.querySelector("#pluginApiMethodInput"),
+  pluginHookInput: document.querySelector("#pluginHookInput"),
+  pluginHookSelect: document.querySelector("#pluginHookSelect"),
+  pluginEventSelect: document.querySelector("#pluginEventSelect"),
+  pluginProcedureNameInput: document.querySelector("#pluginProcedureNameInput"),
+  generatePluginBtn: document.querySelector("#generatePluginBtn"),
+  pluginSkeletonPreview: document.querySelector("#pluginSkeletonPreview"),
+  developerRiskList: document.querySelector("#developerRiskList"),
+  developerStatus: document.querySelector("#developerStatus"),
   operationsDialog: document.querySelector("#operationsDialog"),
   operationsSummary: document.querySelector("#operationsSummary"),
   cronModeInput: document.querySelector("#cronModeInput"),
@@ -987,6 +1065,7 @@ document.querySelector("#userManagementBtn").addEventListener("click", openIdent
 document.querySelector("#systemSettingsBtn").addEventListener("click", openSystemSettingsDialog);
 document.querySelector("#runtimeBtn").addEventListener("click", openRuntimeDialog);
 document.querySelector("#deploymentBtn").addEventListener("click", openDeploymentDialog);
+document.querySelector("#developerBtn").addEventListener("click", openDeveloperDialog);
 document.querySelector("#operationsBtn").addEventListener("click", openOperationsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
@@ -1218,6 +1297,52 @@ els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
   els.accessOutboundRestrictedInput
 ].forEach((input) => input.addEventListener("change", updateDeploymentFromDialog));
 els.runHealthcheckBtn.addEventListener("click", runDeploymentHealthcheckSimulation);
+[
+  els.webhookEnabledInput,
+  els.webhookUrlInput,
+  els.webhookTokenInput,
+  els.webhookEventInput,
+  els.webhookTimeoutInput,
+  els.webhookPrivateNetworkInput,
+  els.apiEndpointDeveloperInput,
+  els.apiAccessTypeInput,
+  els.apiAuthMethodInput,
+  els.apiUsernameDeveloperInput,
+  els.apiCustomHeaderDeveloperInput,
+  els.apiProcedureInput,
+  els.apiBatchModeInput,
+  els.pluginNameInput,
+  els.pluginNamespaceInput,
+  els.pluginAuthorInput,
+  els.pluginVersionInput,
+  els.pluginCompatibleInput,
+  els.pluginHomepageInput,
+  els.pluginSchemaInput,
+  els.pluginMetadataInput,
+  els.pluginApiMethodInput,
+  els.pluginHookInput,
+  els.pluginHookSelect,
+  els.pluginEventSelect,
+  els.pluginProcedureNameInput
+].forEach((input) => input.addEventListener("input", updateDeveloperFromDialog));
+[
+  els.webhookEnabledInput,
+  els.webhookEventInput,
+  els.webhookPrivateNetworkInput,
+  els.apiAccessTypeInput,
+  els.apiAuthMethodInput,
+  els.apiProcedureInput,
+  els.apiBatchModeInput,
+  els.pluginSchemaInput,
+  els.pluginMetadataInput,
+  els.pluginApiMethodInput,
+  els.pluginHookInput,
+  els.pluginHookSelect,
+  els.pluginEventSelect
+].forEach((input) => input.addEventListener("change", updateDeveloperFromDialog));
+els.sendWebhookBtn.addEventListener("click", simulateWebhookDelivery);
+els.runApiProcedureBtn.addEventListener("click", simulateApiProcedure);
+els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1547,6 +1672,48 @@ function createDefaultDeployment() {
       outboundNetworkRestricted: true
     },
     logs: []
+  };
+}
+
+function createDefaultDeveloperHub() {
+  return {
+    webhooks: {
+      enabled: true,
+      url: "https://integrations.example.com/kanboard",
+      token: "WEBHOOK_TOKEN",
+      selectedEvent: "task.create",
+      timeoutBudgetMs: 1000,
+      privateNetworkAllowed: false,
+      receiverStatus: "未测试",
+      deliveries: []
+    },
+    api: {
+      endpoint: "/jsonrpc.php",
+      accessType: "application",
+      authMethod: "basic",
+      username: "jsonrpc",
+      customHeader: "",
+      selectedProcedure: "getVersion",
+      batchMode: false,
+      lastStatus: "未测试",
+      logs: []
+    },
+    pluginDev: {
+      name: "PmWorkflow",
+      namespace: "PmWorkflow",
+      author: "PM Team",
+      version: "0.1.0",
+      compatibleVersion: ">=1.2.0",
+      homepage: "https://github.com/example/kanboard-plugin-pm-workflow",
+      withSchema: true,
+      withMetadata: true,
+      withApiMethod: true,
+      withHook: true,
+      selectedHook: "template:layout:css",
+      selectedEvent: "task.create",
+      procedureName: "pm_workflow_export",
+      lastGeneratedAt: ""
+    }
   };
 }
 
@@ -1973,6 +2140,7 @@ function createDemoState() {
     operations: createDefaultOperations(),
     runtime: createDefaultRuntime(),
     deployment: createDefaultDeployment(),
+    developer: createDefaultDeveloperHub(),
     projects: [
       {
         id: projectId,
@@ -2036,6 +2204,7 @@ function normalizeState() {
   state.operations = normalizeOperations(state.operations);
   state.runtime = normalizeRuntime(state.runtime);
   state.deployment = normalizeDeployment(state.deployment);
+  state.developer = normalizeDeveloperHub(state.developer);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -2302,6 +2471,52 @@ function normalizeDeployment(existing = {}) {
         : defaults.access.trustedProxyNetworks
     },
     logs: (existing.logs || defaults.logs).slice(0, 12)
+  };
+}
+
+function normalizeDeveloperHub(existing = {}) {
+  const defaults = createDefaultDeveloperHub();
+  const allProcedures = API_PROCEDURE_GROUPS.flatMap((group) => group.procedures);
+  return {
+    webhooks: {
+      ...defaults.webhooks,
+      ...(existing.webhooks || {}),
+      url: existing.webhooks?.url || defaults.webhooks.url,
+      token: existing.webhooks?.token || defaults.webhooks.token,
+      selectedEvent: WEBHOOK_EVENTS.includes(existing.webhooks?.selectedEvent)
+        ? existing.webhooks.selectedEvent
+        : defaults.webhooks.selectedEvent,
+      timeoutBudgetMs: clampNumber(existing.webhooks?.timeoutBudgetMs, 100, 10000, defaults.webhooks.timeoutBudgetMs),
+      deliveries: (existing.webhooks?.deliveries || defaults.webhooks.deliveries).slice(0, 12)
+    },
+    api: {
+      ...defaults.api,
+      ...(existing.api || {}),
+      endpoint: existing.api?.endpoint || defaults.api.endpoint,
+      accessType: ["application", "user"].includes(existing.api?.accessType) ? existing.api.accessType : defaults.api.accessType,
+      authMethod: ["basic", "header"].includes(existing.api?.authMethod) ? existing.api.authMethod : defaults.api.authMethod,
+      username: existing.api?.username || defaults.api.username,
+      selectedProcedure: allProcedures.includes(existing.api?.selectedProcedure)
+        ? existing.api.selectedProcedure
+        : defaults.api.selectedProcedure,
+      logs: (existing.api?.logs || defaults.api.logs).slice(0, 12)
+    },
+    pluginDev: {
+      ...defaults.pluginDev,
+      ...(existing.pluginDev || {}),
+      name: existing.pluginDev?.name || defaults.pluginDev.name,
+      namespace: existing.pluginDev?.namespace || defaults.pluginDev.namespace,
+      author: existing.pluginDev?.author || defaults.pluginDev.author,
+      version: existing.pluginDev?.version || defaults.pluginDev.version,
+      compatibleVersion: existing.pluginDev?.compatibleVersion || defaults.pluginDev.compatibleVersion,
+      selectedHook: PLUGIN_HOOK_OPTIONS.includes(existing.pluginDev?.selectedHook)
+        ? existing.pluginDev.selectedHook
+        : defaults.pluginDev.selectedHook,
+      selectedEvent: WEBHOOK_EVENTS.includes(existing.pluginDev?.selectedEvent)
+        ? existing.pluginDev.selectedEvent
+        : defaults.pluginDev.selectedEvent,
+      procedureName: existing.pluginDev?.procedureName || defaults.pluginDev.procedureName
+    }
   };
 }
 
@@ -4279,7 +4494,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0822",
+      exportVersion: "kanboard-static-v0823",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -5561,6 +5776,367 @@ function buildDeploymentRunbookPreview() {
 
 function deploymentMethodLabel(value) {
   return DEPLOYMENT_METHODS.find((item) => item.value === value)?.label || value;
+}
+
+function openDeveloperDialog() {
+  renderDeveloperDialog();
+  els.developerDialog.showModal();
+}
+
+function renderDeveloperDialog() {
+  const { webhooks, api, pluginDev } = state.developer;
+  els.webhookEventInput.innerHTML = WEBHOOK_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
+  els.apiProcedureInput.innerHTML = API_PROCEDURE_GROUPS.map((group) => `
+    <optgroup label="${group.group}">
+      ${group.procedures.map((procedure) => `<option value="${procedure}">${procedure}</option>`).join("")}
+    </optgroup>
+  `).join("");
+  els.pluginHookSelect.innerHTML = PLUGIN_HOOK_OPTIONS.map((hook) => `<option value="${hook}">${hook}</option>`).join("");
+  els.pluginEventSelect.innerHTML = WEBHOOK_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
+
+  els.webhookEnabledInput.checked = Boolean(webhooks.enabled);
+  els.webhookUrlInput.value = webhooks.url;
+  els.webhookTokenInput.value = webhooks.token;
+  els.webhookEventInput.value = webhooks.selectedEvent;
+  els.webhookTimeoutInput.value = webhooks.timeoutBudgetMs;
+  els.webhookPrivateNetworkInput.checked = Boolean(webhooks.privateNetworkAllowed);
+  els.apiEndpointDeveloperInput.value = api.endpoint;
+  els.apiAccessTypeInput.value = api.accessType;
+  els.apiAuthMethodInput.value = api.authMethod;
+  els.apiUsernameDeveloperInput.value = api.username;
+  els.apiCustomHeaderDeveloperInput.value = api.customHeader;
+  els.apiProcedureInput.value = api.selectedProcedure;
+  els.apiBatchModeInput.checked = Boolean(api.batchMode);
+  els.pluginNameInput.value = pluginDev.name;
+  els.pluginNamespaceInput.value = pluginDev.namespace;
+  els.pluginAuthorInput.value = pluginDev.author;
+  els.pluginVersionInput.value = pluginDev.version;
+  els.pluginCompatibleInput.value = pluginDev.compatibleVersion;
+  els.pluginHomepageInput.value = pluginDev.homepage;
+  els.pluginSchemaInput.checked = Boolean(pluginDev.withSchema);
+  els.pluginMetadataInput.checked = Boolean(pluginDev.withMetadata);
+  els.pluginApiMethodInput.checked = Boolean(pluginDev.withApiMethod);
+  els.pluginHookInput.checked = Boolean(pluginDev.withHook);
+  els.pluginHookSelect.value = pluginDev.selectedHook;
+  els.pluginEventSelect.value = pluginDev.selectedEvent;
+  els.pluginProcedureNameInput.value = pluginDev.procedureName;
+  renderDeveloperSummary();
+  renderApiProcedureIndex();
+  renderWebhookDeliveries();
+  renderApiLogs();
+  renderDeveloperRisks();
+  els.webhookPayloadPreview.value = buildWebhookPayloadPreview();
+  els.apiRequestPreview.value = buildApiRequestPreview();
+  els.pluginSkeletonPreview.value = buildPluginSkeletonPreview();
+  const risks = developerRiskMessages();
+  els.developerStatus.textContent = risks[0] || "开发者与集成配置已通过静态检查。";
+}
+
+function renderDeveloperSummary() {
+  const { webhooks, api, pluginDev } = state.developer;
+  const risks = developerRiskMessages();
+  els.developerSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>Webhook</span>
+      <strong>${webhooks.enabled ? webhooks.selectedEvent : "关闭"}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>API</span>
+      <strong>${api.selectedProcedure}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>插件</span>
+      <strong>${escapeHtml(pluginDev.name)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>风险</span>
+      <strong>${risks.length}</strong>
+    </div>
+  `;
+}
+
+function renderApiProcedureIndex() {
+  els.apiProcedureIndex.innerHTML = API_PROCEDURE_GROUPS.map((group) => `
+    <div class="settings-item developer-index-item">
+      <div>
+        <strong>${group.group}</strong>
+        <span>${group.procedures.join(", ")}</span>
+      </div>
+      <span class="role-pill">${group.procedures.length}</span>
+    </div>
+  `).join("");
+}
+
+function renderWebhookDeliveries() {
+  els.webhookDeliveryList.innerHTML = state.developer.webhooks.deliveries.length
+    ? state.developer.webhooks.deliveries.map((entry) => `
+      <div class="settings-item developer-log-item">
+        <div>
+          <strong>${escapeHtml(entry.event)}</strong>
+          <span>${escapeHtml(entry.status)} · ${entry.durationMs}ms · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无 Webhook 投递日志</div>`;
+}
+
+function renderApiLogs() {
+  els.apiLogList.innerHTML = state.developer.api.logs.length
+    ? state.developer.api.logs.map((entry) => `
+      <div class="settings-item developer-log-item">
+        <div>
+          <strong>${escapeHtml(entry.method)}</strong>
+          <span>${escapeHtml(entry.status)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无 API 调用日志</div>`;
+}
+
+function renderDeveloperRisks() {
+  const risks = developerRiskMessages();
+  els.developerRiskList.innerHTML = risks.length
+    ? risks.map((message) => `
+      <div class="settings-item developer-risk-item fail">
+        <div>
+          <strong>待处理</strong>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="settings-item developer-risk-item pass"><div><strong>检查通过</strong><span>Webhook、API 和插件开发配置暂无高风险提示。</span></div></div>`;
+}
+
+function updateDeveloperFromDialog() {
+  state.developer.webhooks = {
+    ...state.developer.webhooks,
+    enabled: els.webhookEnabledInput.checked,
+    url: els.webhookUrlInput.value.trim(),
+    token: els.webhookTokenInput.value.trim(),
+    selectedEvent: els.webhookEventInput.value,
+    timeoutBudgetMs: clampNumber(els.webhookTimeoutInput.value, 100, 10000, 1000),
+    privateNetworkAllowed: els.webhookPrivateNetworkInput.checked
+  };
+  state.developer.api = {
+    ...state.developer.api,
+    endpoint: els.apiEndpointDeveloperInput.value.trim() || "/jsonrpc.php",
+    accessType: els.apiAccessTypeInput.value,
+    authMethod: els.apiAuthMethodInput.value,
+    username: els.apiUsernameDeveloperInput.value.trim() || "jsonrpc",
+    customHeader: els.apiCustomHeaderDeveloperInput.value.trim(),
+    selectedProcedure: els.apiProcedureInput.value,
+    batchMode: els.apiBatchModeInput.checked
+  };
+  state.developer.pluginDev = {
+    ...state.developer.pluginDev,
+    name: els.pluginNameInput.value.trim() || "PmWorkflow",
+    namespace: els.pluginNamespaceInput.value.trim() || "PmWorkflow",
+    author: els.pluginAuthorInput.value.trim() || "PM Team",
+    version: els.pluginVersionInput.value.trim() || "0.1.0",
+    compatibleVersion: els.pluginCompatibleInput.value.trim() || ">=1.2.0",
+    homepage: els.pluginHomepageInput.value.trim(),
+    withSchema: els.pluginSchemaInput.checked,
+    withMetadata: els.pluginMetadataInput.checked,
+    withApiMethod: els.pluginApiMethodInput.checked,
+    withHook: els.pluginHookInput.checked,
+    selectedHook: els.pluginHookSelect.value,
+    selectedEvent: els.pluginEventSelect.value,
+    procedureName: els.pluginProcedureNameInput.value.trim() || "pm_workflow_export"
+  };
+  state.developer = normalizeDeveloperHub(state.developer);
+  persist();
+  renderDeveloperDialog();
+}
+
+function simulateWebhookDelivery() {
+  const now = new Date().toISOString();
+  const durationMs = Math.min(state.developer.webhooks.timeoutBudgetMs, 420);
+  const status = state.developer.webhooks.enabled && state.developer.webhooks.url && state.developer.webhooks.token
+    ? "200 OK"
+    : "未发送";
+  state.developer.webhooks.receiverStatus = status;
+  state.developer.webhooks.deliveries.unshift({
+    id: uid("webhook"),
+    event: state.developer.webhooks.selectedEvent,
+    status,
+    durationMs,
+    createdAt: now
+  });
+  state.developer.webhooks.deliveries = state.developer.webhooks.deliveries.slice(0, 12);
+  persist();
+  renderDeveloperDialog();
+}
+
+function simulateApiProcedure() {
+  const now = new Date().toISOString();
+  const status = developerRiskMessages().some((message) => message.includes("API")) ? "检查通过但有配置提示" : "200 OK";
+  state.developer.api.lastStatus = status;
+  state.developer.api.logs.unshift({
+    id: uid("api-log"),
+    method: state.developer.api.selectedProcedure,
+    status,
+    createdAt: now
+  });
+  state.developer.api.logs = state.developer.api.logs.slice(0, 12);
+  persist();
+  renderDeveloperDialog();
+}
+
+function generatePluginSkeletonSimulation() {
+  state.developer.pluginDev.lastGeneratedAt = new Date().toISOString();
+  persist();
+  renderDeveloperDialog();
+}
+
+function developerRiskMessages() {
+  const { webhooks, api, pluginDev } = state.developer;
+  const messages = [];
+  if (webhooks.enabled && !webhooks.url) messages.push("Webhook 已开启，但缺少接收 URL。");
+  if (webhooks.enabled && !webhooks.token) messages.push("Webhook 已开启，但缺少用于校验来源的 token。");
+  if (webhooks.timeoutBudgetMs > 1000) messages.push("Webhook 接收端预算超过 1 秒，可能拖慢 Kanboard UI。");
+  if (webhooks.privateNetworkAllowed) messages.push("Webhook 允许访问私网，存在 SSRF 风险。");
+  if (!api.endpoint.includes("jsonrpc.php")) messages.push("API endpoint 应指向 jsonrpc.php。");
+  if (api.endpoint.startsWith("http://")) messages.push("API 明文 HTTP 会暴露凭据，应优先使用 HTTPS。");
+  if (api.authMethod === "header" && !api.customHeader) messages.push("API 自定义 Header 认证已选择，但 Header 名为空。");
+  if (api.accessType === "user" && state.identity.users.some((user) => user.twoFactor)) {
+    messages.push("User API 场景下，已开启 2FA 的用户必须使用 API Key。");
+  }
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(pluginDev.name)) {
+    messages.push("插件目录名首字母应大写且只包含字母数字。");
+  }
+  if (!/^[A-Z][A-Za-z0-9]*$/.test(pluginDev.namespace)) {
+    messages.push("插件 namespace 应匹配 Kanboard\\Plugin\\Yourplugin 命名规则。");
+  }
+  if (!pluginDev.compatibleVersion.trim()) messages.push("插件缺少 getCompatibleVersion 兼容版本声明。");
+  if (pluginDev.withApiMethod && !/^[a-z][a-z0-9_]*$/.test(pluginDev.procedureName)) {
+    messages.push("插件 API 方法名应使用小写字母、数字和下划线。");
+  }
+  if (pluginDev.withHook && !pluginDev.selectedHook) messages.push("插件启用 Hook 扩展但尚未选择 Hook。");
+  return messages;
+}
+
+function buildWebhookPayloadPreview() {
+  const { webhooks } = state.developer;
+  const payload = {
+    request: `POST ${webhooks.url || "https://your_webhook_url/"}?token=${webhooks.token || "WEBHOOK_TOKEN_HERE"}`,
+    headers: {
+      "User-Agent": "Kanboard Webhook",
+      "Content-Type": "application/json",
+      Connection: "close"
+    },
+    body: {
+      event_name: webhooks.selectedEvent,
+      event_data: {
+        task_id: 5,
+        project_id: 1,
+        task: {
+          id: "5",
+          title: "PM workflow integration",
+          project_name: "Demo Project",
+          column_title: "Ready",
+          assignee_username: "admin"
+        }
+      }
+    }
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+function buildApiRequestPreview() {
+  const { api } = state.developer;
+  const request = {
+    jsonrpc: "2.0",
+    method: api.selectedProcedure,
+    id: 1
+  };
+  const params = apiProcedureParams(api.selectedProcedure);
+  if (params) request.params = params;
+  const body = api.batchMode ? [request, { jsonrpc: "2.0", method: "getVersion", id: 2 }] : request;
+  const authLine = api.authMethod === "header"
+    ? `-H '${api.customHeader || "X-API-Auth"}: base64(${api.username}:TOKEN)'`
+    : `-u '${api.username}:TOKEN'`;
+  return [
+    `curl ${authLine} \\`,
+    `  -d '${JSON.stringify(body)}' \\`,
+    `  ${api.endpoint}`,
+    "",
+    JSON.stringify({
+      response: {
+        jsonrpc: "2.0",
+        id: 1,
+        result: apiProcedureResult(api.selectedProcedure)
+      }
+    }, null, 2)
+  ].join("\n");
+}
+
+function buildPluginSkeletonPreview() {
+  const { pluginDev } = state.developer;
+  const className = pluginDev.namespace;
+  const lines = [
+    `plugins/${pluginDev.name}/`,
+    "  Plugin.php",
+    pluginDev.withSchema ? "  Schema/Sqlite.php" : null,
+    pluginDev.withSchema ? "  Schema/Mysql.php" : null,
+    pluginDev.withSchema ? "  Schema/Postgres.php" : null,
+    pluginDev.withMetadata ? "  Model/MetadataModel.php" : null,
+    "  Template/",
+    "  Asset/",
+    "",
+    "<?php",
+    `namespace Kanboard\\Plugin\\${className};`,
+    "",
+    "use Kanboard\\Core\\Plugin\\Base;",
+    "",
+    "class Plugin extends Base",
+    "{",
+    "    public function initialize()",
+    "    {",
+    pluginDev.withHook ? `        $this->hook->on('${pluginDev.selectedHook}', array('template' => 'plugins/${pluginDev.name}/Asset/style.css'));` : null,
+    pluginDev.withApiMethod ? `        $this->api->getProcedureHandler()->withCallback('${pluginDev.procedureName}', function() { return 'ok'; });` : null,
+    `        $this->on('${pluginDev.selectedEvent}', function($event) { /* listen to Kanboard event */ });`,
+    "    }",
+    "",
+    `    public function getPluginName() { return '${escapeConfigValue(pluginDev.name)}'; }`,
+    `    public function getPluginAuthor() { return '${escapeConfigValue(pluginDev.author)}'; }`,
+    `    public function getPluginVersion() { return '${escapeConfigValue(pluginDev.version)}'; }`,
+    `    public function getPluginHomepage() { return '${escapeConfigValue(pluginDev.homepage)}'; }`,
+    `    public function getCompatibleVersion() { return '${escapeConfigValue(pluginDev.compatibleVersion)}'; }`,
+    "}",
+    pluginDev.withSchema ? "" : null,
+    pluginDev.withSchema ? "Schema migrations: const VERSION = 1; function version_1($pdo) { ... }" : null,
+    pluginDev.withMetadata ? "Metadata: prefix keys with plugin name, e.g. pmworkflow_external_id" : null
+  ].filter((line) => line !== null);
+  return lines.join("\n");
+}
+
+function apiProcedureParams(procedure) {
+  if (procedure.startsWith("get") && !["getTask", "getProjectById"].includes(procedure)) return null;
+  if (procedure === "getTask") return { task_id: 1 };
+  if (procedure === "getProjectById") return { project_id: 1 };
+  if (procedure === "createTask") return { project_id: 1, title: "Task created from API" };
+  if (procedure === "createProject") return { name: "API project" };
+  if (procedure === "changeTaskPosition") return { project_id: 1, task_id: 1, column_id: 2, position: 1 };
+  if (procedure.includes("Metadata")) return { task_id: 1, name: "pmworkflow_external_id", value: "EXT-1001" };
+  if (procedure.includes("File")) return { project_id: 1, task_id: 1 };
+  if (procedure.includes("Group")) return { group_id: 1, user_id: 1 };
+  if (procedure.includes("Subtask")) return { task_id: 1, title: "API subtask" };
+  if (procedure.includes("User")) return { username: "api_user", password: "secret" };
+  if (procedure.includes("Task")) return { task_id: 1 };
+  if (procedure.includes("Project")) return { project_id: 1 };
+  return null;
+}
+
+function apiProcedureResult(procedure) {
+  if (procedure === "getVersion") return "1.2.46";
+  if (procedure === "getTimezone") return "Asia/Hong_Kong";
+  if (procedure.includes("Roles")) return { "app-admin": "Administrator", "app-manager": "Manager", "app-user": "User" };
+  if (procedure.includes("Color")) return { yellow: "Yellow", blue: "Blue", green: "Green" };
+  if (procedure.startsWith("create")) return 42;
+  if (procedure.startsWith("remove")) return true;
+  if (procedure.startsWith("update")) return true;
+  if (procedure.startsWith("close") || procedure.startsWith("open")) return true;
+  return [{ id: 1, name: "Demo Project", title: "PM workflow integration" }];
 }
 
 function openOperationsDialog() {
