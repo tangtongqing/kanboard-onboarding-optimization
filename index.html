@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.23 开发者集成补齐</title>
+  <title>Kanboard V0.8.24 插件扩展能力补齐</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.23 开发者集成补齐版</p>
+          <p>V0.8.24 插件扩展能力补齐版</p>
         </div>
       </div>
 
@@ -49,6 +49,7 @@
           <button class="secondary-button" id="runtimeBtn" type="button">运行环境</button>
           <button class="secondary-button" id="deploymentBtn" type="button">部署检查</button>
           <button class="secondary-button" id="developerBtn" type="button">开发者</button>
+          <button class="secondary-button" id="extensionLabBtn" type="button">扩展能力</button>
           <button class="secondary-button" id="operationsBtn" type="button">运维任务</button>
           <button class="secondary-button" id="shortcutsBtn" type="button">快捷键</button>
           <button class="secondary-button" id="projectSettingsBtn" type="button">项目设置</button>
@@ -411,7 +412,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.23</span>
+          <span>静态模拟 V0.8.24</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">
@@ -1546,6 +1547,221 @@
         </div>
       </section>
       <p class="subscription-status" id="developerStatus">开发者集成配置已加载。</p>
+      <div class="modal-actions">
+        <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="extensionDialog" class="modal wide">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>扩展能力</h3>
+        <button class="icon-button" value="cancel" type="submit" formnovalidate aria-label="关闭">×</button>
+      </div>
+      <section class="analytics-grid" id="extensionSummary"></section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>认证提供者</h4>
+            <span>AuthenticationManager</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="authProviderEnabledInput" type="checkbox">
+            <span>启用自定义认证提供者</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>Provider 名称</span>
+              <input id="authProviderNameInput" maxlength="80">
+            </label>
+            <label>
+              <span>接口类型</span>
+              <select id="authProviderInterfaceInput"></select>
+            </label>
+            <label>
+              <span>Provider Class</span>
+              <input id="authProviderClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>外部 ID 字段</span>
+              <input id="authExternalIdColumnInput" maxlength="60" placeholder="github_id">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="authAutoCreateInput" type="checkbox">
+              <span>允许自动创建用户</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="authSyncGroupsInput" type="checkbox">
+              <span>同步外部用户组</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="authSessionCheckInput" type="checkbox">
+              <span>实现会话有效性检查</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="authTwoFactorInput" type="checkbox">
+              <span>认证后继续执行 2FA</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runAuthSimulationBtn" type="button">模拟注册认证提供者</button>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>认证代码预览</h4>
+            <span>UserProviderInterface</span>
+          </div>
+          <textarea id="authProviderPreview" rows="20" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>认证流程</h4>
+            <span>执行顺序</span>
+          </div>
+          <div class="settings-list extension-scroll-list" id="authFlowList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>已知 Provider</h4>
+            <span>Native / Plugin</span>
+          </div>
+          <div class="settings-list extension-scroll-list" id="authProviderList"></div>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>自动动作扩展</h4>
+            <span>Action\Base</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>动作名称</span>
+              <input id="actionNameInput" maxlength="100">
+            </label>
+            <label>
+              <span>动作 Class</span>
+              <input id="actionClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>兼容事件</span>
+              <select id="actionEventInput"></select>
+            </label>
+            <label>
+              <span>插件自定义事件</span>
+              <input id="actionCustomEventInput" maxlength="80">
+            </label>
+            <label>
+              <span>动作必填参数</span>
+              <input id="actionRequiredParameterInput" maxlength="120">
+            </label>
+            <label>
+              <span>事件必备参数</span>
+              <input id="actionEventParameterInput" maxlength="160">
+            </label>
+            <label>
+              <span>触发条件</span>
+              <input id="actionConditionInput" maxlength="160">
+            </label>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="actionRegisterExistingEventInput" type="checkbox">
+            <span>扩展现有动作的兼容事件</span>
+          </label>
+          <button class="secondary-button" id="runActionExtensionBtn" type="button">模拟执行动作</button>
+          <div class="settings-list extension-scroll-list" id="actionExtensionLogList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>自动动作代码预览</h4>
+            <span>register / addEvent</span>
+          </div>
+          <textarea id="actionExtensionPreview" rows="24" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>通知类型扩展</h4>
+            <span>NotificationInterface</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>类型 Key</span>
+              <input id="notificationTypeKeyInput" maxlength="60">
+            </label>
+            <label>
+              <span>显示名称</span>
+              <input id="notificationTypeLabelInput" maxlength="80">
+            </label>
+            <label>
+              <span>处理器 Class</span>
+              <input id="notificationHandlerClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>适用范围</span>
+              <select id="notificationScopeInput"></select>
+            </label>
+            <label>
+              <span>测试事件</span>
+              <select id="notificationEventInput"></select>
+            </label>
+            <label>
+              <span>投递 Endpoint</span>
+              <input id="notificationEndpointInput" maxlength="180">
+            </label>
+          </div>
+          <button class="secondary-button" id="sendExtensionNotificationBtn" type="button">模拟通知投递</button>
+          <div class="settings-list extension-scroll-list" id="notificationExtensionLogList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>通知代码预览</h4>
+            <span>setType</span>
+          </div>
+          <textarea id="notificationExtensionPreview" rows="24" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>扩展风险</h4>
+            <span>类名 / 参数 / 同步 / 投递</span>
+          </div>
+          <div class="settings-list extension-risk-list" id="extensionRiskList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>官网映射</h4>
+            <span>本轮补齐依据</span>
+          </div>
+          <div class="settings-list">
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Authentication Providers</strong>
+                <span>通过 AuthenticationManager 注册，实现 Password、OAuth、Pre、Post 或 SessionCheck 接口。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Automatic Actions</strong>
+                <span>动作类继承 Action\Base，实现兼容事件、必填参数、条件和 doAction。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Notification Types</strong>
+                <span>通过 user/project notification type model 注册处理器，并实现 NotificationInterface。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <p class="subscription-status" id="extensionStatus">扩展能力配置已加载。</p>
       <div class="modal-actions">
         <button class="primary-action compact" value="cancel" type="submit" formnovalidate>关闭</button>
       </div>

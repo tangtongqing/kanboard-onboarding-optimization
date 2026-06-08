@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0823";
+const STORAGE_KEY = "kanboard-static-v0824";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -110,6 +110,32 @@ const PLUGIN_HOOK_OPTIONS = [
   "formatter:board:query",
   "model:task:creation:prepare",
   "model:task:creation:aftersave"
+];
+const AUTH_PROVIDER_INTERFACES = [
+  { value: "password", label: "PasswordAuthenticationProviderInterface", role: "Login form / LDAP" },
+  { value: "pre", label: "PreAuthenticationProviderInterface", role: "Reverse proxy / RememberMe" },
+  { value: "oauth", label: "OAuthAuthenticationProviderInterface", role: "OAuth2 provider" },
+  { value: "post", label: "PostAuthenticationProviderInterface", role: "Two-Factor" },
+  { value: "session", label: "SessionCheckProviderInterface", role: "Session validation" }
+];
+const AUTH_FLOW_STEPS = [
+  "SessionCheckProviderInterface",
+  "PreAuthenticationProviderInterface",
+  "PasswordAuthenticationProviderInterface",
+  "OAuthAuthenticationProviderInterface",
+  "PostAuthenticationProviderInterface",
+  "UserProviderInterface local sync"
+];
+const EXTENSION_ACTION_EVENTS = [
+  ...WEBHOOK_EVENTS,
+  "auth.success",
+  "auth.failure",
+  "pm.workflow.ready"
+];
+const NOTIFICATION_SCOPES = [
+  { value: "both", label: "User + Project" },
+  { value: "user", label: "User only" },
+  { value: "project", label: "Project only" }
 ];
 const PROJECT_TEMPLATES = [
   {
@@ -905,6 +931,43 @@ const els = {
   pluginSkeletonPreview: document.querySelector("#pluginSkeletonPreview"),
   developerRiskList: document.querySelector("#developerRiskList"),
   developerStatus: document.querySelector("#developerStatus"),
+  extensionDialog: document.querySelector("#extensionDialog"),
+  extensionSummary: document.querySelector("#extensionSummary"),
+  authProviderEnabledInput: document.querySelector("#authProviderEnabledInput"),
+  authProviderNameInput: document.querySelector("#authProviderNameInput"),
+  authProviderInterfaceInput: document.querySelector("#authProviderInterfaceInput"),
+  authProviderClassInput: document.querySelector("#authProviderClassInput"),
+  authExternalIdColumnInput: document.querySelector("#authExternalIdColumnInput"),
+  authAutoCreateInput: document.querySelector("#authAutoCreateInput"),
+  authSyncGroupsInput: document.querySelector("#authSyncGroupsInput"),
+  authSessionCheckInput: document.querySelector("#authSessionCheckInput"),
+  authTwoFactorInput: document.querySelector("#authTwoFactorInput"),
+  runAuthSimulationBtn: document.querySelector("#runAuthSimulationBtn"),
+  authProviderList: document.querySelector("#authProviderList"),
+  authFlowList: document.querySelector("#authFlowList"),
+  authProviderPreview: document.querySelector("#authProviderPreview"),
+  actionNameInput: document.querySelector("#actionNameInput"),
+  actionClassInput: document.querySelector("#actionClassInput"),
+  actionEventInput: document.querySelector("#actionEventInput"),
+  actionCustomEventInput: document.querySelector("#actionCustomEventInput"),
+  actionRequiredParameterInput: document.querySelector("#actionRequiredParameterInput"),
+  actionEventParameterInput: document.querySelector("#actionEventParameterInput"),
+  actionConditionInput: document.querySelector("#actionConditionInput"),
+  actionRegisterExistingEventInput: document.querySelector("#actionRegisterExistingEventInput"),
+  runActionExtensionBtn: document.querySelector("#runActionExtensionBtn"),
+  actionExtensionPreview: document.querySelector("#actionExtensionPreview"),
+  actionExtensionLogList: document.querySelector("#actionExtensionLogList"),
+  notificationTypeKeyInput: document.querySelector("#notificationTypeKeyInput"),
+  notificationTypeLabelInput: document.querySelector("#notificationTypeLabelInput"),
+  notificationHandlerClassInput: document.querySelector("#notificationHandlerClassInput"),
+  notificationScopeInput: document.querySelector("#notificationScopeInput"),
+  notificationEventInput: document.querySelector("#notificationEventInput"),
+  notificationEndpointInput: document.querySelector("#notificationEndpointInput"),
+  sendExtensionNotificationBtn: document.querySelector("#sendExtensionNotificationBtn"),
+  notificationExtensionPreview: document.querySelector("#notificationExtensionPreview"),
+  notificationExtensionLogList: document.querySelector("#notificationExtensionLogList"),
+  extensionRiskList: document.querySelector("#extensionRiskList"),
+  extensionStatus: document.querySelector("#extensionStatus"),
   operationsDialog: document.querySelector("#operationsDialog"),
   operationsSummary: document.querySelector("#operationsSummary"),
   cronModeInput: document.querySelector("#cronModeInput"),
@@ -1066,6 +1129,7 @@ document.querySelector("#systemSettingsBtn").addEventListener("click", openSyste
 document.querySelector("#runtimeBtn").addEventListener("click", openRuntimeDialog);
 document.querySelector("#deploymentBtn").addEventListener("click", openDeploymentDialog);
 document.querySelector("#developerBtn").addEventListener("click", openDeveloperDialog);
+document.querySelector("#extensionLabBtn").addEventListener("click", openExtensionDialog);
 document.querySelector("#operationsBtn").addEventListener("click", openOperationsDialog);
 document.querySelector("#shortcutsBtn").addEventListener("click", openShortcutsDialog);
 document.querySelector("#projectSettingsBtn").addEventListener("click", openProjectSettingsDialog);
@@ -1343,6 +1407,46 @@ els.runHealthcheckBtn.addEventListener("click", runDeploymentHealthcheckSimulati
 els.sendWebhookBtn.addEventListener("click", simulateWebhookDelivery);
 els.runApiProcedureBtn.addEventListener("click", simulateApiProcedure);
 els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation);
+[
+  els.authProviderEnabledInput,
+  els.authProviderNameInput,
+  els.authProviderInterfaceInput,
+  els.authProviderClassInput,
+  els.authExternalIdColumnInput,
+  els.authAutoCreateInput,
+  els.authSyncGroupsInput,
+  els.authSessionCheckInput,
+  els.authTwoFactorInput,
+  els.actionNameInput,
+  els.actionClassInput,
+  els.actionEventInput,
+  els.actionCustomEventInput,
+  els.actionRequiredParameterInput,
+  els.actionEventParameterInput,
+  els.actionConditionInput,
+  els.actionRegisterExistingEventInput,
+  els.notificationTypeKeyInput,
+  els.notificationTypeLabelInput,
+  els.notificationHandlerClassInput,
+  els.notificationScopeInput,
+  els.notificationEventInput,
+  els.notificationEndpointInput
+].forEach((input) => input.addEventListener("input", updateExtensionFromDialog));
+[
+  els.authProviderEnabledInput,
+  els.authProviderInterfaceInput,
+  els.authAutoCreateInput,
+  els.authSyncGroupsInput,
+  els.authSessionCheckInput,
+  els.authTwoFactorInput,
+  els.actionEventInput,
+  els.actionRegisterExistingEventInput,
+  els.notificationScopeInput,
+  els.notificationEventInput
+].forEach((input) => input.addEventListener("change", updateExtensionFromDialog));
+els.runAuthSimulationBtn.addEventListener("click", simulateAuthenticationProvider);
+els.runActionExtensionBtn.addEventListener("click", simulateAutomaticActionExtension);
+els.sendExtensionNotificationBtn.addEventListener("click", simulateNotificationTypeDelivery);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1713,6 +1817,52 @@ function createDefaultDeveloperHub() {
       selectedEvent: "task.create",
       procedureName: "pm_workflow_export",
       lastGeneratedAt: ""
+    }
+  };
+}
+
+function createDefaultExtensionLab() {
+  return {
+    authProviders: {
+      enabled: true,
+      selectedInterface: "oauth",
+      providerName: "GithubAuth",
+      className: "Kanboard\\Plugin\\GithubAuth\\Auth\\GithubProvider",
+      autoCreateUser: true,
+      externalIdColumn: "github_id",
+      syncGroups: true,
+      sessionCheck: true,
+      twoFactorAfterAuth: true,
+      lastSimulationAt: "",
+      providers: [
+        { id: "database", name: "Database", interfaceType: "password", order: 1, enabled: true, native: true },
+        { id: "ldap", name: "LDAP", interfaceType: "password", order: 2, enabled: false, native: true },
+        { id: "reverse-proxy", name: "Reverse Proxy", interfaceType: "pre", order: 3, enabled: false, native: true },
+        { id: "google", name: "Google OAuth2", interfaceType: "oauth", order: 4, enabled: false, native: true },
+        { id: "totp", name: "TOTP Two-Factor", interfaceType: "post", order: 5, enabled: true, native: true }
+      ]
+    },
+    automaticActions: {
+      actionName: "TaskRenameFromProductStage",
+      className: "Kanboard\\Plugin\\PmWorkflow\\Action\\TaskRenameFromProductStage",
+      selectedEvent: "task.move.column",
+      customEvent: "pm.workflow.ready",
+      requiredParameter: "target_column_id",
+      eventParameter: "task_id,column_id,project_id",
+      conditionExpression: "column_id == PRD",
+      registerExistingEvent: true,
+      lastRunAt: "",
+      logs: []
+    },
+    notificationTypes: {
+      typeKey: "chatops",
+      label: "ChatOps",
+      handlerClass: "Kanboard\\Plugin\\ChatOps\\Notification\\ChatOpsHandler",
+      scope: "both",
+      selectedEvent: "task.create",
+      endpoint: "https://chat.example.com/hooks/kanboard",
+      lastStatus: "未测试",
+      logs: []
     }
   };
 }
@@ -2141,6 +2291,7 @@ function createDemoState() {
     runtime: createDefaultRuntime(),
     deployment: createDefaultDeployment(),
     developer: createDefaultDeveloperHub(),
+    extensions: createDefaultExtensionLab(),
     projects: [
       {
         id: projectId,
@@ -2205,6 +2356,7 @@ function normalizeState() {
   state.runtime = normalizeRuntime(state.runtime);
   state.deployment = normalizeDeployment(state.deployment);
   state.developer = normalizeDeveloperHub(state.developer);
+  state.extensions = normalizeExtensionLab(state.extensions);
   state.plugins = normalizePlugins(state.plugins);
   state.ui.viewMode ||= "board";
   state.ui.cardMode ||= "expanded";
@@ -2516,6 +2668,74 @@ function normalizeDeveloperHub(existing = {}) {
         ? existing.pluginDev.selectedEvent
         : defaults.pluginDev.selectedEvent,
       procedureName: existing.pluginDev?.procedureName || defaults.pluginDev.procedureName
+    }
+  };
+}
+
+function normalizeExtensionLab(existing = {}) {
+  const defaults = createDefaultExtensionLab();
+  const interfaceValues = AUTH_PROVIDER_INTERFACES.map((item) => item.value);
+  const actionEvents = EXTENSION_ACTION_EVENTS;
+  const scopeValues = NOTIFICATION_SCOPES.map((item) => item.value);
+  return {
+    authProviders: {
+      ...defaults.authProviders,
+      ...(existing.authProviders || {}),
+      selectedInterface: interfaceValues.includes(existing.authProviders?.selectedInterface)
+        ? existing.authProviders.selectedInterface
+        : defaults.authProviders.selectedInterface,
+      providerName: existing.authProviders?.providerName || defaults.authProviders.providerName,
+      className: existing.authProviders?.className || defaults.authProviders.className,
+      externalIdColumn: existing.authProviders && "externalIdColumn" in existing.authProviders
+        ? existing.authProviders.externalIdColumn
+        : defaults.authProviders.externalIdColumn,
+      providers: (existing.authProviders?.providers?.length ? existing.authProviders.providers : defaults.authProviders.providers)
+        .map((provider, index) => ({
+          id: provider.id || uid("auth-provider"),
+          name: provider.name || `Provider ${index + 1}`,
+          interfaceType: interfaceValues.includes(provider.interfaceType) ? provider.interfaceType : "password",
+          order: clampNumber(provider.order, 1, 99, index + 1),
+          enabled: provider.enabled ?? true,
+          native: Boolean(provider.native)
+        }))
+        .sort((a, b) => a.order - b.order)
+    },
+    automaticActions: {
+      ...defaults.automaticActions,
+      ...(existing.automaticActions || {}),
+      actionName: existing.automaticActions?.actionName || defaults.automaticActions.actionName,
+      className: existing.automaticActions?.className || defaults.automaticActions.className,
+      selectedEvent: actionEvents.includes(existing.automaticActions?.selectedEvent)
+        ? existing.automaticActions.selectedEvent
+        : defaults.automaticActions.selectedEvent,
+      customEvent: existing.automaticActions?.customEvent || defaults.automaticActions.customEvent,
+      requiredParameter: existing.automaticActions && "requiredParameter" in existing.automaticActions
+        ? existing.automaticActions.requiredParameter
+        : defaults.automaticActions.requiredParameter,
+      eventParameter: existing.automaticActions && "eventParameter" in existing.automaticActions
+        ? existing.automaticActions.eventParameter
+        : defaults.automaticActions.eventParameter,
+      conditionExpression: existing.automaticActions && "conditionExpression" in existing.automaticActions
+        ? existing.automaticActions.conditionExpression
+        : defaults.automaticActions.conditionExpression,
+      logs: (existing.automaticActions?.logs || defaults.automaticActions.logs).slice(0, 12)
+    },
+    notificationTypes: {
+      ...defaults.notificationTypes,
+      ...(existing.notificationTypes || {}),
+      typeKey: existing.notificationTypes?.typeKey || defaults.notificationTypes.typeKey,
+      label: existing.notificationTypes?.label || defaults.notificationTypes.label,
+      handlerClass: existing.notificationTypes?.handlerClass || defaults.notificationTypes.handlerClass,
+      scope: scopeValues.includes(existing.notificationTypes?.scope)
+        ? existing.notificationTypes.scope
+        : defaults.notificationTypes.scope,
+      selectedEvent: actionEvents.includes(existing.notificationTypes?.selectedEvent)
+        ? existing.notificationTypes.selectedEvent
+        : defaults.notificationTypes.selectedEvent,
+      endpoint: existing.notificationTypes && "endpoint" in existing.notificationTypes
+        ? existing.notificationTypes.endpoint
+        : defaults.notificationTypes.endpoint,
+      logs: (existing.notificationTypes?.logs || defaults.notificationTypes.logs).slice(0, 12)
     }
   };
 }
@@ -4494,7 +4714,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0823",
+      exportVersion: "kanboard-static-v0824",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -6137,6 +6357,375 @@ function apiProcedureResult(procedure) {
   if (procedure.startsWith("update")) return true;
   if (procedure.startsWith("close") || procedure.startsWith("open")) return true;
   return [{ id: 1, name: "Demo Project", title: "PM workflow integration" }];
+}
+
+function openExtensionDialog() {
+  renderExtensionDialog();
+  els.extensionDialog.showModal();
+}
+
+function renderExtensionDialog() {
+  const { authProviders, automaticActions, notificationTypes } = state.extensions;
+  els.authProviderInterfaceInput.innerHTML = AUTH_PROVIDER_INTERFACES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
+  els.actionEventInput.innerHTML = EXTENSION_ACTION_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
+  els.notificationScopeInput.innerHTML = NOTIFICATION_SCOPES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
+  els.notificationEventInput.innerHTML = EXTENSION_ACTION_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
+
+  els.authProviderEnabledInput.checked = Boolean(authProviders.enabled);
+  els.authProviderNameInput.value = authProviders.providerName;
+  els.authProviderInterfaceInput.value = authProviders.selectedInterface;
+  els.authProviderClassInput.value = authProviders.className;
+  els.authExternalIdColumnInput.value = authProviders.externalIdColumn;
+  els.authAutoCreateInput.checked = Boolean(authProviders.autoCreateUser);
+  els.authSyncGroupsInput.checked = Boolean(authProviders.syncGroups);
+  els.authSessionCheckInput.checked = Boolean(authProviders.sessionCheck);
+  els.authTwoFactorInput.checked = Boolean(authProviders.twoFactorAfterAuth);
+  els.actionNameInput.value = automaticActions.actionName;
+  els.actionClassInput.value = automaticActions.className;
+  els.actionEventInput.value = automaticActions.selectedEvent;
+  els.actionCustomEventInput.value = automaticActions.customEvent;
+  els.actionRequiredParameterInput.value = automaticActions.requiredParameter;
+  els.actionEventParameterInput.value = automaticActions.eventParameter;
+  els.actionConditionInput.value = automaticActions.conditionExpression;
+  els.actionRegisterExistingEventInput.checked = Boolean(automaticActions.registerExistingEvent);
+  els.notificationTypeKeyInput.value = notificationTypes.typeKey;
+  els.notificationTypeLabelInput.value = notificationTypes.label;
+  els.notificationHandlerClassInput.value = notificationTypes.handlerClass;
+  els.notificationScopeInput.value = notificationTypes.scope;
+  els.notificationEventInput.value = notificationTypes.selectedEvent;
+  els.notificationEndpointInput.value = notificationTypes.endpoint;
+
+  renderExtensionSummary();
+  renderAuthProviderList();
+  renderAuthFlowList();
+  renderExtensionLogs();
+  renderExtensionRisks();
+  els.authProviderPreview.value = buildAuthProviderPreview();
+  els.actionExtensionPreview.value = buildAutomaticActionExtensionPreview();
+  els.notificationExtensionPreview.value = buildNotificationTypePreview();
+  const risks = extensionRiskMessages();
+  els.extensionStatus.textContent = risks[0] || "认证提供者、自动动作和通知类型扩展配置已通过静态检查。";
+}
+
+function renderExtensionSummary() {
+  const { authProviders, automaticActions, notificationTypes } = state.extensions;
+  const risks = extensionRiskMessages();
+  const enabledProviders = authProviders.providers.filter((provider) => provider.enabled).length;
+  els.extensionSummary.innerHTML = `
+    <div class="analytics-card">
+      <span>认证提供者</span>
+      <strong>${enabledProviders}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>当前接口</span>
+      <strong>${authProviderInterfaceLabel(authProviders.selectedInterface).replace("AuthenticationProviderInterface", "")}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>自动动作</span>
+      <strong>${escapeHtml(automaticActions.actionName)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>通知类型</span>
+      <strong>${escapeHtml(notificationTypes.typeKey)}</strong>
+    </div>
+    <div class="analytics-card">
+      <span>风险</span>
+      <strong>${risks.length}</strong>
+    </div>
+  `;
+}
+
+function renderAuthProviderList() {
+  els.authProviderList.innerHTML = state.extensions.authProviders.providers.map((provider) => `
+    <div class="settings-item extension-provider-item ${provider.enabled ? "pass" : ""}">
+      <div>
+        <strong>${escapeHtml(provider.name)}</strong>
+        <span>${provider.order}. ${authProviderInterfaceLabel(provider.interfaceType)} · ${provider.native ? "Kanboard native" : "Plugin"}</span>
+      </div>
+      <span class="role-pill">${provider.enabled ? "启用" : "关闭"}</span>
+    </div>
+  `).join("");
+}
+
+function renderAuthFlowList() {
+  els.authFlowList.innerHTML = AUTH_FLOW_STEPS.map((step, index) => `
+    <div class="settings-item extension-flow-item">
+      <div>
+        <strong>${index + 1}. ${step}</strong>
+        <span>${authFlowHint(step)}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderExtensionLogs() {
+  const { automaticActions, notificationTypes } = state.extensions;
+  els.actionExtensionLogList.innerHTML = automaticActions.logs.length
+    ? automaticActions.logs.map((entry) => `
+      <div class="settings-item extension-log-item">
+        <div>
+          <strong>${escapeHtml(entry.event)}</strong>
+          <span>${escapeHtml(entry.status)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无自动动作模拟日志</div>`;
+  els.notificationExtensionLogList.innerHTML = notificationTypes.logs.length
+    ? notificationTypes.logs.map((entry) => `
+      <div class="settings-item extension-log-item">
+        <div>
+          <strong>${escapeHtml(entry.type)}</strong>
+          <span>${escapeHtml(entry.status)} · ${escapeHtml(entry.event)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无通知类型投递日志</div>`;
+}
+
+function renderExtensionRisks() {
+  const risks = extensionRiskMessages();
+  els.extensionRiskList.innerHTML = risks.length
+    ? risks.map((message) => `
+      <div class="settings-item extension-risk-item fail">
+        <div>
+          <strong>待处理</strong>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="settings-item extension-risk-item pass"><div><strong>检查通过</strong><span>扩展接口、类名、必要参数和通知处理器暂无高风险提示。</span></div></div>`;
+}
+
+function updateExtensionFromDialog() {
+  state.extensions.authProviders = {
+    ...state.extensions.authProviders,
+    enabled: els.authProviderEnabledInput.checked,
+    providerName: els.authProviderNameInput.value.trim() || "GithubAuth",
+    selectedInterface: els.authProviderInterfaceInput.value,
+    className: els.authProviderClassInput.value.trim() || "Kanboard\\Plugin\\GithubAuth\\Auth\\GithubProvider",
+    externalIdColumn: els.authExternalIdColumnInput.value.trim(),
+    autoCreateUser: els.authAutoCreateInput.checked,
+    syncGroups: els.authSyncGroupsInput.checked,
+    sessionCheck: els.authSessionCheckInput.checked,
+    twoFactorAfterAuth: els.authTwoFactorInput.checked
+  };
+  state.extensions.automaticActions = {
+    ...state.extensions.automaticActions,
+    actionName: els.actionNameInput.value.trim() || "TaskRenameFromProductStage",
+    className: els.actionClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\Action\\TaskRenameFromProductStage",
+    selectedEvent: els.actionEventInput.value,
+    customEvent: els.actionCustomEventInput.value.trim() || "pm.workflow.ready",
+    requiredParameter: els.actionRequiredParameterInput.value.trim(),
+    eventParameter: els.actionEventParameterInput.value.trim(),
+    conditionExpression: els.actionConditionInput.value.trim(),
+    registerExistingEvent: els.actionRegisterExistingEventInput.checked
+  };
+  state.extensions.notificationTypes = {
+    ...state.extensions.notificationTypes,
+    typeKey: els.notificationTypeKeyInput.value.trim() || "chatops",
+    label: els.notificationTypeLabelInput.value.trim() || "ChatOps",
+    handlerClass: els.notificationHandlerClassInput.value.trim() || "Kanboard\\Plugin\\ChatOps\\Notification\\ChatOpsHandler",
+    scope: els.notificationScopeInput.value,
+    selectedEvent: els.notificationEventInput.value,
+    endpoint: els.notificationEndpointInput.value.trim()
+  };
+  state.extensions = normalizeExtensionLab(state.extensions);
+  persist();
+  renderExtensionDialog();
+}
+
+function simulateAuthenticationProvider() {
+  const { authProviders } = state.extensions;
+  const customProvider = {
+    id: "custom-auth-provider",
+    name: authProviders.providerName,
+    interfaceType: authProviders.selectedInterface,
+    order: 6,
+    enabled: Boolean(authProviders.enabled),
+    native: false
+  };
+  state.extensions.authProviders.lastSimulationAt = new Date().toISOString();
+  state.extensions.authProviders.providers = [
+    ...authProviders.providers.filter((provider) => provider.id !== customProvider.id),
+    customProvider
+  ].sort((a, b) => a.order - b.order);
+  persist();
+  renderExtensionDialog();
+}
+
+function simulateAutomaticActionExtension() {
+  const now = new Date().toISOString();
+  const { automaticActions } = state.extensions;
+  const status = extensionRiskMessages().some((message) => message.includes("自动动作")) ? "检查通过但有配置提示" : "doAction true";
+  state.extensions.automaticActions.lastRunAt = now;
+  state.extensions.automaticActions.logs.unshift({
+    id: uid("action-log"),
+    event: automaticActions.selectedEvent,
+    status,
+    createdAt: now
+  });
+  state.extensions.automaticActions.logs = state.extensions.automaticActions.logs.slice(0, 12);
+  persist();
+  renderExtensionDialog();
+}
+
+function simulateNotificationTypeDelivery() {
+  const now = new Date().toISOString();
+  const { notificationTypes } = state.extensions;
+  const status = notificationTypes.endpoint ? "notifyUser / notifyProject OK" : "缺少 endpoint";
+  state.extensions.notificationTypes.lastStatus = status;
+  state.extensions.notificationTypes.logs.unshift({
+    id: uid("notification-type-log"),
+    type: notificationTypes.typeKey,
+    event: notificationTypes.selectedEvent,
+    status,
+    createdAt: now
+  });
+  state.extensions.notificationTypes.logs = state.extensions.notificationTypes.logs.slice(0, 12);
+  persist();
+  renderExtensionDialog();
+}
+
+function extensionRiskMessages() {
+  const { authProviders, automaticActions, notificationTypes } = state.extensions;
+  const messages = [];
+  if (authProviders.enabled && !authProviders.className.includes("\\")) {
+    messages.push("认证提供者类名应使用完整 namespace，便于 AuthenticationManager 注册。");
+  }
+  if (authProviders.selectedInterface === "oauth" && !authProviders.externalIdColumn.endsWith("_id")) {
+    messages.push("OAuth2 用户同步建议使用 google_id、github_id、gitlab_id 这类外部 ID 字段。");
+  }
+  if (authProviders.autoCreateUser && !authProviders.externalIdColumn) {
+    messages.push("开启自动创建用户时，需要外部 ID 字段支持本地同步。");
+  }
+  if (!authProviders.sessionCheck) {
+    messages.push("缺少 SessionCheckProviderInterface 会让会话有效性检查不可见。");
+  }
+  if (authProviders.twoFactorAfterAuth && authProviders.selectedInterface === "post") {
+    messages.push("当前已选择 PostAuthenticationProviderInterface，不应再把它作为前置认证方式。");
+  }
+  if (!automaticActions.className.includes("\\")) {
+    messages.push("自动动作类名需要包含 namespace，Kanboard 使用完全限定类名识别动作。");
+  }
+  if (!automaticActions.requiredParameter) {
+    messages.push("自动动作缺少 getActionRequiredParameters，用户无法在 UI 中配置动作参数。");
+  }
+  if (!automaticActions.eventParameter.includes("task_id")) {
+    messages.push("自动动作事件参数缺少 task_id，可能无法定位任务上下文。");
+  }
+  if (!automaticActions.conditionExpression) {
+    messages.push("自动动作缺少 hasRequiredCondition 条件表达，容易无差别触发。");
+  }
+  if (!/^[a-z][a-z0-9_-]*$/.test(notificationTypes.typeKey)) {
+    messages.push("通知类型 key 建议使用小写字母、数字、下划线或短横线。");
+  }
+  if (!notificationTypes.handlerClass.includes("\\")) {
+    messages.push("通知处理器需要完整 namespace 并实现 NotificationInterface。");
+  }
+  if (!notificationTypes.endpoint) {
+    messages.push("通知类型缺少外部投递 endpoint，模拟投递会失败。");
+  }
+  return messages;
+}
+
+function buildAuthProviderPreview() {
+  const { authProviders } = state.extensions;
+  const interfaceName = authProviderInterfaceLabel(authProviders.selectedInterface);
+  const className = authProviders.className.split("\\").pop() || authProviders.providerName;
+  const namespace = authProviders.className.split("\\").slice(0, -1).join("\\") || "Kanboard\\Plugin\\Auth\\Auth";
+  return [
+    "<?php",
+    `namespace ${escapeConfigValue(namespace)};`,
+    "",
+    `use Kanboard\\Core\\Security\\${interfaceName};`,
+    "",
+    `class ${className} implements ${interfaceName}`,
+    "{",
+    `    public function getName() { return '${escapeConfigValue(authProviders.providerName)}'; }`,
+    authProviders.autoCreateUser ? "    public function isUserCreationAllowed() { return true; }" : "    public function isUserCreationAllowed() { return false; }",
+    `    public function getExternalIdColumn() { return '${escapeConfigValue(authProviders.externalIdColumn || "external_id")}'; }`,
+    authProviders.syncGroups ? "    public function getExternalGroupIds() { return array('product-delivery'); }" : "    public function getExternalGroupIds() { return array(); }",
+    "}",
+    "",
+    "// Plugin.php / AuthenticationManager",
+    "public function initialize()",
+    "{",
+    `    $this->authenticationManager->register(new ${className}($this->container));`,
+    authProviders.twoFactorAfterAuth ? "    // Post-authentication can still request a TOTP code." : "    // No post-authentication provider selected.",
+    "}"
+  ].join("\n");
+}
+
+function buildAutomaticActionExtensionPreview() {
+  const { automaticActions } = state.extensions;
+  const className = automaticActions.className.split("\\").pop() || automaticActions.actionName;
+  const eventParams = automaticActions.eventParameter.split(",").map((item) => item.trim()).filter(Boolean);
+  return [
+    "<?php",
+    `class ${className} extends \\Kanboard\\Action\\Base`,
+    "{",
+    `    public function getDescription() { return '${escapeConfigValue(automaticActions.actionName)}'; }`,
+    "    public function getCompatibleEvents()",
+    "    {",
+    `        return array('${escapeConfigValue(automaticActions.selectedEvent)}'${automaticActions.registerExistingEvent ? `, '${escapeConfigValue(automaticActions.customEvent)}'` : ""});`,
+    "    }",
+    `    public function getActionRequiredParameters() { return array('${escapeConfigValue(automaticActions.requiredParameter || "target_column_id")}'); }`,
+    `    public function getEventRequiredParameters() { return array(${eventParams.map((item) => `'${escapeConfigValue(item)}'`).join(", ")}); }`,
+    "    public function hasRequiredCondition(array $data)",
+    "    {",
+    `        return ${automaticActions.conditionExpression ? "true" : "false"}; // ${escapeConfigValue(automaticActions.conditionExpression || "define a condition")}`,
+    "    }",
+    "    public function doAction(array $data) { return true; }",
+    "}",
+    "",
+    "// Plugin.php",
+    "public function initialize()",
+    "{",
+    `    $this->actionManager->register(new ${className}($this->container));`,
+    automaticActions.registerExistingEvent ? `    $this->actionManager->getAction('${escapeConfigValue(automaticActions.className)}')->addEvent('${escapeConfigValue(automaticActions.customEvent)}', 'PM workflow ready');` : null,
+    "}"
+  ].filter((line) => line !== null).join("\n");
+}
+
+function buildNotificationTypePreview() {
+  const { notificationTypes } = state.extensions;
+  const className = notificationTypes.handlerClass.split("\\").pop() || "NotificationHandler";
+  const registerUser = ["user", "both"].includes(notificationTypes.scope);
+  const registerProject = ["project", "both"].includes(notificationTypes.scope);
+  return [
+    "<?php",
+    `class ${className} implements \\Kanboard\\Core\\Notification\\NotificationInterface`,
+    "{",
+    "    public function notifyUser(array $user, $event_name, array $event_data)",
+    "    {",
+    `        return $this->send('${escapeConfigValue(notificationTypes.endpoint || "https://example.com/hook")}', $event_name, $event_data);`,
+    "    }",
+    "    public function notifyProject(array $project, $event_name, array $event_data)",
+    "    {",
+    `        return $this->send('${escapeConfigValue(notificationTypes.endpoint || "https://example.com/hook")}', $event_name, $event_data);`,
+    "    }",
+    "}",
+    "",
+    "// Plugin.php",
+    "public function initialize()",
+    "{",
+    registerUser ? `    $this->userNotificationTypeModel->setType('${escapeConfigValue(notificationTypes.typeKey)}', t('${escapeConfigValue(notificationTypes.label)}'), '${escapeConfigValue(notificationTypes.handlerClass)}');` : null,
+    registerProject ? `    $this->projectNotificationTypeModel->setType('${escapeConfigValue(notificationTypes.typeKey)}', t('${escapeConfigValue(notificationTypes.label)}'), '${escapeConfigValue(notificationTypes.handlerClass)}');` : null,
+    "}"
+  ].filter((line) => line !== null).join("\n");
+}
+
+function authProviderInterfaceLabel(value) {
+  return AUTH_PROVIDER_INTERFACES.find((item) => item.value === value)?.label || value;
+}
+
+function authFlowHint(step) {
+  if (step.includes("SessionCheck")) return "已有会话先检查有效性";
+  if (step.includes("PreAuthentication")) return "反向代理或 RememberMe 这类到达应用前已认证的用户";
+  if (step.includes("Password")) return "登录表单提交用户名密码后执行";
+  if (step.includes("OAuth")) return "用户选择 OAuth2 provider 后执行";
+  if (step.includes("PostAuthentication")) return "认证成功后继续执行 2FA";
+  return "外部用户信息同步到 Kanboard 本地用户表";
 }
 
 function openOperationsDialog() {

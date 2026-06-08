@@ -1373,7 +1373,8 @@ textarea:focus {
   width: min(840px, calc(100vw - 32px));
 }
 
-#developerDialog.modal.wide {
+#developerDialog.modal.wide,
+#extensionDialog.modal.wide {
   width: min(1080px, calc(100vw - 32px));
 }
 
@@ -1865,7 +1866,10 @@ textarea:focus {
 #deploymentRunbookPreview,
 #webhookPayloadPreview,
 #apiRequestPreview,
-#pluginSkeletonPreview {
+#pluginSkeletonPreview,
+#authProviderPreview,
+#actionExtensionPreview,
+#notificationExtensionPreview {
   width: 100%;
   min-height: 280px;
   resize: vertical;
@@ -1879,8 +1883,14 @@ textarea:focus {
   min-height: 250px;
 }
 
-#pluginSkeletonPreview {
+#pluginSkeletonPreview,
+#actionExtensionPreview,
+#notificationExtensionPreview {
   min-height: 460px;
+}
+
+#authProviderPreview {
+  min-height: 380px;
 }
 
 .developer-action-row {
@@ -1907,19 +1917,39 @@ textarea:focus {
   padding-right: 2px;
 }
 
+.extension-scroll-list {
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.extension-risk-list {
+  max-height: 340px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
 .developer-index-item,
 .developer-log-item,
 .developer-risk-item,
-.developer-doc-item {
+.developer-doc-item,
+.extension-provider-item,
+.extension-flow-item,
+.extension-log-item,
+.extension-risk-item,
+.extension-doc-item {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.developer-risk-item.pass {
+.developer-risk-item.pass,
+.extension-risk-item.pass,
+.extension-provider-item.pass {
   background: #f0f8f5;
   border-color: #cfe7dc;
 }
 
-.developer-risk-item.fail {
+.developer-risk-item.fail,
+.extension-risk-item.fail {
   background: #fff8ed;
   border-color: #ead2a4;
 }

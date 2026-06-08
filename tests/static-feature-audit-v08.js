@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0823";
+const STORAGE_KEY = "kanboard-static-v0824";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -121,6 +121,9 @@ async function testInitialShell(page) {
   check(state.developer.webhooks.selectedEvent === "task.create", "developer webhook event defaults to task.create");
   check(state.developer.api.selectedProcedure === "getVersion", "developer API procedure defaults to getVersion");
   check(state.developer.pluginDev.name === "PmWorkflow", "developer plugin skeleton defaults normalized");
+  check(state.extensions.authProviders.selectedInterface === "oauth", "extension auth provider defaults to OAuth interface");
+  check(state.extensions.automaticActions.selectedEvent === "task.move.column", "extension automatic action defaults to task move event");
+  check(state.extensions.notificationTypes.typeKey === "chatops", "extension notification type defaults normalized");
   check(await page.locator("#developerBtn").isVisible(), "developer entry renders in topbar");
   check(state.deployment.docker.versionPinned === true, "deployment Docker image pinning defaults enabled");
   check(project.automations.length >= 2, "default automation rules normalized");
@@ -134,6 +137,7 @@ async function testInitialShell(page) {
   check(await page.locator("#systemSettingsBtn").isVisible(), "system settings entry renders");
   check(await page.locator("#runtimeBtn").isVisible(), "runtime environment entry renders");
   check(await page.locator("#deploymentBtn").isVisible(), "deployment check entry renders");
+  check(await page.locator("#extensionLabBtn").isVisible(), "extension lab entry renders");
   check(await page.locator("#operationsBtn").isVisible(), "operations entry renders");
   check(await page.locator("#shortcutsBtn").isVisible(), "shortcut help entry renders");
   check((await page.locator(".swimlane").count()) === 1, "main workflow swimlane renders");
@@ -607,7 +611,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0823", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0824", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -873,6 +877,65 @@ async function testDeveloperIntegrations(page) {
   check((await page.locator("#developerStatus").textContent()).length > 0, "developer status feedback renders");
 }
 
+async function testExtensionLab(page) {
+  await fresh(page);
+  await page.click("#extensionLabBtn");
+  check(await page.locator("#extensionDialog[open]").isVisible(), "extension lab dialog opens");
+  check((await page.locator("#extensionSummary .analytics-card").count()) === 5, "extension summary renders");
+  check((await page.locator("#authProviderList .extension-provider-item").count()) >= 5, "extension auth provider list renders");
+  check((await page.locator("#authFlowList .extension-flow-item").count()) === 6, "extension auth workflow renders");
+  check((await page.locator("#authProviderPreview").inputValue()).includes("AuthenticationManager"), "extension auth provider preview renders");
+  check((await page.locator("#actionExtensionPreview").inputValue()).includes("getCompatibleEvents"), "extension automatic action preview renders");
+  check((await page.locator("#notificationExtensionPreview").inputValue()).includes("NotificationInterface"), "extension notification preview renders");
+
+  await page.selectOption("#authProviderInterfaceInput", "pre");
+  await page.fill("#authProviderNameInput", "ProxySso");
+  await page.fill("#authProviderClassInput", "Kanboard\\Plugin\\ProxySso\\Auth\\ProxySsoProvider");
+  await page.fill("#authExternalIdColumnInput", "sso_id");
+  await page.uncheck("#authAutoCreateInput");
+  await page.check("#authSessionCheckInput");
+  await pause();
+  let state = await getState(page);
+  check(state.extensions.authProviders.selectedInterface === "pre", "extension auth provider interface saves");
+  check(state.extensions.authProviders.providerName === "ProxySso", "extension auth provider name saves");
+  await page.click("#runAuthSimulationBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.extensions.authProviders.lastSimulationAt), "extension auth provider simulation timestamp saves");
+  check(state.extensions.authProviders.providers.some((provider) => provider.id === "custom-auth-provider"), "extension custom auth provider registers in list");
+
+  await page.fill("#actionNameInput", "MoveTaskToReady");
+  await page.fill("#actionClassInput", "Kanboard\\Plugin\\PmWorkflow\\Action\\MoveTaskToReady");
+  await page.selectOption("#actionEventInput", "task.update");
+  await page.fill("#actionRequiredParameterInput", "");
+  await pause();
+  check((await page.locator("#extensionRiskList .extension-risk-item.fail").count()) >= 1, "extension automatic action risk renders");
+  await page.fill("#actionRequiredParameterInput", "target_column_id");
+  await page.fill("#actionEventParameterInput", "task_id,column_id,project_id");
+  await page.fill("#actionConditionInput", "column_id == review");
+  await page.click("#runActionExtensionBtn");
+  await pause();
+  state = await getState(page);
+  check(state.extensions.automaticActions.selectedEvent === "task.update", "extension automatic action event saves");
+  check(state.extensions.automaticActions.logs.length === 1, "extension automatic action log saves");
+
+  await page.fill("#notificationTypeKeyInput", "chat-ops");
+  await page.fill("#notificationTypeLabelInput", "Chat Ops");
+  await page.fill("#notificationHandlerClassInput", "Kanboard\\Plugin\\ChatOps\\Notification\\ChatOpsHandler");
+  await page.selectOption("#notificationScopeInput", "user");
+  await page.selectOption("#notificationEventInput", "task.close");
+  await page.fill("#notificationEndpointInput", "");
+  await pause();
+  check((await page.locator("#extensionRiskList .extension-risk-item.fail").count()) >= 1, "extension notification endpoint risk renders");
+  await page.fill("#notificationEndpointInput", "https://chat.example.com/hooks/kanboard");
+  await page.click("#sendExtensionNotificationBtn");
+  await pause();
+  state = await getState(page);
+  check(state.extensions.notificationTypes.typeKey === "chat-ops", "extension notification type key saves");
+  check(state.extensions.notificationTypes.logs.length === 1, "extension notification delivery log saves");
+  check((await page.locator("#extensionStatus").textContent()).length > 0, "extension status feedback renders");
+}
+
 async function testOperations(page) {
   await fresh(page);
   await page.click("#operationsBtn");
@@ -923,6 +986,14 @@ async function testMobileDialogBounds(page) {
   });
   check(developerFits, "developer dialog fits mobile viewport");
   await page.locator('#developerDialog .modal-actions button[value="cancel"]').click();
+  await pause();
+  await page.click("#extensionLabBtn");
+  const extensionFits = await page.evaluate(() => {
+    const dialog = document.querySelector("#extensionDialog");
+    return dialog.getBoundingClientRect().width <= window.innerWidth;
+  });
+  check(extensionFits, "extension lab dialog fits mobile viewport");
+  await page.locator('#extensionDialog .modal-actions button[value="cancel"]').click();
   await pause();
   await page.setViewportSize({ width: 1280, height: 900 });
 }
@@ -976,6 +1047,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testRuntimeEnvironment(page);
     await testDeploymentChecks(page);
     await testDeveloperIntegrations(page);
+    await testExtensionLab(page);
     await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
