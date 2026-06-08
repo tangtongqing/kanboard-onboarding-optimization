@@ -1914,6 +1914,58 @@ textarea:focus {
   margin: 10px 0;
 }
 
+.api-toggle-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.api-procedure-detail {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.api-procedure-card {
+  border-left: 4px solid var(--primary);
+}
+
+.api-param-checklist,
+.api-procedure-risk-list {
+  margin-top: 8px;
+}
+
+.api-param-item.required {
+  border-left: 3px solid var(--danger);
+}
+
+.api-param-item.optional {
+  border-left: 3px solid #64748b;
+}
+
+.api-param-item small {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.api-procedure-coverage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.api-coverage-card strong {
+  font-size: 18px;
+}
+
+.api-reference-notes {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .developer-preview-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1965,6 +2017,11 @@ textarea:focus {
 
 .developer-risk-item.fail,
 .extension-risk-item.fail {
+  background: #fff8ed;
+  border-color: #ead2a4;
+}
+
+.developer-risk-item.warn {
   background: #fff8ed;
   border-color: #ead2a4;
 }

@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0826";
+const STORAGE_KEY = "kanboard-static-v0827";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -120,7 +120,10 @@ async function testInitialShell(page) {
   check(state.deployment.platform.selected === "ubuntu-nginx", "deployment platform defaults to Ubuntu Nginx");
   check(state.deployment.access.dataDenyRule === true, "deployment data deny rule defaults enabled");
   check(state.developer.webhooks.selectedEvent === "task.create", "developer webhook event defaults to task.create");
-  check(state.developer.api.selectedProcedure === "getVersion", "developer API procedure defaults to getVersion");
+  check(state.developer.api.procedureGroup === "Task", "developer API procedure group defaults to Task");
+  check(state.developer.api.selectedProcedure === "createTask", "developer API procedure defaults to createTask");
+  check(state.developer.api.showOptionalParams === true, "developer API optional params default visible");
+  check(state.developer.api.includeResponseSample === true, "developer API response sample default visible");
   check(state.developer.pluginDev.name === "PmWorkflow", "developer plugin skeleton defaults normalized");
   check(state.extensions.authProviders.selectedInterface === "oauth", "extension auth provider defaults to OAuth interface");
   check(state.extensions.automaticActions.selectedEvent === "task.move.column", "extension automatic action defaults to task move event");
@@ -616,7 +619,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0826", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0827", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -839,9 +842,14 @@ async function testDeveloperIntegrations(page) {
   await page.click("#developerBtn");
   check(await page.locator("#developerDialog[open]").isVisible(), "developer dialog opens");
   check((await page.locator("#developerSummary .analytics-card").count()) === 4, "developer summary renders");
-  check((await page.locator("#apiProcedureIndex .developer-index-item").count()) >= 6, "developer API procedure index renders");
+  check((await page.locator("#apiProcedureIndex .developer-index-item").count()) >= 4, "developer API procedure index renders");
+  check((await page.locator("#apiProcedureCoverage .api-coverage-card").count()) >= 4, "developer API procedure coverage renders");
+  check((await page.locator("#apiProcedureDetail").textContent()).includes("createTask"), "developer API procedure detail renders");
+  check((await page.locator("#apiParamChecklist .api-param-item").count()) >= 2, "developer API parameter checklist renders");
+  check((await page.locator("#apiReferenceNotes").textContent()).includes("API Reference"), "developer API reference notes render");
   check((await page.locator("#webhookPayloadPreview").inputValue()).includes("event_name"), "developer webhook payload preview renders");
   check((await page.locator("#apiRequestPreview").inputValue()).includes("jsonrpc"), "developer API request preview renders");
+  check((await page.locator("#apiRequestPreview").inputValue()).includes("Content-Type: application/json"), "developer API request preview includes JSON header");
   check((await page.locator("#pluginSkeletonPreview").inputValue()).includes("class Plugin"), "developer plugin skeleton preview renders");
 
   await page.check("#webhookEnabledInput");
@@ -864,15 +872,32 @@ async function testDeveloperIntegrations(page) {
   await page.selectOption("#apiAccessTypeInput", "user");
   await page.selectOption("#apiAuthMethodInput", "header");
   await page.fill("#apiCustomHeaderDeveloperInput", "X-API-Auth");
-  await page.selectOption("#apiProcedureInput", "createTask");
+  await page.selectOption("#apiProcedureGroupInput", "Task");
+  await page.selectOption("#apiProcedureInput", "moveTaskPosition");
   await page.check("#apiBatchModeInput");
   await pause();
-  check((await page.locator("#apiRequestPreview").inputValue()).includes("createTask"), "developer API preview updates selected method");
+  check((await page.locator("#apiRequestPreview").inputValue()).includes("moveTaskPosition"), "developer API preview updates selected method");
+  check((await page.locator("#apiProcedureRiskList").textContent()).includes("User API 受当前用户权限限制"), "developer API user permission risk renders");
+  check((await page.locator("#apiProcedureRiskList").textContent()).includes("批量请求包含写操作"), "developer API batch write risk renders");
+  await page.selectOption("#apiProcedureGroupInput", "Task File");
+  await pause();
+  await page.selectOption("#apiProcedureInput", "createTaskFile");
+  await page.check("#apiIncludeFilePayloadInput");
+  await pause();
+  check((await page.locator("#apiRequestPreview").inputValue()).includes("base64-encoded-content"), "developer API file payload preview renders");
+  check((await page.locator("#apiProcedureRiskList").textContent()).includes("文件接口"), "developer API file risk renders");
+  await page.selectOption("#apiProcedureGroupInput", "Link");
+  await pause();
+  await page.selectOption("#apiProcedureInput", "getOppositeLinkId");
+  await pause();
+  check((await page.locator("#apiProcedureRiskList").textContent()).includes("Link API"), "developer API link risk renders");
   await page.click("#runApiProcedureBtn");
   await pause();
   state = await getState(page);
-  check(state.developer.api.selectedProcedure === "createTask", "developer API procedure saves");
+  check(state.developer.api.procedureGroup === "Link", "developer API procedure group saves");
+  check(state.developer.api.selectedProcedure === "getOppositeLinkId", "developer API procedure saves");
   check(state.developer.api.logs.length === 1, "developer API call log saves");
+  check(state.developer.api.logs[0].group === "Link", "developer API call log saves group");
 
   await page.fill("#pluginNameInput", "bad plugin");
   await pause();

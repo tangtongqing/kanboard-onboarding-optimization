@@ -1466,14 +1466,46 @@
               <input id="apiCustomHeaderDeveloperInput" maxlength="80" placeholder="X-API-Auth">
             </label>
             <label>
+              <span>方法分组</span>
+              <select id="apiProcedureGroupInput"></select>
+            </label>
+            <label>
+              <span>场景预设</span>
+              <select id="apiScenarioPresetInput">
+                <option value="create">创建 / 写入</option>
+                <option value="read">读取 / 查询</option>
+                <option value="update">更新 / 移动</option>
+                <option value="delete">删除 / 关闭</option>
+                <option value="file">文件上传下载</option>
+                <option value="link">任务关系</option>
+              </select>
+            </label>
+            <label>
               <span>方法</span>
               <select id="apiProcedureInput"></select>
             </label>
           </div>
-          <label class="checkbox-control settings-checkbox">
-            <input id="apiBatchModeInput" type="checkbox">
-            <span>批量请求模式</span>
-          </label>
+          <div class="api-toggle-row">
+            <label class="checkbox-control settings-checkbox">
+              <input id="apiBatchModeInput" type="checkbox">
+              <span>批量请求模式</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="apiShowOptionalParamsInput" type="checkbox">
+              <span>显示可选参数</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="apiIncludeFilePayloadInput" type="checkbox">
+              <span>文件接口包含 base64 示例</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="apiIncludeResponseSampleInput" type="checkbox">
+              <span>显示响应示例</span>
+            </label>
+          </div>
+          <div class="api-procedure-detail" id="apiProcedureDetail"></div>
+          <div class="settings-list api-param-checklist" id="apiParamChecklist"></div>
+          <div class="settings-list api-procedure-risk-list" id="apiProcedureRiskList"></div>
           <div class="developer-action-row">
             <button class="secondary-button" id="runApiProcedureBtn" type="button">模拟调用</button>
           </div>
@@ -1484,9 +1516,11 @@
         <div class="detail-section">
           <div class="detail-heading">
             <h4>API 方法索引</h4>
-            <span>Application / Project / Task</span>
+            <span>Task / File / Link Procedures</span>
           </div>
           <div class="settings-list developer-scroll-list" id="apiProcedureIndex"></div>
+          <div class="api-procedure-coverage" id="apiProcedureCoverage"></div>
+          <div class="api-reference-notes" id="apiReferenceNotes"></div>
         </div>
         <div class="detail-section">
           <div class="detail-heading">

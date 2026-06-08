@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0826";
+﻿const STORAGE_KEY = "kanboard-static-v0827";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -174,15 +174,473 @@ const WEBHOOK_EVENTS = [
   "task_internal_link.create_update",
   "task_internal_link.delete"
 ];
-const API_PROCEDURE_GROUPS = [
-  { group: "Application", procedures: ["getVersion", "getTimezone", "getColorList", "getApplicationRoles", "getProjectRoles"] },
-  { group: "Project", procedures: ["getAllProjects", "getProjectById", "createProject", "updateProject", "removeProject"] },
-  { group: "Board", procedures: ["getBoard", "getColumns", "changeTaskPosition"] },
-  { group: "Task", procedures: ["createTask", "getTask", "updateTask", "closeTask", "openTask", "removeTask"] },
-  { group: "Subtask", procedures: ["createSubtask", "updateSubtask", "removeSubtask", "getAllSubtasks"] },
-  { group: "User/Group", procedures: ["getAllUsers", "createUser", "getAllGroups", "createGroup", "addGroupMember"] },
-  { group: "Metadata/File", procedures: ["getTaskMetadata", "saveTaskMetadata", "getAllTaskFiles", "downloadTaskFile"] }
+const API_PROCEDURE_CATALOG = [
+  {
+    group: "Application",
+    label: "Application API Procedures",
+    source: "API Reference / Application Procedures",
+    procedures: [
+      {
+        name: "getVersion",
+        title: "Get version",
+        description: "读取 Kanboard 当前版本，常用于连接测试和兼容性检查。",
+        requiredParams: [],
+        optionalParams: [],
+        resultType: "string",
+        resultSample: "1.2.46",
+        notes: ["通常作为 API Explorer 的最小连通性检查。"],
+        risks: []
+      },
+      {
+        name: "getTimezone",
+        title: "Get timezone",
+        description: "读取实例时区，用于解释任务截止时间、活动时间和报表时间。",
+        requiredParams: [],
+        optionalParams: [],
+        resultType: "string",
+        resultSample: "Asia/Shanghai",
+        notes: ["和 date_due 等 timestamp 字段一起理解。"],
+        risks: []
+      }
+    ]
+  },
+  {
+    group: "Task",
+    label: "Task API Procedures",
+    source: "API Reference / Task API Procedures",
+    procedures: [
+      {
+        name: "createTask",
+        title: "Create task",
+        description: "创建任务，最小参数通常包含 project_id 与 title。",
+        requiredParams: [
+          { name: "project_id", type: "integer", sample: 1, note: "目标项目 ID" },
+          { name: "title", type: "string", sample: "Task created from API", note: "任务标题" }
+        ],
+        optionalParams: [
+          { name: "description", type: "string", sample: "Created by JSON-RPC explorer", note: "Markdown 描述" },
+          { name: "column_id", type: "integer", sample: 2, note: "目标列 ID" },
+          { name: "owner_id", type: "integer", sample: 1, note: "负责人用户 ID" },
+          { name: "color_id", type: "string", sample: "blue", note: "Kanboard 颜色 ID" },
+          { name: "date_due", type: "integer", sample: 1780876800, note: "Unix timestamp 截止时间" }
+        ],
+        resultType: "integer",
+        resultSample: 42,
+        notes: ["返回新任务 ID。", "User API 场景受用户项目权限影响。"],
+        risks: ["确认 project_id、column_id、owner_id 均来自同一项目上下文。"]
+      },
+      {
+        name: "getTask",
+        title: "Get task",
+        description: "按 task_id 读取任务完整字段，是任务详情页与外部系统同步的基础方法。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "object",
+        resultSample: { id: 1, title: "PM workflow integration", is_active: 1, project_id: 1, column_id: 2 },
+        notes: ["返回字段可映射到任务详情弹窗。"],
+        risks: ["User API 读取任务时仍需要当前用户可访问项目。"]
+      },
+      {
+        name: "updateTask",
+        title: "Update task",
+        description: "更新任务标题、描述、负责人、颜色、截止时间等字段。",
+        requiredParams: [{ name: "id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [
+          { name: "title", type: "string", sample: "Updated from API", note: "新标题" },
+          { name: "owner_id", type: "integer", sample: 2, note: "负责人用户 ID" },
+          { name: "date_due", type: "integer", sample: 1780876800, note: "Unix timestamp 截止时间" },
+          { name: "score", type: "integer", sample: 3, note: "复杂度或优先级分值" }
+        ],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["适合表达外部系统回写 Kanboard 任务字段。"],
+        risks: ["更新字段为空时要区分“不传参数”和“主动清空”。"]
+      },
+      {
+        name: "removeTask",
+        title: "Remove task",
+        description: "删除任务，属于破坏性写操作。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["静态原型只展示请求，不实际删除任务。"],
+        risks: ["删除类 procedure 不应在批量请求中和其它写操作混用，除非调用方能处理失败顺序。"]
+      },
+      {
+        name: "closeTask",
+        title: "Close task",
+        description: "关闭任务，让任务离开活跃看板流。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["对应原型中的关闭任务能力。"],
+        risks: ["关闭任务后是否显示，取决于客户端 showClosed 设置。"]
+      },
+      {
+        name: "openTask",
+        title: "Open task",
+        description: "重新打开已关闭任务。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["对应原型中的重新打开任务能力。"],
+        risks: ["重新打开任务后需要确认列和泳道仍然存在。"]
+      },
+      {
+        name: "getAllTasks",
+        title: "Get all tasks",
+        description: "按 project_id、status_id 等条件查询任务列表。",
+        requiredParams: [{ name: "project_id", type: "integer", sample: 1, note: "项目 ID" }],
+        optionalParams: [
+          { name: "status_id", type: "integer", sample: 1, note: "1 为打开任务，0 为关闭任务" },
+          { name: "page", type: "integer", sample: 1, note: "分页页码" },
+          { name: "limit", type: "integer", sample: 20, note: "单页数量" }
+        ],
+        resultType: "array",
+        resultSample: [{ id: 1, title: "PM workflow integration", project_id: 1, is_active: 1 }],
+        notes: ["适合作为看板外部同步的列表入口。"],
+        risks: ["任务量大时必须分页，不应一次性拉取全量数据。"]
+      },
+      {
+        name: "moveTaskPosition",
+        title: "Move task position",
+        description: "移动任务到指定项目、列、泳道和位置。",
+        requiredParams: [
+          { name: "project_id", type: "integer", sample: 1, note: "项目 ID" },
+          { name: "task_id", type: "integer", sample: 1, note: "任务 ID" },
+          { name: "column_id", type: "integer", sample: 3, note: "目标列 ID" },
+          { name: "position", type: "integer", sample: 1, note: "目标排序位置" }
+        ],
+        optionalParams: [{ name: "swimlane_id", type: "integer", sample: 1, note: "目标泳道 ID" }],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["对应看板卡片跨列、跨泳道流转。"],
+        risks: ["column_id 与 swimlane_id 必须属于同一个 project_id。"]
+      },
+      {
+        name: "duplicateTaskToProject",
+        title: "Duplicate task to project",
+        description: "复制任务到指定项目。",
+        requiredParams: [
+          { name: "task_id", type: "integer", sample: 1, note: "源任务 ID" },
+          { name: "project_id", type: "integer", sample: 2, note: "目标项目 ID" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 77,
+        notes: ["返回复制后的新任务 ID。"],
+        risks: ["跨项目复制时分类、成员、列、泳道映射可能不完全一致。"]
+      },
+      {
+        name: "duplicateTaskToAnotherProject",
+        title: "Duplicate task to another project",
+        description: "复制任务到另一个项目并指定目标列/泳道上下文。",
+        requiredParams: [
+          { name: "task_id", type: "integer", sample: 1, note: "源任务 ID" },
+          { name: "project_id", type: "integer", sample: 2, note: "目标项目 ID" },
+          { name: "swimlane_id", type: "integer", sample: 1, note: "目标泳道 ID" },
+          { name: "column_id", type: "integer", sample: 2, note: "目标列 ID" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 78,
+        notes: ["比 duplicateTaskToProject 更强调目标看板位置。"],
+        risks: ["目标项目的列、泳道 ID 必须提前通过 Board API 或项目配置确认。"]
+      },
+      {
+        name: "searchTasks",
+        title: "Search tasks",
+        description: "使用 Kanboard 高级搜索语法查询任务。",
+        requiredParams: [
+          { name: "project_id", type: "integer", sample: 1, note: "项目 ID" },
+          { name: "query", type: "string", sample: "status:open assignee:admin", note: "高级搜索语法" }
+        ],
+        optionalParams: [],
+        resultType: "array",
+        resultSample: [{ id: 1, title: "API matched task", assignee_username: "admin" }],
+        notes: ["对应 V0.6 已补齐的高级搜索轻量版。"],
+        risks: ["搜索语法应和 UI 高级搜索保持一致，避免 API/UI 结果差异过大。"]
+      }
+    ]
+  },
+  {
+    group: "Project File",
+    label: "Project File API Procedures",
+    source: "API Reference / Project File API Procedures",
+    procedures: [
+      {
+        name: "createProjectFile",
+        title: "Create project file",
+        description: "给项目文件库上传文件。",
+        requiredParams: [
+          { name: "project_id", type: "integer", sample: 1, note: "项目 ID" },
+          { name: "filename", type: "string", sample: "project-brief.pdf", note: "文件名" },
+          { name: "content", type: "string", sample: "base64-encoded-content", note: "base64 文件内容" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 501,
+        notes: ["返回项目文件 ID。"],
+        risks: ["文件接口需要关注 base64 内容体、文件大小和存储目录权限。"]
+      },
+      {
+        name: "getProjectFile",
+        title: "Get project file",
+        description: "读取项目文件元数据。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 501, note: "项目文件 ID" }],
+        optionalParams: [],
+        resultType: "object",
+        resultSample: { id: 501, name: "project-brief.pdf", size: 20480 },
+        notes: ["只表达元数据，不等同于下载内容。"],
+        risks: ["file_id 与 project_id 的访问权限仍需由 API 权限控制。"]
+      },
+      {
+        name: "getAllProjectFiles",
+        title: "Get all project files",
+        description: "列出某个项目的文件库。",
+        requiredParams: [{ name: "project_id", type: "integer", sample: 1, note: "项目 ID" }],
+        optionalParams: [],
+        resultType: "array",
+        resultSample: [{ id: 501, name: "project-brief.pdf" }],
+        notes: ["对应原型项目文件库。"],
+        risks: ["公共访问项目也不代表文件接口可以绕过权限。"]
+      },
+      {
+        name: "downloadProjectFile",
+        title: "Download project file",
+        description: "下载项目文件内容。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 501, note: "项目文件 ID" }],
+        optionalParams: [],
+        resultType: "base64",
+        resultSample: "base64-encoded-content",
+        notes: ["下载响应通常需要客户端解码。"],
+        risks: ["下载接口要关注大文件、权限和本地解码处理。"]
+      },
+      {
+        name: "removeProjectFile",
+        title: "Remove project file",
+        description: "删除项目文件。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 501, note: "项目文件 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["静态原型只模拟删除调用日志。"],
+        risks: ["删除文件前应提示不可逆和审计记录。"]
+      }
+    ]
+  },
+  {
+    group: "Task File",
+    label: "Task File API Procedures",
+    source: "API Reference / Task File API Procedures",
+    procedures: [
+      {
+        name: "createTaskFile",
+        title: "Create task file",
+        description: "给任务上传附件。",
+        requiredParams: [
+          { name: "task_id", type: "integer", sample: 1, note: "任务 ID" },
+          { name: "filename", type: "string", sample: "task-evidence.png", note: "文件名" },
+          { name: "content", type: "string", sample: "base64-encoded-content", note: "base64 文件内容" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 601,
+        notes: ["对应 V0.8.13 的任务附件能力。"],
+        risks: ["任务附件上传要确认 FILES_DIR、data 权限和文件大小限制。"]
+      },
+      {
+        name: "getTaskFile",
+        title: "Get task file",
+        description: "读取任务附件元数据。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 601, note: "任务附件 ID" }],
+        optionalParams: [],
+        resultType: "object",
+        resultSample: { id: 601, name: "task-evidence.png", task_id: 1 },
+        notes: ["用于附件列表详情。"],
+        risks: ["file_id 不能和 project file id 混用。"]
+      },
+      {
+        name: "getAllTaskFiles",
+        title: "Get all task files",
+        description: "列出某个任务下的全部附件。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "array",
+        resultSample: [{ id: 601, name: "task-evidence.png" }],
+        notes: ["对应任务详情中的附件列表。"],
+        risks: ["User API 只能列出当前用户可访问任务的附件。"]
+      },
+      {
+        name: "downloadTaskFile",
+        title: "Download task file",
+        description: "下载任务附件内容。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 601, note: "任务附件 ID" }],
+        optionalParams: [],
+        resultType: "base64",
+        resultSample: "base64-encoded-content",
+        notes: ["静态原型只展示 base64 响应示例。"],
+        risks: ["文件接口需要关注 base64 内容体、文件大小和下载响应处理。"]
+      },
+      {
+        name: "removeTaskFile",
+        title: "Remove task file",
+        description: "删除任务附件。",
+        requiredParams: [{ name: "file_id", type: "integer", sample: 601, note: "任务附件 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["删除结果通常返回布尔值。"],
+        risks: ["删除附件属于不可逆操作，需要和活动记录/审计说明关联。"]
+      }
+    ]
+  },
+  {
+    group: "Link",
+    label: "Link API Procedures",
+    source: "API Reference / Link API Procedures",
+    procedures: [
+      {
+        name: "getAllLinks",
+        title: "Get all links",
+        description: "读取系统内可用的任务关系类型。",
+        requiredParams: [],
+        optionalParams: [],
+        resultType: "array",
+        resultSample: [{ id: 1, label: "relates to", opposite_id: 2 }],
+        notes: ["用于生成任务关系下拉选项。"],
+        risks: ["Link API 需要区分 link_id 与 task_id。"]
+      },
+      {
+        name: "getOppositeLinkId",
+        title: "Get opposite link id",
+        description: "获取某个关系类型的反向关系 ID。",
+        requiredParams: [{ name: "link_id", type: "integer", sample: 1, note: "关系类型 ID" }],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 2,
+        notes: ["可用于校验阻塞/被阻塞等成对关系。"],
+        risks: ["反向关系 ID 不是任务 ID，不能传给 createTaskLink 的 task 参数。"]
+      },
+      {
+        name: "createLink",
+        title: "Create link label",
+        description: "创建任务关系类型。",
+        requiredParams: [
+          { name: "label", type: "string", sample: "depends on", note: "正向关系名称" },
+          { name: "opposite_label", type: "string", sample: "is required by", note: "反向关系名称" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 9,
+        notes: ["属于系统级关系类型配置。"],
+        risks: ["新增关系类型会影响所有项目的任务链接语义。"]
+      },
+      {
+        name: "updateLink",
+        title: "Update link label",
+        description: "更新任务关系类型名称。",
+        requiredParams: [
+          { name: "link_id", type: "integer", sample: 9, note: "关系类型 ID" },
+          { name: "label", type: "string", sample: "depends on", note: "正向关系名称" },
+          { name: "opposite_label", type: "string", sample: "is required by", note: "反向关系名称" }
+        ],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["更新已有关系类型。"],
+        risks: ["修改关系标签会改变历史任务链接的阅读含义。"]
+      },
+      {
+        name: "removeLink",
+        title: "Remove link label",
+        description: "删除任务关系类型。",
+        requiredParams: [{ name: "link_id", type: "integer", sample: 9, note: "关系类型 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["静态原型只显示请求风险。"],
+        risks: ["删除关系类型前要确认历史 task link 的处理策略。"]
+      },
+      {
+        name: "createTaskLink",
+        title: "Create task link",
+        description: "在两个任务之间创建关系。",
+        requiredParams: [
+          { name: "task_id", type: "integer", sample: 1, note: "源任务 ID" },
+          { name: "opposite_task_id", type: "integer", sample: 2, note: "目标任务 ID" },
+          { name: "link_id", type: "integer", sample: 1, note: "关系类型 ID" }
+        ],
+        optionalParams: [],
+        resultType: "integer",
+        resultSample: 3001,
+        notes: ["对应 V0.6 内部任务链接能力。"],
+        risks: ["创建跨项目任务关系前要确认两个任务都可访问。"]
+      },
+      {
+        name: "updateTaskLink",
+        title: "Update task link",
+        description: "更新两个任务之间的关系类型。",
+        requiredParams: [
+          { name: "task_link_id", type: "integer", sample: 3001, note: "任务关系记录 ID" },
+          { name: "link_id", type: "integer", sample: 2, note: "新的关系类型 ID" }
+        ],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["变更任务链接语义。"],
+        risks: ["task_link_id、link_id、task_id 是三类不同 ID，测试数据要分清。"]
+      },
+      {
+        name: "removeTaskLink",
+        title: "Remove task link",
+        description: "删除两个任务之间的关系。",
+        requiredParams: [{ name: "task_link_id", type: "integer", sample: 3001, note: "任务关系记录 ID" }],
+        optionalParams: [],
+        resultType: "boolean",
+        resultSample: true,
+        notes: ["只删除关系，不删除任务。"],
+        risks: ["删除关系可能影响阻塞链路和项目风险判断。"]
+      },
+      {
+        name: "getAllTaskLinks",
+        title: "Get all task links",
+        description: "读取某个任务的全部关系。",
+        requiredParams: [{ name: "task_id", type: "integer", sample: 1, note: "任务 ID" }],
+        optionalParams: [],
+        resultType: "array",
+        resultSample: [{ id: 3001, task_id: 1, opposite_task_id: 2, link_id: 1 }],
+        notes: ["用于任务详情中的内部链接列表。"],
+        risks: ["Link API 返回的是关系记录，需要再结合任务详情展示标题。"]
+      }
+    ]
+  }
 ];
+const API_PROCEDURE_GROUPS = API_PROCEDURE_CATALOG.map((group) => ({
+  group: group.group,
+  procedures: group.procedures.map((procedure) => procedure.name)
+}));
+
+function flattenApiProcedureCatalog() {
+  return API_PROCEDURE_CATALOG.flatMap((group) => group.procedures.map((procedure) => ({
+    ...procedure,
+    group: group.group,
+    groupLabel: group.label,
+    source: group.source
+  })));
+}
+
+function apiProcedureDefinition(name) {
+  const procedures = flattenApiProcedureCatalog();
+  return procedures.find((procedure) => procedure.name === name) || procedures[0];
+}
+
+function apiProcedureGroupDefinition(groupName) {
+  return API_PROCEDURE_CATALOG.find((group) => group.group === groupName) || API_PROCEDURE_CATALOG[0];
+}
 const PLUGIN_HOOK_OPTIONS = [
   "template:layout:css",
   "template:layout:js",
@@ -1021,10 +1479,20 @@ const els = {
   apiAuthMethodInput: document.querySelector("#apiAuthMethodInput"),
   apiUsernameDeveloperInput: document.querySelector("#apiUsernameDeveloperInput"),
   apiCustomHeaderDeveloperInput: document.querySelector("#apiCustomHeaderDeveloperInput"),
+  apiProcedureGroupInput: document.querySelector("#apiProcedureGroupInput"),
+  apiScenarioPresetInput: document.querySelector("#apiScenarioPresetInput"),
   apiProcedureInput: document.querySelector("#apiProcedureInput"),
   apiBatchModeInput: document.querySelector("#apiBatchModeInput"),
+  apiShowOptionalParamsInput: document.querySelector("#apiShowOptionalParamsInput"),
+  apiIncludeFilePayloadInput: document.querySelector("#apiIncludeFilePayloadInput"),
+  apiIncludeResponseSampleInput: document.querySelector("#apiIncludeResponseSampleInput"),
   runApiProcedureBtn: document.querySelector("#runApiProcedureBtn"),
+  apiProcedureDetail: document.querySelector("#apiProcedureDetail"),
+  apiParamChecklist: document.querySelector("#apiParamChecklist"),
+  apiProcedureRiskList: document.querySelector("#apiProcedureRiskList"),
   apiProcedureIndex: document.querySelector("#apiProcedureIndex"),
+  apiProcedureCoverage: document.querySelector("#apiProcedureCoverage"),
+  apiReferenceNotes: document.querySelector("#apiReferenceNotes"),
   apiRequestPreview: document.querySelector("#apiRequestPreview"),
   apiLogList: document.querySelector("#apiLogList"),
   pluginNameInput: document.querySelector("#pluginNameInput"),
@@ -1573,8 +2041,13 @@ els.runPlatformChecklistBtn.addEventListener("click", runPlatformChecklistSimula
   els.apiAuthMethodInput,
   els.apiUsernameDeveloperInput,
   els.apiCustomHeaderDeveloperInput,
+  els.apiProcedureGroupInput,
+  els.apiScenarioPresetInput,
   els.apiProcedureInput,
   els.apiBatchModeInput,
+  els.apiShowOptionalParamsInput,
+  els.apiIncludeFilePayloadInput,
+  els.apiIncludeResponseSampleInput,
   els.pluginNameInput,
   els.pluginNamespaceInput,
   els.pluginAuthorInput,
@@ -1595,8 +2068,13 @@ els.runPlatformChecklistBtn.addEventListener("click", runPlatformChecklistSimula
   els.webhookPrivateNetworkInput,
   els.apiAccessTypeInput,
   els.apiAuthMethodInput,
+  els.apiProcedureGroupInput,
+  els.apiScenarioPresetInput,
   els.apiProcedureInput,
   els.apiBatchModeInput,
+  els.apiShowOptionalParamsInput,
+  els.apiIncludeFilePayloadInput,
+  els.apiIncludeResponseSampleInput,
   els.pluginSchemaInput,
   els.pluginMetadataInput,
   els.pluginApiMethodInput,
@@ -2088,7 +2566,13 @@ function createDefaultDeveloperHub() {
       authMethod: "basic",
       username: "jsonrpc",
       customHeader: "",
-      selectedProcedure: "getVersion",
+      procedureGroup: "Task",
+      scenarioPreset: "create",
+      selectedProcedure: "createTask",
+      showOptionalParams: true,
+      includeFilePayload: false,
+      includeResponseSample: true,
+      strictPermissionCheck: true,
       batchMode: false,
       lastStatus: "未测试",
       logs: []
@@ -3002,7 +3486,12 @@ function normalizeDeployment(existing = {}) {
 
 function normalizeDeveloperHub(existing = {}) {
   const defaults = createDefaultDeveloperHub();
-  const allProcedures = API_PROCEDURE_GROUPS.flatMap((group) => group.procedures);
+  const allProcedures = flattenApiProcedureCatalog();
+  const knownProcedureNames = allProcedures.map((procedure) => procedure.name);
+  const selectedProcedure = knownProcedureNames.includes(existing.api?.selectedProcedure)
+    ? existing.api.selectedProcedure
+    : defaults.api.selectedProcedure;
+  const selectedDefinition = apiProcedureDefinition(selectedProcedure);
   return {
     webhooks: {
       ...defaults.webhooks,
@@ -3022,9 +3511,15 @@ function normalizeDeveloperHub(existing = {}) {
       accessType: ["application", "user"].includes(existing.api?.accessType) ? existing.api.accessType : defaults.api.accessType,
       authMethod: ["basic", "header"].includes(existing.api?.authMethod) ? existing.api.authMethod : defaults.api.authMethod,
       username: existing.api?.username || defaults.api.username,
-      selectedProcedure: allProcedures.includes(existing.api?.selectedProcedure)
-        ? existing.api.selectedProcedure
-        : defaults.api.selectedProcedure,
+      procedureGroup: selectedDefinition.group,
+      scenarioPreset: ["create", "read", "update", "delete", "file", "link"].includes(existing.api?.scenarioPreset)
+        ? existing.api.scenarioPreset
+        : defaults.api.scenarioPreset,
+      selectedProcedure,
+      showOptionalParams: existing.api?.showOptionalParams !== false,
+      includeFilePayload: Boolean(existing.api?.includeFilePayload),
+      includeResponseSample: existing.api?.includeResponseSample !== false,
+      strictPermissionCheck: existing.api?.strictPermissionCheck !== false,
       logs: (existing.api?.logs || defaults.api.logs).slice(0, 12)
     },
     pluginDev: {
@@ -5173,7 +5668,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0826",
+      exportVersion: "kanboard-static-v0827",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -6557,12 +7052,10 @@ function openDeveloperDialog() {
 
 function renderDeveloperDialog() {
   const { webhooks, api, pluginDev } = state.developer;
+  const selectedGroup = apiProcedureGroupDefinition(api.procedureGroup);
   els.webhookEventInput.innerHTML = WEBHOOK_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
-  els.apiProcedureInput.innerHTML = API_PROCEDURE_GROUPS.map((group) => `
-    <optgroup label="${group.group}">
-      ${group.procedures.map((procedure) => `<option value="${procedure}">${procedure}</option>`).join("")}
-    </optgroup>
-  `).join("");
+  els.apiProcedureGroupInput.innerHTML = API_PROCEDURE_CATALOG.map((group) => `<option value="${group.group}">${group.label}</option>`).join("");
+  els.apiProcedureInput.innerHTML = selectedGroup.procedures.map((procedure) => `<option value="${procedure.name}">${procedure.name}</option>`).join("");
   els.pluginHookSelect.innerHTML = PLUGIN_HOOK_OPTIONS.map((hook) => `<option value="${hook}">${hook}</option>`).join("");
   els.pluginEventSelect.innerHTML = WEBHOOK_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
 
@@ -6577,8 +7070,13 @@ function renderDeveloperDialog() {
   els.apiAuthMethodInput.value = api.authMethod;
   els.apiUsernameDeveloperInput.value = api.username;
   els.apiCustomHeaderDeveloperInput.value = api.customHeader;
+  els.apiProcedureGroupInput.value = api.procedureGroup;
+  els.apiScenarioPresetInput.value = api.scenarioPreset;
   els.apiProcedureInput.value = api.selectedProcedure;
   els.apiBatchModeInput.checked = Boolean(api.batchMode);
+  els.apiShowOptionalParamsInput.checked = Boolean(api.showOptionalParams);
+  els.apiIncludeFilePayloadInput.checked = Boolean(api.includeFilePayload);
+  els.apiIncludeResponseSampleInput.checked = Boolean(api.includeResponseSample);
   els.pluginNameInput.value = pluginDev.name;
   els.pluginNamespaceInput.value = pluginDev.namespace;
   els.pluginAuthorInput.value = pluginDev.author;
@@ -6593,7 +7091,12 @@ function renderDeveloperDialog() {
   els.pluginEventSelect.value = pluginDev.selectedEvent;
   els.pluginProcedureNameInput.value = pluginDev.procedureName;
   renderDeveloperSummary();
+  renderApiProcedureDetail();
+  renderApiParamChecklist();
+  renderApiProcedureRisks();
   renderApiProcedureIndex();
+  renderApiProcedureCoverage();
+  renderApiReferenceNotes();
   renderWebhookDeliveries();
   renderApiLogs();
   renderDeveloperRisks();
@@ -6627,16 +7130,86 @@ function renderDeveloperSummary() {
   `;
 }
 
+function renderApiProcedureDetail() {
+  const definition = apiProcedureDefinition(state.developer.api.selectedProcedure);
+  els.apiProcedureDetail.innerHTML = `
+    <div class="settings-item api-procedure-card">
+      <div>
+        <strong>${escapeHtml(definition.name)} · ${escapeHtml(definition.title)}</strong>
+        <span>${escapeHtml(definition.description)}</span>
+      </div>
+      <span class="role-pill">${escapeHtml(definition.resultType || "mixed")}</span>
+    </div>
+  `;
+}
+
+function renderApiParamChecklist() {
+  const { api } = state.developer;
+  const definition = apiProcedureDefinition(api.selectedProcedure);
+  const params = [
+    ...(definition.requiredParams || []).map((param) => ({ ...param, required: true })),
+    ...(api.showOptionalParams ? (definition.optionalParams || []).map((param) => ({ ...param, required: false })) : [])
+  ];
+  els.apiParamChecklist.innerHTML = params.length
+    ? params.map((param) => `
+      <div class="settings-item api-param-item ${param.required ? "required" : "optional"}">
+        <div>
+          <strong>${escapeHtml(param.name)} <small>${escapeHtml(param.type)}</small></strong>
+          <span>${escapeHtml(param.note || "")}</span>
+        </div>
+        <span class="role-pill">${param.required ? "必填" : "可选"}</span>
+      </div>
+    `).join("")
+    : `<div class="empty-state compact">该方法无必填参数，通常直接传空 params 或省略 params。</div>`;
+}
+
+function renderApiProcedureRisks() {
+  const risks = apiProcedureRiskMessages();
+  els.apiProcedureRiskList.innerHTML = risks.length
+    ? risks.map((message) => `
+      <div class="settings-item developer-risk-item warn">
+        <div>
+          <strong>API 注意事项</strong>
+          <span>${escapeHtml(message)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="settings-item developer-risk-item pass"><div><strong>检查通过</strong><span>当前 API 方法暂无额外注意事项。</span></div></div>`;
+}
+
 function renderApiProcedureIndex() {
-  els.apiProcedureIndex.innerHTML = API_PROCEDURE_GROUPS.map((group) => `
+  els.apiProcedureIndex.innerHTML = API_PROCEDURE_CATALOG.map((group) => `
     <div class="settings-item developer-index-item">
       <div>
-        <strong>${group.group}</strong>
-        <span>${group.procedures.join(", ")}</span>
+        <strong>${escapeHtml(group.label)}</strong>
+        <span>${group.procedures.map((procedure) => procedure.name).join(", ")}</span>
       </div>
       <span class="role-pill">${group.procedures.length}</span>
     </div>
   `).join("");
+}
+
+function renderApiProcedureCoverage() {
+  els.apiProcedureCoverage.innerHTML = API_PROCEDURE_CATALOG.map((group) => {
+    const withParams = group.procedures.filter((procedure) => (procedure.requiredParams || []).length || (procedure.optionalParams || []).length).length;
+    return `
+      <div class="analytics-card api-coverage-card">
+        <span>${escapeHtml(group.label)}</span>
+        <strong>${withParams}/${group.procedures.length}</strong>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderApiReferenceNotes() {
+  els.apiReferenceNotes.innerHTML = `
+    <div class="settings-item developer-doc-item">
+      <div>
+        <strong>官网核对范围</strong>
+        <span>本版本聚焦 Kanboard API Reference: Task、Project File、Task File、Link Procedures；认证、JSON-RPC 与批量请求作为辅助校验。</span>
+      </div>
+    </div>
+  `;
 }
 
 function renderWebhookDeliveries() {
@@ -6658,7 +7231,7 @@ function renderApiLogs() {
       <div class="settings-item developer-log-item">
         <div>
           <strong>${escapeHtml(entry.method)}</strong>
-          <span>${escapeHtml(entry.status)} · ${formatTime(entry.createdAt)}</span>
+          <span>${escapeHtml(entry.status)} · ${escapeHtml(entry.group || "API")} · ${escapeHtml(entry.resultType || "mixed")} · ${entry.riskCount || 0} 项提示 · ${formatTime(entry.createdAt)}</span>
         </div>
       </div>
     `).join("")
@@ -6689,6 +7262,11 @@ function updateDeveloperFromDialog() {
     timeoutBudgetMs: clampNumber(els.webhookTimeoutInput.value, 100, 10000, 1000),
     privateNetworkAllowed: els.webhookPrivateNetworkInput.checked
   };
+  const selectedApiGroup = apiProcedureGroupDefinition(els.apiProcedureGroupInput.value);
+  const selectedGroupProcedures = selectedApiGroup.procedures.map((procedure) => procedure.name);
+  const selectedProcedure = selectedGroupProcedures.includes(els.apiProcedureInput.value)
+    ? els.apiProcedureInput.value
+    : selectedGroupProcedures[0];
   state.developer.api = {
     ...state.developer.api,
     endpoint: els.apiEndpointDeveloperInput.value.trim() || "/jsonrpc.php",
@@ -6696,8 +7274,13 @@ function updateDeveloperFromDialog() {
     authMethod: els.apiAuthMethodInput.value,
     username: els.apiUsernameDeveloperInput.value.trim() || "jsonrpc",
     customHeader: els.apiCustomHeaderDeveloperInput.value.trim(),
-    selectedProcedure: els.apiProcedureInput.value,
-    batchMode: els.apiBatchModeInput.checked
+    procedureGroup: selectedApiGroup.group,
+    scenarioPreset: els.apiScenarioPresetInput.value,
+    selectedProcedure,
+    batchMode: els.apiBatchModeInput.checked,
+    showOptionalParams: els.apiShowOptionalParamsInput.checked,
+    includeFilePayload: els.apiIncludeFilePayloadInput.checked,
+    includeResponseSample: els.apiIncludeResponseSampleInput.checked
   };
   state.developer.pluginDev = {
     ...state.developer.pluginDev,
@@ -6741,11 +7324,16 @@ function simulateWebhookDelivery() {
 
 function simulateApiProcedure() {
   const now = new Date().toISOString();
+  const definition = apiProcedureDefinition(state.developer.api.selectedProcedure);
+  const risks = apiProcedureRiskMessages();
   const status = developerRiskMessages().some((message) => message.includes("API")) ? "检查通过但有配置提示" : "200 OK";
   state.developer.api.lastStatus = status;
   state.developer.api.logs.unshift({
     id: uid("api-log"),
     method: state.developer.api.selectedProcedure,
+    group: definition.group,
+    resultType: definition.resultType || "mixed",
+    riskCount: risks.length,
     status,
     createdAt: now
   });
@@ -6827,19 +7415,23 @@ function buildApiRequestPreview() {
   const authLine = api.authMethod === "header"
     ? `-H '${api.customHeader || "X-API-Auth"}: base64(${api.username}:TOKEN)'`
     : `-u '${api.username}:TOKEN'`;
-  return [
+  const lines = [
     `curl ${authLine} \\`,
+"  -H 'Content-Type: application/json' \\",
     `  -d '${JSON.stringify(body)}' \\`,
     `  ${api.endpoint}`,
-    "",
-    JSON.stringify({
+    ""
+  ];
+  if (api.includeResponseSample) {
+    lines.push(JSON.stringify({
       response: {
         jsonrpc: "2.0",
         id: 1,
         result: apiProcedureResult(api.selectedProcedure)
       }
-    }, null, 2)
-  ].join("\n");
+    }, null, 2));
+  }
+  return lines.join("\n");
 }
 
 function buildPluginSkeletonPreview() {
@@ -6882,33 +7474,50 @@ function buildPluginSkeletonPreview() {
   return lines.join("\n");
 }
 
+function apiProcedureRiskMessages() {
+  const { api } = state.developer;
+  const definition = apiProcedureDefinition(api.selectedProcedure);
+  const messages = [...(definition.risks || [])];
+
+  if (api.accessType === "user") {
+    messages.push("User API 受当前用户权限限制，跨项目读取/写入会失败。");
+  }
+
+  if (api.batchMode && /create|update|remove|close|open|move|duplicate/i.test(api.selectedProcedure)) {
+    messages.push("批量请求包含写操作时，应确认前序失败不会造成后续请求语义错误。");
+  }
+
+  if (/File|download|createProjectFile|createTaskFile/i.test(api.selectedProcedure)) {
+    messages.push("文件接口需要关注 base64 内容体、文件大小和下载响应处理。");
+  }
+
+  if (/Link|TaskLink/i.test(api.selectedProcedure)) {
+    messages.push("Link API 需要区分 link_id 与 task_id，反向关系可用 getOppositeLinkId 校验。");
+  }
+
+  return [...new Set(messages)];
+}
+
 function apiProcedureParams(procedure) {
-  if (procedure.startsWith("get") && !["getTask", "getProjectById"].includes(procedure)) return null;
-  if (procedure === "getTask") return { task_id: 1 };
-  if (procedure === "getProjectById") return { project_id: 1 };
-  if (procedure === "createTask") return { project_id: 1, title: "Task created from API" };
-  if (procedure === "createProject") return { name: "API project" };
-  if (procedure === "changeTaskPosition") return { project_id: 1, task_id: 1, column_id: 2, position: 1 };
-  if (procedure.includes("Metadata")) return { task_id: 1, name: "pmworkflow_external_id", value: "EXT-1001" };
-  if (procedure.includes("File")) return { project_id: 1, task_id: 1 };
-  if (procedure.includes("Group")) return { group_id: 1, user_id: 1 };
-  if (procedure.includes("Subtask")) return { task_id: 1, title: "API subtask" };
-  if (procedure.includes("User")) return { username: "api_user", password: "secret" };
-  if (procedure.includes("Task")) return { task_id: 1 };
-  if (procedure.includes("Project")) return { project_id: 1 };
-  return null;
+  const { api } = state.developer;
+  const definition = apiProcedureDefinition(procedure);
+  const params = {};
+
+  [...(definition.requiredParams || []), ...(api.showOptionalParams ? (definition.optionalParams || []) : [])]
+    .forEach((param) => {
+      if (!api.includeFilePayload && param.name === "content") return;
+      params[param.name] = param.sample;
+    });
+
+  return Object.keys(params).length ? params : null;
 }
 
 function apiProcedureResult(procedure) {
-  if (procedure === "getVersion") return "1.2.46";
-  if (procedure === "getTimezone") return "Asia/Hong_Kong";
-  if (procedure.includes("Roles")) return { "app-admin": "Administrator", "app-manager": "Manager", "app-user": "User" };
-  if (procedure.includes("Color")) return { yellow: "Yellow", blue: "Blue", green: "Green" };
-  if (procedure.startsWith("create")) return 42;
-  if (procedure.startsWith("remove")) return true;
-  if (procedure.startsWith("update")) return true;
-  if (procedure.startsWith("close") || procedure.startsWith("open")) return true;
-  return [{ id: 1, name: "Demo Project", title: "PM workflow integration" }];
+  const definition = apiProcedureDefinition(procedure);
+  if (definition && Object.prototype.hasOwnProperty.call(definition, "resultSample")) {
+    return definition.resultSample;
+  }
+  return true;
 }
 
 function openExtensionDialog() {

@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.26 平台安装与自定义表单补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.27 API 方法细化补齐
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -66,6 +66,7 @@
 - [x] 认证提供者 / 自动动作 / 通知类型插件扩展补齐 V0.8.24
 - [x] 授权架构 / 自定义路由 / Provider / Schema / Helper / Override 插件进阶扩展补齐 V0.8.25
 - [x] Debian / Ubuntu / RHEL / Windows 平台安装与 Custom Forms 补齐 V0.8.26
+- [x] API Procedure Explorer / Task、File、Link API 方法细化补齐 V0.8.27
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -111,6 +112,7 @@
 | `插件扩展能力补齐说明-V0.8.24.md` | 根据 Kanboard Authentication Providers、Automatic Actions 和 Notification Types 文档补齐插件扩展能力 |
 | `插件进阶扩展补齐说明-V0.8.25.md` | 根据 Kanboard Authorization、Custom Routes、Provider、Schema、Helper、Events 和 Overrides 文档补齐插件进阶扩展能力 |
 | `平台安装与自定义表单补齐说明-V0.8.26.md` | 根据 Kanboard Custom Forms、Debian、Ubuntu、RHEL 和 Windows 安装文档补齐静态能力 |
+| `API方法细化补齐说明-V0.8.27.md` | 根据 Kanboard API Reference 中 Task、Project File、Task File、Link Procedures 补齐 API 方法细化能力 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -158,6 +160,7 @@
 | `设计图/kanboard-v0.8.25-plugin-advanced.png` | V0.8.25 插件进阶扩展能力截图 |
 | `设计图/kanboard-v0.8.26-platform-install.png` | V0.8.26 平台安装教程截图 |
 | `设计图/kanboard-v0.8.26-custom-forms.png` | V0.8.26 Custom Forms 插件表单截图 |
+| `设计图/kanboard-v0.8.27-api-procedure-explorer.png` | V0.8.27 API Procedure Explorer 截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -198,15 +201,16 @@
 | V0.8.24 | 认证提供者、自动动作、通知类型插件扩展能力补齐 | 已完成 |
 | V0.8.25 | 授权架构、Avatar、Custom Routes、外部链接/任务 Provider、Schema、Helper、Events、Overrides 插件进阶扩展补齐 | 已完成 |
 | V0.8.26 | Debian、Ubuntu、RHEL、Windows 平台安装与 Custom Forms 补齐 | 已完成 |
-| V0.8.27 | 继续核对 API procedure、管理配置或剩余官网细项 | 下一步 |
+| V0.8.27 | API Procedure Explorer：Task / Project File / Task File / Link API 方法细化补齐 | 已完成 |
+| V0.8.28 | 继续核对 Admin/Settings、数据库配置、安全配置或剩余 API procedures | 下一步 |
 | V0.9 | Figma 高保真原型 | 待完整复现后进入 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
 ## 下一步
 
 继续根据 Kanboard 官网补齐剩余系统级功能：
-- 继续核对 API Reference 中更细的 procedure 是否需要进入静态复现。
-- 检查管理员信息架构、配置文件细项和数据库文档是否仍有遗漏。
+- 继续核对 Admin/Settings、数据库配置、安全配置是否仍有适合静态复现的细项。
+- 继续检查 API Reference 中 Project、Board、User、Group 等剩余 procedure 是否需要进一步细化。
 - 补齐到静态复现差距进一步收敛后，再进入 V0.9 Figma 高保真原型。
 
 ## 本地打开
@@ -215,4 +219,4 @@
 
 ## 当前截图
 
-![Kanboard 平台安装教程 V0.8.26](设计图/kanboard-v0.8.26-platform-install.png)
+![Kanboard API Procedure Explorer V0.8.27](设计图/kanboard-v0.8.27-api-procedure-explorer.png)
