@@ -1885,11 +1885,15 @@ textarea:focus {
 
 #pluginSkeletonPreview,
 #actionExtensionPreview,
-#notificationExtensionPreview {
+#notificationExtensionPreview,
+#advancedAccessPreview,
+#advancedProviderPreview {
   min-height: 460px;
 }
 
-#authProviderPreview {
+#authProviderPreview,
+#advancedSchemaPreview,
+#advancedEventsPreview {
   min-height: 380px;
 }
 

@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0824";
+const STORAGE_KEY = "kanboard-static-v0825";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -124,6 +124,9 @@ async function testInitialShell(page) {
   check(state.extensions.authProviders.selectedInterface === "oauth", "extension auth provider defaults to OAuth interface");
   check(state.extensions.automaticActions.selectedEvent === "task.move.column", "extension automatic action defaults to task move event");
   check(state.extensions.notificationTypes.typeKey === "chatops", "extension notification type defaults normalized");
+  check(state.extensions.advanced.authorization.scope === "project", "extension advanced authorization defaults normalized");
+  check(state.extensions.advanced.routes.url.includes("/pm/workflow"), "extension custom route defaults normalized");
+  check(state.extensions.advanced.schema.driverFile === "Sqlite.php", "extension schema migration defaults normalized");
   check(await page.locator("#developerBtn").isVisible(), "developer entry renders in topbar");
   check(state.deployment.docker.versionPinned === true, "deployment Docker image pinning defaults enabled");
   check(project.automations.length >= 2, "default automation rules normalized");
@@ -611,7 +614,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0824", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0825", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -887,6 +890,10 @@ async function testExtensionLab(page) {
   check((await page.locator("#authProviderPreview").inputValue()).includes("AuthenticationManager"), "extension auth provider preview renders");
   check((await page.locator("#actionExtensionPreview").inputValue()).includes("getCompatibleEvents"), "extension automatic action preview renders");
   check((await page.locator("#notificationExtensionPreview").inputValue()).includes("NotificationInterface"), "extension notification preview renders");
+  check((await page.locator("#advancedAccessPreview").inputValue()).includes("projectAccessMap"), "extension advanced access preview renders");
+  check((await page.locator("#advancedProviderPreview").inputValue()).includes("externalLinkManager"), "extension advanced provider preview renders");
+  check((await page.locator("#advancedSchemaPreview").inputValue()).includes("const VERSION"), "extension advanced schema preview renders");
+  check((await page.locator("#advancedEventsPreview").inputValue()).includes("eventManager"), "extension advanced event preview renders");
 
   await page.selectOption("#authProviderInterfaceInput", "pre");
   await page.fill("#authProviderNameInput", "ProxySso");
@@ -933,6 +940,50 @@ async function testExtensionLab(page) {
   state = await getState(page);
   check(state.extensions.notificationTypes.typeKey === "chat-ops", "extension notification type key saves");
   check(state.extensions.notificationTypes.logs.length === 1, "extension notification delivery log saves");
+
+  await page.selectOption("#advancedAuthorizationScopeInput", "application");
+  await page.selectOption("#advancedAuthorizationRoleInput", "Role::APP_MANAGER");
+  await page.fill("#advancedAuthorizationControllerInput", "PmWorkflowController");
+  await page.fill("#advancedAuthorizationActionInput", "export");
+  await page.fill("#advancedRouteUrlInput", "pm/workflow/:project_id");
+  await pause();
+  check((await page.locator("#extensionRiskList .extension-risk-item.fail").count()) >= 1, "extension custom route risk renders");
+  await page.fill("#advancedRouteUrlInput", "/pm/workflow/:project_id");
+  await page.selectOption("#advancedRouteResultInput", "redirect");
+  await page.click("#runAdvancedRouteBtn");
+  await pause();
+  state = await getState(page);
+  check(state.extensions.advanced.authorization.scope === "application", "extension advanced authorization scope saves");
+  check(Boolean(state.extensions.advanced.routes.lastStatus), "extension custom route status saves");
+
+  await page.fill("#advancedExternalLinkPatternInput", "https://github.com/example/product/pull/");
+  await pause();
+  check((await page.locator("#extensionRiskList .extension-risk-item.fail").count()) >= 1, "extension external link risk renders");
+  await page.fill("#advancedExternalLinkPatternInput", "https://github.com/example/product/pull/%s");
+  await page.click("#runAdvancedProviderSyncBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.extensions.advanced.providers.lastSyncAt), "extension provider sync timestamp saves");
+  check(state.extensions.advanced.logs.some((entry) => entry.type === "Provider Registry"), "extension provider sync log saves");
+
+  await page.fill("#advancedSchemaVersionInput", "2");
+  await page.selectOption("#advancedSchemaDriverInput", "Postgres.php");
+  await page.fill("#advancedSchemaTableInput", "pm_workflow_links");
+  await page.click("#runAdvancedSchemaBtn");
+  await pause();
+  state = await getState(page);
+  check(state.extensions.advanced.schema.version === 2, "extension schema version saves");
+  check(Boolean(state.extensions.advanced.schema.lastMigrationAt), "extension schema migration timestamp saves");
+  check((await page.locator("#advancedSchemaPreview").inputValue()).includes("version_2"), "extension schema migration preview updates");
+
+  await page.fill("#advancedHelperNameInput", "pmWorkflowHelper");
+  await page.fill("#advancedEventNameInput", "pm.workflow.released");
+  await page.fill("#advancedOverrideTemplateInput", "dashboard/sidebar");
+  await page.click("#generateAdvancedPluginBtn");
+  await pause();
+  state = await getState(page);
+  check(Boolean(state.extensions.advanced.events.lastGeneratedAt), "extension helper event generation timestamp saves");
+  check((await page.locator("#advancedEventsPreview").inputValue()).includes("pm.workflow.released"), "extension helper event preview updates");
   check((await page.locator("#extensionStatus").textContent()).length > 0, "extension status feedback renders");
 }
 

@@ -1729,6 +1729,209 @@
       <section class="settings-two-column">
         <div class="detail-section">
           <div class="detail-heading">
+            <h4>访问控制与路由</h4>
+            <span>AccessMap / Route</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>权限范围</span>
+              <select id="advancedAuthorizationScopeInput"></select>
+            </label>
+            <label>
+              <span>角色</span>
+              <select id="advancedAuthorizationRoleInput"></select>
+            </label>
+            <label>
+              <span>Controller</span>
+              <input id="advancedAuthorizationControllerInput" maxlength="100">
+            </label>
+            <label>
+              <span>Action</span>
+              <input id="advancedAuthorizationActionInput" maxlength="80">
+            </label>
+            <label>
+              <span>路由 URL</span>
+              <input id="advancedRouteUrlInput" maxlength="140">
+            </label>
+            <label>
+              <span>路由 Controller</span>
+              <input id="advancedRouteControllerInput" maxlength="100">
+            </label>
+            <label>
+              <span>路由 Action</span>
+              <input id="advancedRouteActionInput" maxlength="80">
+            </label>
+            <label>
+              <span>Plugin</span>
+              <input id="advancedRoutePluginInput" maxlength="80">
+            </label>
+            <label>
+              <span>链接输出</span>
+              <select id="advancedRouteResultInput"></select>
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedProjectRoleCheckInput" type="checkbox">
+              <span>保留项目角色检查</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedReadonlyFallbackInput" type="checkbox">
+              <span>提供只读 fallback 权限</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedRouteCsrfInput" type="checkbox">
+              <span>写入型路由保留 CSRF</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedRouteRewriteInput" type="checkbox">
+              <span>依赖 URL rewriting</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runAdvancedRouteBtn" type="button">模拟路由权限检查</button>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>权限与路由代码</h4>
+            <span>addRoute / UrlHelper</span>
+          </div>
+          <textarea id="advancedAccessPreview" rows="24" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Provider 接入</h4>
+            <span>Avatar / Group / External / Mail</span>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedProviderAvatarInput" type="checkbox">
+              <span>注册头像 Provider</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedGroupProviderInput" type="checkbox">
+              <span>注册外部用户组 Provider</span>
+            </label>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>Avatar Provider Class</span>
+              <input id="advancedAvatarClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>Group Provider Class</span>
+              <input id="advancedGroupClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>External Link Class</span>
+              <input id="advancedExternalLinkClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>External Link Pattern</span>
+              <input id="advancedExternalLinkPatternInput" maxlength="180">
+            </label>
+            <label>
+              <span>External Task Class</span>
+              <input id="advancedExternalTaskClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>External Task URI</span>
+              <input id="advancedExternalTaskUriInput" maxlength="100">
+            </label>
+            <label>
+              <span>Mail Transport Class</span>
+              <input id="advancedMailTransportClassInput" maxlength="180">
+            </label>
+          </div>
+          <button class="secondary-button" id="runAdvancedProviderSyncBtn" type="button">模拟 Provider 同步</button>
+          <div class="settings-list extension-scroll-list" id="advancedLogList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Provider 代码</h4>
+            <span>register / setTransport</span>
+          </div>
+          <textarea id="advancedProviderPreview" rows="28" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Schema 迁移</h4>
+            <span>Schema/Mysql.php</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>Schema Version</span>
+              <input id="advancedSchemaVersionInput" type="number" min="1" max="99">
+            </label>
+            <label>
+              <span>Driver File</span>
+              <select id="advancedSchemaDriverInput"></select>
+            </label>
+            <label>
+              <span>表名</span>
+              <input id="advancedSchemaTableInput" maxlength="80">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedSchemaEnabledInput" type="checkbox">
+              <span>启用插件数据库迁移</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedSchemaTransactionalInput" type="checkbox">
+              <span>迁移使用事务回滚</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runAdvancedSchemaBtn" type="button">模拟 Schema 迁移</button>
+          <textarea id="advancedSchemaPreview" rows="18" readonly></textarea>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Helper / Events / Overrides</h4>
+            <span>Plugin Base</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>Helper 名称</span>
+              <input id="advancedHelperNameInput" maxlength="80">
+            </label>
+            <label>
+              <span>Helper Class</span>
+              <input id="advancedHelperClassInput" maxlength="180">
+            </label>
+            <label>
+              <span>事件名称</span>
+              <input id="advancedEventNameInput" maxlength="100">
+            </label>
+            <label>
+              <span>事件说明</span>
+              <input id="advancedEventDescriptionInput" maxlength="140">
+            </label>
+            <label>
+              <span>覆盖模板</span>
+              <input id="advancedOverrideTemplateInput" maxlength="120">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedFormatterOverrideInput" type="checkbox">
+              <span>覆盖 formatter 对象</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="advancedCspOverrideInput" type="checkbox">
+              <span>覆盖 Content Security Policy</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="generateAdvancedPluginBtn" type="button">生成进阶扩展预览</button>
+          <textarea id="advancedEventsPreview" rows="18" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
             <h4>扩展风险</h4>
             <span>类名 / 参数 / 同步 / 投递</span>
           </div>
@@ -1756,6 +1959,24 @@
               <div>
                 <strong>Notification Types</strong>
                 <span>通过 user/project notification type model 注册处理器，并实现 NotificationInterface。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Authorization / Custom Routes</strong>
+                <span>通过 applicationAccessMap、projectAccessMap 与 route->addRoute 补齐插件页面权限和 URL 映射。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Providers</strong>
+                <span>覆盖 Avatar、Group、External Link、External Task 与 Mail Transport 等插件 provider 注册点。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Schema / Helpers / Events / Overrides</strong>
+                <span>覆盖 Schema 迁移、helper 注册、事件注册监听、模板/CSP/formatter override。</span>
               </div>
             </div>
           </div>

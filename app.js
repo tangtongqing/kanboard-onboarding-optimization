@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0824";
+const STORAGE_KEY = "kanboard-static-v0825";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -137,6 +137,24 @@ const NOTIFICATION_SCOPES = [
   { value: "user", label: "User only" },
   { value: "project", label: "Project only" }
 ];
+const ACCESS_MAP_SCOPES = [
+  { value: "project", label: "Project Access Map" },
+  { value: "application", label: "Application Access Map" }
+];
+const ROLE_OPTIONS = [
+  "Role::APP_ADMIN",
+  "Role::APP_MANAGER",
+  "Role::APP_USER",
+  "Role::PROJECT_MANAGER",
+  "Role::PROJECT_MEMBER",
+  "Role::PROJECT_VIEWER"
+];
+const ROUTE_RESULT_TYPES = [
+  { value: "link", label: "HTML link" },
+  { value: "href", label: "href only" },
+  { value: "redirect", label: "redirect" }
+];
+const SCHEMA_DRIVER_FILES = ["Sqlite.php", "Mysql.php", "Postgres.php"];
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -966,6 +984,49 @@ const els = {
   sendExtensionNotificationBtn: document.querySelector("#sendExtensionNotificationBtn"),
   notificationExtensionPreview: document.querySelector("#notificationExtensionPreview"),
   notificationExtensionLogList: document.querySelector("#notificationExtensionLogList"),
+  advancedAuthorizationScopeInput: document.querySelector("#advancedAuthorizationScopeInput"),
+  advancedAuthorizationControllerInput: document.querySelector("#advancedAuthorizationControllerInput"),
+  advancedAuthorizationActionInput: document.querySelector("#advancedAuthorizationActionInput"),
+  advancedAuthorizationRoleInput: document.querySelector("#advancedAuthorizationRoleInput"),
+  advancedProjectRoleCheckInput: document.querySelector("#advancedProjectRoleCheckInput"),
+  advancedReadonlyFallbackInput: document.querySelector("#advancedReadonlyFallbackInput"),
+  advancedRouteUrlInput: document.querySelector("#advancedRouteUrlInput"),
+  advancedRouteControllerInput: document.querySelector("#advancedRouteControllerInput"),
+  advancedRouteActionInput: document.querySelector("#advancedRouteActionInput"),
+  advancedRoutePluginInput: document.querySelector("#advancedRoutePluginInput"),
+  advancedRouteResultInput: document.querySelector("#advancedRouteResultInput"),
+  advancedRouteCsrfInput: document.querySelector("#advancedRouteCsrfInput"),
+  advancedRouteRewriteInput: document.querySelector("#advancedRouteRewriteInput"),
+  runAdvancedRouteBtn: document.querySelector("#runAdvancedRouteBtn"),
+  advancedProviderAvatarInput: document.querySelector("#advancedProviderAvatarInput"),
+  advancedAvatarClassInput: document.querySelector("#advancedAvatarClassInput"),
+  advancedGroupProviderInput: document.querySelector("#advancedGroupProviderInput"),
+  advancedGroupClassInput: document.querySelector("#advancedGroupClassInput"),
+  advancedExternalLinkClassInput: document.querySelector("#advancedExternalLinkClassInput"),
+  advancedExternalLinkPatternInput: document.querySelector("#advancedExternalLinkPatternInput"),
+  advancedExternalTaskClassInput: document.querySelector("#advancedExternalTaskClassInput"),
+  advancedExternalTaskUriInput: document.querySelector("#advancedExternalTaskUriInput"),
+  advancedMailTransportClassInput: document.querySelector("#advancedMailTransportClassInput"),
+  runAdvancedProviderSyncBtn: document.querySelector("#runAdvancedProviderSyncBtn"),
+  advancedSchemaEnabledInput: document.querySelector("#advancedSchemaEnabledInput"),
+  advancedSchemaVersionInput: document.querySelector("#advancedSchemaVersionInput"),
+  advancedSchemaTableInput: document.querySelector("#advancedSchemaTableInput"),
+  advancedSchemaDriverInput: document.querySelector("#advancedSchemaDriverInput"),
+  advancedSchemaTransactionalInput: document.querySelector("#advancedSchemaTransactionalInput"),
+  runAdvancedSchemaBtn: document.querySelector("#runAdvancedSchemaBtn"),
+  advancedHelperNameInput: document.querySelector("#advancedHelperNameInput"),
+  advancedHelperClassInput: document.querySelector("#advancedHelperClassInput"),
+  advancedEventNameInput: document.querySelector("#advancedEventNameInput"),
+  advancedEventDescriptionInput: document.querySelector("#advancedEventDescriptionInput"),
+  advancedOverrideTemplateInput: document.querySelector("#advancedOverrideTemplateInput"),
+  advancedCspOverrideInput: document.querySelector("#advancedCspOverrideInput"),
+  advancedFormatterOverrideInput: document.querySelector("#advancedFormatterOverrideInput"),
+  generateAdvancedPluginBtn: document.querySelector("#generateAdvancedPluginBtn"),
+  advancedAccessPreview: document.querySelector("#advancedAccessPreview"),
+  advancedProviderPreview: document.querySelector("#advancedProviderPreview"),
+  advancedSchemaPreview: document.querySelector("#advancedSchemaPreview"),
+  advancedEventsPreview: document.querySelector("#advancedEventsPreview"),
+  advancedLogList: document.querySelector("#advancedLogList"),
   extensionRiskList: document.querySelector("#extensionRiskList"),
   extensionStatus: document.querySelector("#extensionStatus"),
   operationsDialog: document.querySelector("#operationsDialog"),
@@ -1430,7 +1491,41 @@ els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation
   els.notificationHandlerClassInput,
   els.notificationScopeInput,
   els.notificationEventInput,
-  els.notificationEndpointInput
+  els.notificationEndpointInput,
+  els.advancedAuthorizationScopeInput,
+  els.advancedAuthorizationControllerInput,
+  els.advancedAuthorizationActionInput,
+  els.advancedAuthorizationRoleInput,
+  els.advancedProjectRoleCheckInput,
+  els.advancedReadonlyFallbackInput,
+  els.advancedRouteUrlInput,
+  els.advancedRouteControllerInput,
+  els.advancedRouteActionInput,
+  els.advancedRoutePluginInput,
+  els.advancedRouteResultInput,
+  els.advancedRouteCsrfInput,
+  els.advancedRouteRewriteInput,
+  els.advancedProviderAvatarInput,
+  els.advancedAvatarClassInput,
+  els.advancedGroupProviderInput,
+  els.advancedGroupClassInput,
+  els.advancedExternalLinkClassInput,
+  els.advancedExternalLinkPatternInput,
+  els.advancedExternalTaskClassInput,
+  els.advancedExternalTaskUriInput,
+  els.advancedMailTransportClassInput,
+  els.advancedSchemaEnabledInput,
+  els.advancedSchemaVersionInput,
+  els.advancedSchemaTableInput,
+  els.advancedSchemaDriverInput,
+  els.advancedSchemaTransactionalInput,
+  els.advancedHelperNameInput,
+  els.advancedHelperClassInput,
+  els.advancedEventNameInput,
+  els.advancedEventDescriptionInput,
+  els.advancedOverrideTemplateInput,
+  els.advancedCspOverrideInput,
+  els.advancedFormatterOverrideInput
 ].forEach((input) => input.addEventListener("input", updateExtensionFromDialog));
 [
   els.authProviderEnabledInput,
@@ -1442,11 +1537,29 @@ els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation
   els.actionEventInput,
   els.actionRegisterExistingEventInput,
   els.notificationScopeInput,
-  els.notificationEventInput
+  els.notificationEventInput,
+  els.advancedAuthorizationScopeInput,
+  els.advancedAuthorizationRoleInput,
+  els.advancedProjectRoleCheckInput,
+  els.advancedReadonlyFallbackInput,
+  els.advancedRouteResultInput,
+  els.advancedRouteCsrfInput,
+  els.advancedRouteRewriteInput,
+  els.advancedProviderAvatarInput,
+  els.advancedGroupProviderInput,
+  els.advancedSchemaEnabledInput,
+  els.advancedSchemaDriverInput,
+  els.advancedSchemaTransactionalInput,
+  els.advancedCspOverrideInput,
+  els.advancedFormatterOverrideInput
 ].forEach((input) => input.addEventListener("change", updateExtensionFromDialog));
 els.runAuthSimulationBtn.addEventListener("click", simulateAuthenticationProvider);
 els.runActionExtensionBtn.addEventListener("click", simulateAutomaticActionExtension);
 els.sendExtensionNotificationBtn.addEventListener("click", simulateNotificationTypeDelivery);
+els.runAdvancedRouteBtn.addEventListener("click", simulateAdvancedRouteCheck);
+els.runAdvancedProviderSyncBtn.addEventListener("click", simulateAdvancedProviderSync);
+els.runAdvancedSchemaBtn.addEventListener("click", simulateAdvancedSchemaMigration);
+els.generateAdvancedPluginBtn.addEventListener("click", generateAdvancedPluginPreview);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1862,6 +1975,57 @@ function createDefaultExtensionLab() {
       selectedEvent: "task.create",
       endpoint: "https://chat.example.com/hooks/kanboard",
       lastStatus: "未测试",
+      logs: []
+    },
+    advanced: {
+      authorization: {
+        scope: "project",
+        controller: "PmWorkflowController",
+        action: "export",
+        role: "Role::PROJECT_MANAGER",
+        projectRoleCheck: true,
+        readonlyFallback: true
+      },
+      routes: {
+        url: "/pm/workflow/:project_id",
+        controller: "PmWorkflowController",
+        action: "show",
+        plugin: "PmWorkflow",
+        resultType: "link",
+        csrfRequired: true,
+        urlRewriteRequired: true,
+        lastStatus: "未测试"
+      },
+      providers: {
+        avatarEnabled: true,
+        avatarProviderClass: "Kanboard\\Plugin\\PmWorkflow\\Avatar\\ProductAvatarProvider",
+        groupProviderEnabled: true,
+        groupProviderClass: "Kanboard\\Plugin\\PmWorkflow\\Group\\ProductGroupProvider",
+        externalLinkProviderClass: "Kanboard\\Plugin\\PmWorkflow\\ExternalLink\\GithubPullRequestProvider",
+        externalLinkPattern: "https://github.com/example/product/pull/%s",
+        externalTaskProviderClass: "Kanboard\\Plugin\\PmWorkflow\\ExternalTask\\JiraTaskProvider",
+        externalTaskUri: "JIRA-PM-1001",
+        mailTransportClass: "Kanboard\\Plugin\\PmWorkflow\\Mail\\AuditMailTransport",
+        lastSyncAt: ""
+      },
+      schema: {
+        enabled: true,
+        version: 1,
+        tableName: "pm_workflow_links",
+        driverFile: "Sqlite.php",
+        transactional: true,
+        lastMigrationAt: ""
+      },
+      events: {
+        helperName: "pmWorkflow",
+        helperClass: "Kanboard\\Plugin\\PmWorkflow\\Helper\\PmWorkflowHelper",
+        eventName: "pm.workflow.ready",
+        eventDescription: "PM workflow ready for delivery",
+        overrideTemplate: "dashboard/sidebar",
+        cspOverride: false,
+        formatterOverride: true,
+        lastGeneratedAt: ""
+      },
       logs: []
     }
   };
@@ -2677,6 +2841,8 @@ function normalizeExtensionLab(existing = {}) {
   const interfaceValues = AUTH_PROVIDER_INTERFACES.map((item) => item.value);
   const actionEvents = EXTENSION_ACTION_EVENTS;
   const scopeValues = NOTIFICATION_SCOPES.map((item) => item.value);
+  const accessScopeValues = ACCESS_MAP_SCOPES.map((item) => item.value);
+  const routeResultValues = ROUTE_RESULT_TYPES.map((item) => item.value);
   return {
     authProviders: {
       ...defaults.authProviders,
@@ -2736,6 +2902,67 @@ function normalizeExtensionLab(existing = {}) {
         ? existing.notificationTypes.endpoint
         : defaults.notificationTypes.endpoint,
       logs: (existing.notificationTypes?.logs || defaults.notificationTypes.logs).slice(0, 12)
+    },
+    advanced: {
+      authorization: {
+        ...defaults.advanced.authorization,
+        ...(existing.advanced?.authorization || {}),
+        scope: accessScopeValues.includes(existing.advanced?.authorization?.scope)
+          ? existing.advanced.authorization.scope
+          : defaults.advanced.authorization.scope,
+        controller: existing.advanced?.authorization?.controller || defaults.advanced.authorization.controller,
+        action: existing.advanced?.authorization?.action || defaults.advanced.authorization.action,
+        role: ROLE_OPTIONS.includes(existing.advanced?.authorization?.role)
+          ? existing.advanced.authorization.role
+          : defaults.advanced.authorization.role
+      },
+      routes: {
+        ...defaults.advanced.routes,
+        ...(existing.advanced?.routes || {}),
+        url: existing.advanced?.routes?.url || defaults.advanced.routes.url,
+        controller: existing.advanced?.routes?.controller || defaults.advanced.routes.controller,
+        action: existing.advanced?.routes?.action || defaults.advanced.routes.action,
+        plugin: existing.advanced?.routes?.plugin || defaults.advanced.routes.plugin,
+        resultType: routeResultValues.includes(existing.advanced?.routes?.resultType)
+          ? existing.advanced.routes.resultType
+          : defaults.advanced.routes.resultType
+      },
+      providers: {
+        ...defaults.advanced.providers,
+        ...(existing.advanced?.providers || {}),
+        avatarProviderClass: existing.advanced?.providers?.avatarProviderClass || defaults.advanced.providers.avatarProviderClass,
+        groupProviderClass: existing.advanced?.providers?.groupProviderClass || defaults.advanced.providers.groupProviderClass,
+        externalLinkProviderClass: existing.advanced?.providers?.externalLinkProviderClass || defaults.advanced.providers.externalLinkProviderClass,
+        externalLinkPattern: existing.advanced?.providers && "externalLinkPattern" in existing.advanced.providers
+          ? existing.advanced.providers.externalLinkPattern
+          : defaults.advanced.providers.externalLinkPattern,
+        externalTaskProviderClass: existing.advanced?.providers?.externalTaskProviderClass || defaults.advanced.providers.externalTaskProviderClass,
+        externalTaskUri: existing.advanced?.providers && "externalTaskUri" in existing.advanced.providers
+          ? existing.advanced.providers.externalTaskUri
+          : defaults.advanced.providers.externalTaskUri,
+        mailTransportClass: existing.advanced?.providers?.mailTransportClass || defaults.advanced.providers.mailTransportClass
+      },
+      schema: {
+        ...defaults.advanced.schema,
+        ...(existing.advanced?.schema || {}),
+        version: clampNumber(existing.advanced?.schema?.version, 1, 99, defaults.advanced.schema.version),
+        tableName: existing.advanced?.schema?.tableName || defaults.advanced.schema.tableName,
+        driverFile: SCHEMA_DRIVER_FILES.includes(existing.advanced?.schema?.driverFile)
+          ? existing.advanced.schema.driverFile
+          : defaults.advanced.schema.driverFile
+      },
+      events: {
+        ...defaults.advanced.events,
+        ...(existing.advanced?.events || {}),
+        helperName: existing.advanced?.events?.helperName || defaults.advanced.events.helperName,
+        helperClass: existing.advanced?.events?.helperClass || defaults.advanced.events.helperClass,
+        eventName: existing.advanced?.events?.eventName || defaults.advanced.events.eventName,
+        eventDescription: existing.advanced?.events?.eventDescription || defaults.advanced.events.eventDescription,
+        overrideTemplate: existing.advanced?.events && "overrideTemplate" in existing.advanced.events
+          ? existing.advanced.events.overrideTemplate
+          : defaults.advanced.events.overrideTemplate
+      },
+      logs: (existing.advanced?.logs || defaults.advanced.logs).slice(0, 12)
     }
   };
 }
@@ -4714,7 +4941,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0824",
+      exportVersion: "kanboard-static-v0825",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -6365,11 +6592,15 @@ function openExtensionDialog() {
 }
 
 function renderExtensionDialog() {
-  const { authProviders, automaticActions, notificationTypes } = state.extensions;
+  const { authProviders, automaticActions, notificationTypes, advanced } = state.extensions;
   els.authProviderInterfaceInput.innerHTML = AUTH_PROVIDER_INTERFACES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
   els.actionEventInput.innerHTML = EXTENSION_ACTION_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
   els.notificationScopeInput.innerHTML = NOTIFICATION_SCOPES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
   els.notificationEventInput.innerHTML = EXTENSION_ACTION_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
+  els.advancedAuthorizationScopeInput.innerHTML = ACCESS_MAP_SCOPES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
+  els.advancedAuthorizationRoleInput.innerHTML = ROLE_OPTIONS.map((role) => `<option value="${role}">${role}</option>`).join("");
+  els.advancedRouteResultInput.innerHTML = ROUTE_RESULT_TYPES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
+  els.advancedSchemaDriverInput.innerHTML = SCHEMA_DRIVER_FILES.map((file) => `<option value="${file}">${file}</option>`).join("");
 
   els.authProviderEnabledInput.checked = Boolean(authProviders.enabled);
   els.authProviderNameInput.value = authProviders.providerName;
@@ -6394,6 +6625,40 @@ function renderExtensionDialog() {
   els.notificationScopeInput.value = notificationTypes.scope;
   els.notificationEventInput.value = notificationTypes.selectedEvent;
   els.notificationEndpointInput.value = notificationTypes.endpoint;
+  els.advancedAuthorizationScopeInput.value = advanced.authorization.scope;
+  els.advancedAuthorizationControllerInput.value = advanced.authorization.controller;
+  els.advancedAuthorizationActionInput.value = advanced.authorization.action;
+  els.advancedAuthorizationRoleInput.value = advanced.authorization.role;
+  els.advancedProjectRoleCheckInput.checked = Boolean(advanced.authorization.projectRoleCheck);
+  els.advancedReadonlyFallbackInput.checked = Boolean(advanced.authorization.readonlyFallback);
+  els.advancedRouteUrlInput.value = advanced.routes.url;
+  els.advancedRouteControllerInput.value = advanced.routes.controller;
+  els.advancedRouteActionInput.value = advanced.routes.action;
+  els.advancedRoutePluginInput.value = advanced.routes.plugin;
+  els.advancedRouteResultInput.value = advanced.routes.resultType;
+  els.advancedRouteCsrfInput.checked = Boolean(advanced.routes.csrfRequired);
+  els.advancedRouteRewriteInput.checked = Boolean(advanced.routes.urlRewriteRequired);
+  els.advancedProviderAvatarInput.checked = Boolean(advanced.providers.avatarEnabled);
+  els.advancedAvatarClassInput.value = advanced.providers.avatarProviderClass;
+  els.advancedGroupProviderInput.checked = Boolean(advanced.providers.groupProviderEnabled);
+  els.advancedGroupClassInput.value = advanced.providers.groupProviderClass;
+  els.advancedExternalLinkClassInput.value = advanced.providers.externalLinkProviderClass;
+  els.advancedExternalLinkPatternInput.value = advanced.providers.externalLinkPattern;
+  els.advancedExternalTaskClassInput.value = advanced.providers.externalTaskProviderClass;
+  els.advancedExternalTaskUriInput.value = advanced.providers.externalTaskUri;
+  els.advancedMailTransportClassInput.value = advanced.providers.mailTransportClass;
+  els.advancedSchemaEnabledInput.checked = Boolean(advanced.schema.enabled);
+  els.advancedSchemaVersionInput.value = advanced.schema.version;
+  els.advancedSchemaTableInput.value = advanced.schema.tableName;
+  els.advancedSchemaDriverInput.value = advanced.schema.driverFile;
+  els.advancedSchemaTransactionalInput.checked = Boolean(advanced.schema.transactional);
+  els.advancedHelperNameInput.value = advanced.events.helperName;
+  els.advancedHelperClassInput.value = advanced.events.helperClass;
+  els.advancedEventNameInput.value = advanced.events.eventName;
+  els.advancedEventDescriptionInput.value = advanced.events.eventDescription;
+  els.advancedOverrideTemplateInput.value = advanced.events.overrideTemplate;
+  els.advancedCspOverrideInput.checked = Boolean(advanced.events.cspOverride);
+  els.advancedFormatterOverrideInput.checked = Boolean(advanced.events.formatterOverride);
 
   renderExtensionSummary();
   renderAuthProviderList();
@@ -6403,6 +6668,10 @@ function renderExtensionDialog() {
   els.authProviderPreview.value = buildAuthProviderPreview();
   els.actionExtensionPreview.value = buildAutomaticActionExtensionPreview();
   els.notificationExtensionPreview.value = buildNotificationTypePreview();
+  els.advancedAccessPreview.value = buildAdvancedAccessPreview();
+  els.advancedProviderPreview.value = buildAdvancedProviderPreview();
+  els.advancedSchemaPreview.value = buildAdvancedSchemaPreview();
+  els.advancedEventsPreview.value = buildAdvancedEventsPreview();
   const risks = extensionRiskMessages();
   els.extensionStatus.textContent = risks[0] || "认证提供者、自动动作和通知类型扩展配置已通过静态检查。";
 }
@@ -6459,7 +6728,7 @@ function renderAuthFlowList() {
 }
 
 function renderExtensionLogs() {
-  const { automaticActions, notificationTypes } = state.extensions;
+  const { automaticActions, notificationTypes, advanced } = state.extensions;
   els.actionExtensionLogList.innerHTML = automaticActions.logs.length
     ? automaticActions.logs.map((entry) => `
       <div class="settings-item extension-log-item">
@@ -6480,6 +6749,16 @@ function renderExtensionLogs() {
       </div>
     `).join("")
     : `<div class="empty-state">暂无通知类型投递日志</div>`;
+  els.advancedLogList.innerHTML = advanced.logs.length
+    ? advanced.logs.map((entry) => `
+      <div class="settings-item extension-log-item">
+        <div>
+          <strong>${escapeHtml(entry.type)}</strong>
+          <span>${escapeHtml(entry.status)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无进阶扩展模拟日志</div>`;
 }
 
 function renderExtensionRisks() {
@@ -6528,6 +6807,58 @@ function updateExtensionFromDialog() {
     scope: els.notificationScopeInput.value,
     selectedEvent: els.notificationEventInput.value,
     endpoint: els.notificationEndpointInput.value.trim()
+  };
+  state.extensions.advanced = {
+    ...state.extensions.advanced,
+    authorization: {
+      ...state.extensions.advanced.authorization,
+      scope: els.advancedAuthorizationScopeInput.value,
+      controller: els.advancedAuthorizationControllerInput.value.trim() || "PmWorkflowController",
+      action: els.advancedAuthorizationActionInput.value.trim() || "export",
+      role: els.advancedAuthorizationRoleInput.value,
+      projectRoleCheck: els.advancedProjectRoleCheckInput.checked,
+      readonlyFallback: els.advancedReadonlyFallbackInput.checked
+    },
+    routes: {
+      ...state.extensions.advanced.routes,
+      url: els.advancedRouteUrlInput.value.trim() || "/pm/workflow/:project_id",
+      controller: els.advancedRouteControllerInput.value.trim() || "PmWorkflowController",
+      action: els.advancedRouteActionInput.value.trim() || "show",
+      plugin: els.advancedRoutePluginInput.value.trim() || "PmWorkflow",
+      resultType: els.advancedRouteResultInput.value,
+      csrfRequired: els.advancedRouteCsrfInput.checked,
+      urlRewriteRequired: els.advancedRouteRewriteInput.checked
+    },
+    providers: {
+      ...state.extensions.advanced.providers,
+      avatarEnabled: els.advancedProviderAvatarInput.checked,
+      avatarProviderClass: els.advancedAvatarClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\Avatar\\ProductAvatarProvider",
+      groupProviderEnabled: els.advancedGroupProviderInput.checked,
+      groupProviderClass: els.advancedGroupClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\Group\\ProductGroupProvider",
+      externalLinkProviderClass: els.advancedExternalLinkClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\ExternalLink\\GithubPullRequestProvider",
+      externalLinkPattern: els.advancedExternalLinkPatternInput.value.trim(),
+      externalTaskProviderClass: els.advancedExternalTaskClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\ExternalTask\\JiraTaskProvider",
+      externalTaskUri: els.advancedExternalTaskUriInput.value.trim(),
+      mailTransportClass: els.advancedMailTransportClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\Mail\\AuditMailTransport"
+    },
+    schema: {
+      ...state.extensions.advanced.schema,
+      enabled: els.advancedSchemaEnabledInput.checked,
+      version: clampNumber(els.advancedSchemaVersionInput.value, 1, 99, 1),
+      tableName: els.advancedSchemaTableInput.value.trim() || "pm_workflow_links",
+      driverFile: els.advancedSchemaDriverInput.value,
+      transactional: els.advancedSchemaTransactionalInput.checked
+    },
+    events: {
+      ...state.extensions.advanced.events,
+      helperName: els.advancedHelperNameInput.value.trim() || "pmWorkflow",
+      helperClass: els.advancedHelperClassInput.value.trim() || "Kanboard\\Plugin\\PmWorkflow\\Helper\\PmWorkflowHelper",
+      eventName: els.advancedEventNameInput.value.trim() || "pm.workflow.ready",
+      eventDescription: els.advancedEventDescriptionInput.value.trim() || "PM workflow ready for delivery",
+      overrideTemplate: els.advancedOverrideTemplateInput.value.trim(),
+      cspOverride: els.advancedCspOverrideInput.checked,
+      formatterOverride: els.advancedFormatterOverrideInput.checked
+    }
   };
   state.extensions = normalizeExtensionLab(state.extensions);
   persist();
@@ -6586,8 +6917,72 @@ function simulateNotificationTypeDelivery() {
   renderExtensionDialog();
 }
 
+function addAdvancedExtensionLog(type, status) {
+  state.extensions.advanced.logs.unshift({
+    id: uid("advanced-extension-log"),
+    type,
+    status,
+    createdAt: new Date().toISOString()
+  });
+  state.extensions.advanced.logs = state.extensions.advanced.logs.slice(0, 12);
+}
+
+function simulateAdvancedRouteCheck() {
+  const { routes, authorization } = state.extensions.advanced;
+  const routeRisks = extensionRiskMessages().filter((message) => message.includes("Custom Routes") || message.includes("AccessMap"));
+  const status = routeRisks.length
+    ? "路由/权限检查有提示"
+    : `${authorization.scope} access map + route table OK`;
+  state.extensions.advanced.routes.lastStatus = status;
+  addAdvancedExtensionLog("Custom Routes / Authorization", status);
+  if (routes.resultType === "redirect") {
+    addAdvancedExtensionLog("UrlHelper", "redirect() preview generated");
+  }
+  persist();
+  renderExtensionDialog();
+}
+
+function simulateAdvancedProviderSync() {
+  const { providers } = state.extensions.advanced;
+  const providerRisks = extensionRiskMessages().filter((message) => message.includes("Provider") || message.includes("External") || message.includes("Mail"));
+  const status = providerRisks.length
+    ? "provider 注册有提示"
+    : "avatar/group/external/mail providers registered";
+  state.extensions.advanced.providers.lastSyncAt = new Date().toISOString();
+  addAdvancedExtensionLog("Provider Registry", status);
+  if (providers.externalTaskUri) {
+    addAdvancedExtensionLog("External Task", `fetched ${providers.externalTaskUri}`);
+  }
+  persist();
+  renderExtensionDialog();
+}
+
+function simulateAdvancedSchemaMigration() {
+  const { schema } = state.extensions.advanced;
+  const schemaRisks = extensionRiskMessages().filter((message) => message.includes("Schema"));
+  const status = schema.enabled
+    ? (schemaRisks.length ? "schema migration 有提示" : `Schema/${schema.driverFile} version_${schema.version} OK`)
+    : "schema migration skipped";
+  state.extensions.advanced.schema.lastMigrationAt = new Date().toISOString();
+  addAdvancedExtensionLog("Schema Migration", status);
+  persist();
+  renderExtensionDialog();
+}
+
+function generateAdvancedPluginPreview() {
+  const { events } = state.extensions.advanced;
+  const eventRisks = extensionRiskMessages().filter((message) => message.includes("Helper") || message.includes("Event") || message.includes("Override") || message.includes("CSP"));
+  const status = eventRisks.length
+    ? "helper/event/override 生成有提示"
+    : `${events.helperName} helper + ${events.eventName} event generated`;
+  state.extensions.advanced.events.lastGeneratedAt = new Date().toISOString();
+  addAdvancedExtensionLog("Helper / Events / Overrides", status);
+  persist();
+  renderExtensionDialog();
+}
+
 function extensionRiskMessages() {
-  const { authProviders, automaticActions, notificationTypes } = state.extensions;
+  const { authProviders, automaticActions, notificationTypes, advanced } = state.extensions;
   const messages = [];
   if (authProviders.enabled && !authProviders.className.includes("\\")) {
     messages.push("认证提供者类名应使用完整 namespace，便于 AuthenticationManager 注册。");
@@ -6624,6 +7019,66 @@ function extensionRiskMessages() {
   }
   if (!notificationTypes.endpoint) {
     messages.push("通知类型缺少外部投递 endpoint，模拟投递会失败。");
+  }
+  if (advanced.authorization.scope === "project" && !advanced.authorization.projectRoleCheck) {
+    messages.push("AccessMap: 项目级权限建议保留 project role 检查，否则可能绕过项目成员权限。");
+  }
+  if (!advanced.authorization.controller || !advanced.authorization.action) {
+    messages.push("AccessMap: 控制器和 action 需要同时定义，Authorization 才能匹配页面访问。");
+  }
+  if (!advanced.routes.url.startsWith("/")) {
+    messages.push("Custom Routes: 自定义路由建议以 / 开头，才能稳定映射到 URL rewriting。");
+  }
+  if (!advanced.routes.urlRewriteRequired) {
+    messages.push("Custom Routes: 官网说明自定义路由依赖 URL rewriting，关闭后只能降级到 query 参数链接。");
+  }
+  if (!advanced.routes.csrfRequired && ["save", "create", "update", "delete"].some((word) => advanced.routes.action.toLowerCase().includes(word))) {
+    messages.push("Custom Routes: 写入型 action 建议保留 CSRF 保护。");
+  }
+  if (advanced.providers.avatarEnabled && !advanced.providers.avatarProviderClass.includes("\\")) {
+    messages.push("Avatar Provider: provider class 需要完整 namespace 并实现 AvatarProviderInterface。");
+  }
+  if (advanced.providers.groupProviderEnabled && !advanced.providers.groupProviderClass.includes("\\")) {
+    messages.push("Group Provider: group backend 需要完整 namespace 并接入 GroupManager。");
+  }
+  if (!advanced.providers.externalLinkProviderClass.includes("\\")) {
+    messages.push("External Link Provider: provider class 需要完整 namespace。");
+  }
+  if (!advanced.providers.externalLinkPattern.includes("%s")) {
+    messages.push("External Link Provider: URL pattern 建议保留 %s 占位符用于解析外部编号。");
+  }
+  if (!advanced.providers.externalTaskProviderClass.includes("\\")) {
+    messages.push("External Task Provider: provider class 需要完整 namespace 并实现 ExternalTaskProviderInterface。");
+  }
+  if (!advanced.providers.externalTaskUri) {
+    messages.push("External Task Provider: 缺少可导入或同步的外部任务 URI。");
+  }
+  if (!advanced.providers.mailTransportClass.includes("\\")) {
+    messages.push("Mail Transport: transport class 需要完整 namespace 并实现 ClientInterface。");
+  }
+  if (advanced.schema.enabled && !advanced.schema.tableName) {
+    messages.push("Schema Migration: 启用迁移时需要声明插件自有表名或变更对象。");
+  }
+  if (advanced.schema.enabled && !SCHEMA_DRIVER_FILES.includes(advanced.schema.driverFile)) {
+    messages.push("Schema Migration: 文件名必须匹配数据库驱动 Mysql.php、Postgres.php 或 Sqlite.php。");
+  }
+  if (advanced.schema.enabled && !advanced.schema.transactional) {
+    messages.push("Schema Migration: 官网迁移在事务中执行，关闭事务会降低回滚可恢复性。");
+  }
+  if (!/^[a-z][a-zA-Z0-9]*$/.test(advanced.events.helperName)) {
+    messages.push("Helper: helper name 建议使用 camelCase，便于模板中通过 $this->helperName 调用。");
+  }
+  if (!advanced.events.helperClass.includes("\\")) {
+    messages.push("Helper: helper class 需要完整 namespace 并继承 Kanboard\\Core\\Base。");
+  }
+  if (!advanced.events.eventName.includes(".")) {
+    messages.push("Event: 自定义事件建议使用命名空间式名称，例如 pm.workflow.ready。");
+  }
+  if (!advanced.events.overrideTemplate) {
+    messages.push("Override: 覆盖模板前需要明确原始 template 名称。");
+  }
+  if (advanced.events.cspOverride) {
+    messages.push("CSP Override: 覆盖 Content Security Policy 属于高风险动作，需要单独安全评审。");
   }
   return messages;
 }
@@ -6713,6 +7168,113 @@ function buildNotificationTypePreview() {
     registerProject ? `    $this->projectNotificationTypeModel->setType('${escapeConfigValue(notificationTypes.typeKey)}', t('${escapeConfigValue(notificationTypes.label)}'), '${escapeConfigValue(notificationTypes.handlerClass)}');` : null,
     "}"
   ].filter((line) => line !== null).join("\n");
+}
+
+function buildAdvancedAccessPreview() {
+  const { authorization, routes } = state.extensions.advanced;
+  const accessMap = authorization.scope === "project" ? "projectAccessMap" : "applicationAccessMap";
+  const controller = escapeConfigValue(authorization.controller);
+  const action = escapeConfigValue(authorization.action);
+  const role = escapeConfigValue(authorization.role);
+  return [
+    "<?php",
+    "use Kanboard\\Core\\Security\\Role;",
+    "",
+    "// Plugin.php / Authorization + Custom Routes",
+    "public function initialize()",
+    "{",
+    `    $this->${accessMap}->add('${controller}', array('${action}'), ${role});`,
+    authorization.readonlyFallback ? `    $this->${accessMap}->add('${controller}', array('readonly'), Role::PROJECT_VIEWER);` : null,
+    `    $this->route->addRoute('${escapeConfigValue(routes.url)}', '${controller}', '${escapeConfigValue(routes.action)}', '${escapeConfigValue(routes.plugin)}');`,
+    "}",
+    "",
+    "// UrlHelper usage",
+    routes.resultType === "href"
+      ? `<?= $this->url->href('${controller}', '${escapeConfigValue(routes.action)}', array('plugin' => '${escapeConfigValue(routes.plugin)}')) ?>`
+      : null,
+    routes.resultType === "link"
+      ? `<?= $this->url->link('PM Workflow', '${controller}', '${escapeConfigValue(routes.action)}', array('plugin' => '${escapeConfigValue(routes.plugin)}')) ?>`
+      : null,
+    routes.resultType === "redirect"
+      ? `$this->response->redirect($this->url->to('${controller}', '${escapeConfigValue(routes.action)}', array('plugin' => '${escapeConfigValue(routes.plugin)}')));`
+      : null,
+    routes.urlRewriteRequired ? "// URL rewriting enabled: custom route path is used." : "// URL rewriting disabled: fallback query string is expected.",
+    routes.csrfRequired ? "// Keep CSRF checks for write actions." : "// Read-only route or explicit CSRF exception required."
+  ].filter((line) => line !== null).join("\n");
+}
+
+function buildAdvancedProviderPreview() {
+  const { providers } = state.extensions.advanced;
+  const mailKey = providers.mailTransportClass.split("\\").pop()?.replace(/Transport|Client|Handler/g, "").toLowerCase() || "pmworkflow";
+  return [
+    "<?php",
+    "// Plugin.php / Provider registrations",
+    "public function initialize()",
+    "{",
+    providers.avatarEnabled ? `    $this->avatarManager->register(new \\${escapeConfigValue(providers.avatarProviderClass)}($this->container));` : "    // Avatar provider disabled.",
+    providers.groupProviderEnabled ? `    $this->groupManager->register(new \\${escapeConfigValue(providers.groupProviderClass)}($this->container));` : "    // Group provider disabled.",
+    `    $this->externalLinkManager->register(new \\${escapeConfigValue(providers.externalLinkProviderClass)}($this->container));`,
+    `    $this->externalTaskManager->register(new \\${escapeConfigValue(providers.externalTaskProviderClass)}($this->container));`,
+    `    $this->emailClient->setTransport('${escapeConfigValue(mailKey)}', '\\${escapeConfigValue(providers.mailTransportClass)}');`,
+    "}",
+    "",
+    "// ExternalLinkProviderInterface",
+    `public function match() { return preg_match('/${escapeConfigValue(providers.externalLinkPattern || "PM-%s").replace("%s", "(.+)")}/', $this->userInput); }`,
+    "",
+    "// ExternalTaskProviderInterface",
+    `public function buildTaskUri(array $formValues) { return '${escapeConfigValue(providers.externalTaskUri || "JIRA-PM-1001")}'; }`,
+    "",
+    "// Mail ClientInterface",
+    "public function sendEmail($recipientEmail, $recipientName, $subject, $html, $authorName, $authorEmail = '')",
+    "{",
+    "    return true;",
+    "}"
+  ].join("\n");
+}
+
+function buildAdvancedSchemaPreview() {
+  const { schema } = state.extensions.advanced;
+  const tableName = (schema.tableName || "pm_workflow_links").replace(/[^a-zA-Z0-9_]/g, "_");
+  return [
+    "<?php",
+    `// plugins/PmWorkflow/Schema/${escapeConfigValue(schema.driverFile)}`,
+    "namespace Kanboard\\Plugin\\PmWorkflow\\Schema;",
+    "",
+    `const VERSION = ${schema.version};`,
+    "",
+    `function version_${schema.version}($pdo)`,
+    "{",
+    schema.enabled
+      ? `    $pdo->exec('CREATE TABLE IF NOT EXISTS ${tableName} (id INTEGER PRIMARY KEY, project_id INTEGER NOT NULL, external_url TEXT, created_at TEXT)');`
+      : "    // Schema migration disabled for this plugin.",
+    "}",
+    "",
+    schema.transactional
+      ? "// Kanboard runs plugin migrations sequentially inside a transaction."
+      : "// Transaction disabled in the prototype: treat this as a migration risk."
+  ].join("\n");
+}
+
+function buildAdvancedEventsPreview() {
+  const { events } = state.extensions.advanced;
+  return [
+    "<?php",
+    "// Plugin.php / Helpers, Events and Overrides",
+    "public function initialize()",
+    "{",
+    `    $this->helper->register('${escapeConfigValue(events.helperName)}', '\\${escapeConfigValue(events.helperClass)}');`,
+    `    $this->eventManager->register('${escapeConfigValue(events.eventName)}', '${escapeConfigValue(events.eventDescription)}');`,
+    `    $this->on('${escapeConfigValue(events.eventName)}', function($event) {`,
+    "        // Dispatch PM workflow payload to automatic actions or integrations.",
+    "    });",
+    events.overrideTemplate ? `    $this->template->setTemplateOverride('${escapeConfigValue(events.overrideTemplate)}', 'pmworkflow:${escapeConfigValue(events.overrideTemplate)}');` : "    // No template override configured.",
+    events.formatterOverride ? "    $this->container['userAutoCompleteFormatter'] = $this->container->factory(function ($c) { return new PmUserFormatter($c); });" : "    // Formatter override disabled.",
+    events.cspOverride ? "    $this->setContentSecurityPolicy(array('script-src' => \"'self'\"));" : "    // CSP override disabled.",
+    "}",
+    "",
+    "// Template usage",
+    `<p><?= $this->${escapeConfigValue(events.helperName)}->doSomething() ?></p>`
+  ].join("\n");
 }
 
 function authProviderInterfaceLabel(value) {
