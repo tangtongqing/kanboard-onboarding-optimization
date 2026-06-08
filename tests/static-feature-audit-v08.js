@@ -1,7 +1,7 @@
 const path = require("path");
 const { chromium } = require("playwright");
 
-const STORAGE_KEY = "kanboard-static-v0825";
+const STORAGE_KEY = "kanboard-static-v0826";
 const ROOT = path.resolve(__dirname, "..");
 const FILE_URL = `file:///${path.join(ROOT, "index.html").replace(/\\/g, "/")}`;
 
@@ -117,6 +117,7 @@ async function testInitialShell(page) {
   check(state.runtime.environment.phpVersion.startsWith("8."), "runtime PHP version normalized");
   check(state.runtime.php.extensions.pdo_sqlite === true, "runtime SQLite PDO extension normalized");
   check(state.deployment.install.method === "archive", "deployment install method defaults to archive");
+  check(state.deployment.platform.selected === "ubuntu-nginx", "deployment platform defaults to Ubuntu Nginx");
   check(state.deployment.access.dataDenyRule === true, "deployment data deny rule defaults enabled");
   check(state.developer.webhooks.selectedEvent === "task.create", "developer webhook event defaults to task.create");
   check(state.developer.api.selectedProcedure === "getVersion", "developer API procedure defaults to getVersion");
@@ -124,6 +125,7 @@ async function testInitialShell(page) {
   check(state.extensions.authProviders.selectedInterface === "oauth", "extension auth provider defaults to OAuth interface");
   check(state.extensions.automaticActions.selectedEvent === "task.move.column", "extension automatic action defaults to task move event");
   check(state.extensions.notificationTypes.typeKey === "chatops", "extension notification type defaults normalized");
+  check(state.extensions.customForms.formTemplate === "pmworkflow:decision_form", "extension custom form defaults normalized");
   check(state.extensions.advanced.authorization.scope === "project", "extension advanced authorization defaults normalized");
   check(state.extensions.advanced.routes.url.includes("/pm/workflow"), "extension custom route defaults normalized");
   check(state.extensions.advanced.schema.driverFile === "Sqlite.php", "extension schema migration defaults normalized");
@@ -614,7 +616,7 @@ async function testImportExport(page) {
   await page.click("#generateExportBtn");
   const exportJson = await page.locator("#exportPreviewInput").inputValue();
   const parsed = JSON.parse(exportJson);
-  check(parsed.exportVersion === "kanboard-static-v0825", "project JSON export version renders");
+  check(parsed.exportVersion === "kanboard-static-v0826", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
   await page.fill("#importJsonInput", exportJson);
   await page.click("#previewImportBtn");
@@ -777,13 +779,27 @@ async function testDeploymentChecks(page) {
   check((await page.locator("#deploymentSummary .analytics-card").count()) === 4, "deployment summary renders");
   check((await page.locator("#deploymentRunbookPreview").inputValue()).includes("ENABLE_URL_REWRITE"), "deployment runbook renders URL rewrite config");
   check((await page.locator("#deploymentRiskList .deployment-risk-item").count()) >= 1, "deployment risk list renders");
+  check((await page.locator("#platformStepList .platform-step-item").count()) >= 6, "deployment platform install steps render");
+  check((await page.locator("#deploymentRunbookPreview").inputValue()).includes("Platform guide"), "deployment platform runbook renders");
+  await page.selectOption("#deploymentPlatformInput", "rhel-apache");
+  await page.uncheck("#platformSelinuxInput");
+  await pause();
+  check((await page.locator("#deploymentRiskList").textContent()).includes("SELinux"), "deployment RHEL SELinux risk renders");
+  await page.check("#platformSelinuxInput");
+  await page.selectOption("#accessWebServerInput", "apache");
+  await page.click("#runPlatformChecklistBtn");
+  await pause();
+  let state = await getState(page);
+  check(state.deployment.platform.selected === "rhel-apache", "deployment platform selection saves");
+  check(Boolean(state.deployment.platform.lastChecklistAt), "deployment platform checklist timestamp saves");
+  check((await page.locator("#deploymentRunbookPreview").inputValue()).includes("yum install"), "deployment RHEL package command renders");
   await page.selectOption("#deploymentMethodInput", "docker");
   await page.check("#dockerEnabledInput");
   await page.selectOption("#dockerComposeProfileInput", "postgres");
   await page.fill("#dockerTagInput", "latest");
   await page.uncheck("#dockerPinnedInput");
   await pause();
-  let state = await getState(page);
+  state = await getState(page);
   check(state.deployment.install.method === "docker", "deployment method saves docker");
   check(state.deployment.docker.enabled === true && state.deployment.docker.composeProfile === "postgres", "deployment Docker profile saves");
   check((await page.locator("#deploymentRiskList").textContent()).includes("Docker"), "deployment Docker pinning risk renders");
@@ -890,6 +906,8 @@ async function testExtensionLab(page) {
   check((await page.locator("#authProviderPreview").inputValue()).includes("AuthenticationManager"), "extension auth provider preview renders");
   check((await page.locator("#actionExtensionPreview").inputValue()).includes("getCompatibleEvents"), "extension automatic action preview renders");
   check((await page.locator("#notificationExtensionPreview").inputValue()).includes("NotificationInterface"), "extension notification preview renders");
+  check((await page.locator("#customFormPreview").inputValue()).includes("modal->medium"), "extension custom form preview renders");
+  check((await page.locator("#customFormPreview").inputValue()).includes("form->csrf"), "extension custom form CSRF preview renders");
   check((await page.locator("#advancedAccessPreview").inputValue()).includes("projectAccessMap"), "extension advanced access preview renders");
   check((await page.locator("#advancedProviderPreview").inputValue()).includes("externalLinkManager"), "extension advanced provider preview renders");
   check((await page.locator("#advancedSchemaPreview").inputValue()).includes("const VERSION"), "extension advanced schema preview renders");
@@ -940,6 +958,25 @@ async function testExtensionLab(page) {
   state = await getState(page);
   check(state.extensions.notificationTypes.typeKey === "chat-ops", "extension notification type key saves");
   check(state.extensions.notificationTypes.logs.length === 1, "extension notification delivery log saves");
+
+  await page.fill("#customFormLabelInput", "记录实验结论");
+  await page.fill("#customFormControllerInput", "ExperimentFormController");
+  await page.fill("#customFormActionInput", "saveExperiment");
+  await page.fill("#customFormTemplateInput", "pmworkflow:experiment_form");
+  await page.fill("#customFormPrimaryFieldInput", "experiment_title");
+  await page.fill("#customFormPrimaryLabelInput", "实验标题");
+  await page.fill("#customFormSelectOptionsInput", "可上线,继续观察,放弃");
+  await page.uncheck("#customFormCsrfInput");
+  await pause();
+  check((await page.locator("#extensionRiskList").textContent()).includes("Custom Form"), "extension custom form CSRF risk renders");
+  await page.check("#customFormCsrfInput");
+  await page.click("#runCustomFormValidationBtn");
+  await pause();
+  state = await getState(page);
+  check(state.extensions.customForms.action === "saveExperiment", "extension custom form action saves");
+  check(Boolean(state.extensions.customForms.lastValidationAt), "extension custom form validation timestamp saves");
+  check(state.extensions.customForms.submissions.length === 1, "extension custom form submission log saves");
+  check((await page.locator("#customFormPreview").inputValue()).includes("ExperimentFormController"), "extension custom form preview updates");
 
   await page.selectOption("#advancedAuthorizationScopeInput", "application");
   await page.selectOption("#advancedAuthorizationRoleInput", "Role::APP_MANAGER");

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "kanboard-static-v0825";
+const STORAGE_KEY = "kanboard-static-v0826";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -72,6 +72,88 @@ const DOCKER_REGISTRIES = [
   "quay.io/kanboard/kanboard"
 ];
 const DEPLOYMENT_WEB_SERVERS = ["apache", "nginx", "iis", "caddy"];
+const DEPLOYMENT_PLATFORM_PROFILES = [
+  {
+    value: "debian-apache",
+    label: "Debian + Apache",
+    os: "Debian",
+    webServer: "apache",
+    packageTool: "apt",
+    phpRuntime: "libapache2-mod-php",
+    dataOwner: "www-data",
+    installPath: "/var/www/html/kanboard",
+    service: "apache2",
+    command: "apt install apache2 libapache2-mod-php php-cli php-mbstring php-sqlite3 php-opcache php-json php-ldap php-gd php-xml php-mysql php-pgsql php-curl php-zip",
+    staleNotice: true
+  },
+  {
+    value: "ubuntu-apache",
+    label: "Ubuntu + Apache",
+    os: "Ubuntu",
+    webServer: "apache",
+    packageTool: "apt",
+    phpRuntime: "libapache2-mod-php",
+    dataOwner: "www-data",
+    installPath: "/var/www/html/kanboard",
+    service: "apache2",
+    command: "sudo apt install apache2 libapache2-mod-php php-cli php-mbstring php-sqlite3 php-opcache php-json php-mysql php-pgsql php-ldap php-gd php-xml"
+  },
+  {
+    value: "ubuntu-nginx",
+    label: "Ubuntu + Nginx/PHP-FPM",
+    os: "Ubuntu",
+    webServer: "nginx",
+    packageTool: "apt",
+    phpRuntime: "php-fpm",
+    dataOwner: "www-data",
+    installPath: "/var/www/html/kanboard",
+    service: "nginx",
+    command: "sudo apt install nginx php-fpm php-mysql php-pgsql php-gd php-mbstring php-sqlite3 php-xml"
+  },
+  {
+    value: "rhel-apache",
+    label: "RHEL / CentOS + Apache",
+    os: "RHEL",
+    webServer: "apache",
+    packageTool: "yum",
+    phpRuntime: "mod_php",
+    dataOwner: "apache",
+    installPath: "/var/www/html/kanboard",
+    service: "httpd",
+    command: "yum install -y php php-xml php-mbstring php-pdo php-gd unzip wget",
+    requiresSelinux: true,
+    staleNotice: true
+  },
+  {
+    value: "windows-apache",
+    label: "Windows Server + Apache",
+    os: "Windows",
+    webServer: "apache",
+    packageTool: "manual",
+    phpRuntime: "php8apache2_4.dll",
+    dataOwner: "Apache service user",
+    installPath: "C:\\Apache24\\htdocs\\kanboard",
+    service: "Apache24",
+    command: "Install Visual C++ Redistributable, Apache Lounge build, PHP Thread Safe, then extract Kanboard",
+    requiresWindowsRuntime: true,
+    staleNotice: true
+  },
+  {
+    value: "windows-iis",
+    label: "Windows Server + IIS",
+    os: "Windows",
+    webServer: "iis",
+    packageTool: "manual",
+    phpRuntime: "CGI/FastCGI",
+    dataOwner: "IIS application pool user",
+    installPath: "C:\\inetpub\\wwwroot\\kanboard",
+    service: "W3SVC",
+    command: "Enable IIS CGI/FastCGI, configure php.ini extensions, install IIS URL Rewrite, then extract Kanboard",
+    requiresWindowsRuntime: true,
+    requiresIisRewrite: true,
+    staleNotice: true
+  }
+];
 const WEBHOOK_EVENTS = [
   "comment.create",
   "comment.update",
@@ -155,6 +237,7 @@ const ROUTE_RESULT_TYPES = [
   { value: "redirect", label: "redirect" }
 ];
 const SCHEMA_DRIVER_FILES = ["Sqlite.php", "Mysql.php", "Postgres.php"];
+const CUSTOM_FORM_FIELD_TYPES = ["text", "textarea", "select"];
 const PROJECT_TEMPLATES = [
   {
     id: "learning",
@@ -893,6 +976,18 @@ const els = {
   dockerComposeProfileInput: document.querySelector("#dockerComposeProfileInput"),
   dockerSmtpInput: document.querySelector("#dockerSmtpInput"),
   runHealthcheckBtn: document.querySelector("#runHealthcheckBtn"),
+  deploymentPlatformInput: document.querySelector("#deploymentPlatformInput"),
+  platformPackageInput: document.querySelector("#platformPackageInput"),
+  platformWebServerInput: document.querySelector("#platformWebServerInput"),
+  platformPhpRuntimeInput: document.querySelector("#platformPhpRuntimeInput"),
+  platformArchiveInput: document.querySelector("#platformArchiveInput"),
+  platformDataOwnerInput: document.querySelector("#platformDataOwnerInput"),
+  platformDailyJobInput: document.querySelector("#platformDailyJobInput"),
+  platformSelinuxInput: document.querySelector("#platformSelinuxInput"),
+  platformWindowsRuntimeInput: document.querySelector("#platformWindowsRuntimeInput"),
+  platformIisRewriteInput: document.querySelector("#platformIisRewriteInput"),
+  runPlatformChecklistBtn: document.querySelector("#runPlatformChecklistBtn"),
+  platformStepList: document.querySelector("#platformStepList"),
   accessWebServerInput: document.querySelector("#accessWebServerInput"),
   accessRewriteInput: document.querySelector("#accessRewriteInput"),
   accessSubfolderInput: document.querySelector("#accessSubfolderInput"),
@@ -984,6 +1079,29 @@ const els = {
   sendExtensionNotificationBtn: document.querySelector("#sendExtensionNotificationBtn"),
   notificationExtensionPreview: document.querySelector("#notificationExtensionPreview"),
   notificationExtensionLogList: document.querySelector("#notificationExtensionLogList"),
+  customFormEnabledInput: document.querySelector("#customFormEnabledInput"),
+  customFormIconInput: document.querySelector("#customFormIconInput"),
+  customFormLabelInput: document.querySelector("#customFormLabelInput"),
+  customFormControllerInput: document.querySelector("#customFormControllerInput"),
+  customFormActionInput: document.querySelector("#customFormActionInput"),
+  customFormPluginInput: document.querySelector("#customFormPluginInput"),
+  customFormContextParamInput: document.querySelector("#customFormContextParamInput"),
+  customFormRedirectControllerInput: document.querySelector("#customFormRedirectControllerInput"),
+  customFormRedirectActionInput: document.querySelector("#customFormRedirectActionInput"),
+  customFormTemplateInput: document.querySelector("#customFormTemplateInput"),
+  customFormPrimaryFieldInput: document.querySelector("#customFormPrimaryFieldInput"),
+  customFormPrimaryLabelInput: document.querySelector("#customFormPrimaryLabelInput"),
+  customFormSecondaryFieldInput: document.querySelector("#customFormSecondaryFieldInput"),
+  customFormSecondaryLabelInput: document.querySelector("#customFormSecondaryLabelInput"),
+  customFormSelectFieldInput: document.querySelector("#customFormSelectFieldInput"),
+  customFormSelectOptionsInput: document.querySelector("#customFormSelectOptionsInput"),
+  customFormCsrfInput: document.querySelector("#customFormCsrfInput"),
+  customFormSingleModalInput: document.querySelector("#customFormSingleModalInput"),
+  customFormValidationInput: document.querySelector("#customFormValidationInput"),
+  customFormRedisplayInput: document.querySelector("#customFormRedisplayInput"),
+  runCustomFormValidationBtn: document.querySelector("#runCustomFormValidationBtn"),
+  customFormPreview: document.querySelector("#customFormPreview"),
+  customFormSubmissionList: document.querySelector("#customFormSubmissionList"),
   advancedAuthorizationScopeInput: document.querySelector("#advancedAuthorizationScopeInput"),
   advancedAuthorizationControllerInput: document.querySelector("#advancedAuthorizationControllerInput"),
   advancedAuthorizationActionInput: document.querySelector("#advancedAuthorizationActionInput"),
@@ -1376,6 +1494,16 @@ els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
   els.dockerHealthcheckInput,
   els.dockerComposeProfileInput,
   els.dockerSmtpInput,
+  els.deploymentPlatformInput,
+  els.platformPackageInput,
+  els.platformWebServerInput,
+  els.platformPhpRuntimeInput,
+  els.platformArchiveInput,
+  els.platformDataOwnerInput,
+  els.platformDailyJobInput,
+  els.platformSelinuxInput,
+  els.platformWindowsRuntimeInput,
+  els.platformIisRewriteInput,
   els.accessWebServerInput,
   els.accessRewriteInput,
   els.accessSubfolderInput,
@@ -1409,6 +1537,16 @@ els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
   els.dockerHealthcheckInput,
   els.dockerComposeProfileInput,
   els.dockerSmtpInput,
+  els.deploymentPlatformInput,
+  els.platformPackageInput,
+  els.platformWebServerInput,
+  els.platformPhpRuntimeInput,
+  els.platformArchiveInput,
+  els.platformDataOwnerInput,
+  els.platformDailyJobInput,
+  els.platformSelinuxInput,
+  els.platformWindowsRuntimeInput,
+  els.platformIisRewriteInput,
   els.accessWebServerInput,
   els.accessRewriteInput,
   els.accessDataDenyInput,
@@ -1422,6 +1560,7 @@ els.runDbOptimizeBtn.addEventListener("click", runDatabaseOptimizeSimulation);
   els.accessOutboundRestrictedInput
 ].forEach((input) => input.addEventListener("change", updateDeploymentFromDialog));
 els.runHealthcheckBtn.addEventListener("click", runDeploymentHealthcheckSimulation);
+els.runPlatformChecklistBtn.addEventListener("click", runPlatformChecklistSimulation);
 [
   els.webhookEnabledInput,
   els.webhookUrlInput,
@@ -1492,6 +1631,26 @@ els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation
   els.notificationScopeInput,
   els.notificationEventInput,
   els.notificationEndpointInput,
+  els.customFormEnabledInput,
+  els.customFormIconInput,
+  els.customFormLabelInput,
+  els.customFormControllerInput,
+  els.customFormActionInput,
+  els.customFormPluginInput,
+  els.customFormContextParamInput,
+  els.customFormRedirectControllerInput,
+  els.customFormRedirectActionInput,
+  els.customFormTemplateInput,
+  els.customFormPrimaryFieldInput,
+  els.customFormPrimaryLabelInput,
+  els.customFormSecondaryFieldInput,
+  els.customFormSecondaryLabelInput,
+  els.customFormSelectFieldInput,
+  els.customFormSelectOptionsInput,
+  els.customFormCsrfInput,
+  els.customFormSingleModalInput,
+  els.customFormValidationInput,
+  els.customFormRedisplayInput,
   els.advancedAuthorizationScopeInput,
   els.advancedAuthorizationControllerInput,
   els.advancedAuthorizationActionInput,
@@ -1538,6 +1697,11 @@ els.generatePluginBtn.addEventListener("click", generatePluginSkeletonSimulation
   els.actionRegisterExistingEventInput,
   els.notificationScopeInput,
   els.notificationEventInput,
+  els.customFormEnabledInput,
+  els.customFormCsrfInput,
+  els.customFormSingleModalInput,
+  els.customFormValidationInput,
+  els.customFormRedisplayInput,
   els.advancedAuthorizationScopeInput,
   els.advancedAuthorizationRoleInput,
   els.advancedProjectRoleCheckInput,
@@ -1560,6 +1724,7 @@ els.runAdvancedRouteBtn.addEventListener("click", simulateAdvancedRouteCheck);
 els.runAdvancedProviderSyncBtn.addEventListener("click", simulateAdvancedProviderSync);
 els.runAdvancedSchemaBtn.addEventListener("click", simulateAdvancedSchemaMigration);
 els.generateAdvancedPluginBtn.addEventListener("click", generateAdvancedPluginPreview);
+els.runCustomFormValidationBtn.addEventListener("click", simulateCustomFormValidation);
 els.columnForm.addEventListener("submit", saveColumnFromDialog);
 els.deleteColumnBtn.addEventListener("click", deleteEditingColumn);
 els.swimlaneForm.addEventListener("submit", saveSwimlaneFromDialog);
@@ -1873,6 +2038,19 @@ function createDefaultDeployment() {
       composeProfile: "sqlite",
       smtpTransportPlanned: true
     },
+    platform: {
+      selected: "ubuntu-nginx",
+      packageSetConfirmed: true,
+      webServerConfigured: true,
+      phpRuntimeConfigured: true,
+      archiveDownloaded: true,
+      dataOwnerConfirmed: true,
+      dailyJobPlanned: true,
+      selinuxConfigured: false,
+      windowsRuntimeInstalled: false,
+      iisRewriteInstalled: false,
+      lastChecklistAt: ""
+    },
     access: {
       webServer: "nginx",
       urlRewrite: true,
@@ -1976,6 +2154,30 @@ function createDefaultExtensionLab() {
       endpoint: "https://chat.example.com/hooks/kanboard",
       lastStatus: "未测试",
       logs: []
+    },
+    customForms: {
+      enabled: true,
+      modalIcon: "plus",
+      modalLabel: "记录 PM 决策",
+      controller: "PmWorkflowFormController",
+      action: "saveDecision",
+      plugin: "PmWorkflow",
+      contextParam: "task_id",
+      redirectController: "TaskViewController",
+      redirectAction: "show",
+      formTemplate: "pmworkflow:decision_form",
+      primaryField: "decision_title",
+      primaryLabel: "决策标题",
+      secondaryField: "decision_context",
+      secondaryLabel: "背景说明",
+      selectField: "decision_type",
+      selectOptions: "用户价值,商业价值,技术约束",
+      csrf: true,
+      oneFormPerModal: true,
+      validateRequired: true,
+      redisplayOnError: true,
+      lastValidationAt: "",
+      submissions: []
     },
     advanced: {
       authorization: {
@@ -2755,6 +2957,9 @@ function normalizeDeployment(existing = {}) {
   const registry = DOCKER_REGISTRIES.includes(existing.docker?.registry)
     ? existing.docker.registry
     : defaults.docker.registry;
+  const selectedPlatform = DEPLOYMENT_PLATFORM_PROFILES.some((profile) => profile.value === existing.platform?.selected)
+    ? existing.platform.selected
+    : defaults.platform.selected;
   const webServer = DEPLOYMENT_WEB_SERVERS.includes(existing.access?.webServer)
     ? existing.access.webServer
     : defaults.access.webServer;
@@ -2776,6 +2981,11 @@ function normalizeDeployment(existing = {}) {
         ? existing.docker.composeProfile
         : defaults.docker.composeProfile,
       healthStatus: existing.docker?.healthStatus || defaults.docker.healthStatus
+    },
+    platform: {
+      ...defaults.platform,
+      ...(existing.platform || {}),
+      selected: selectedPlatform
     },
     access: {
       ...defaults.access,
@@ -2902,6 +3112,28 @@ function normalizeExtensionLab(existing = {}) {
         ? existing.notificationTypes.endpoint
         : defaults.notificationTypes.endpoint,
       logs: (existing.notificationTypes?.logs || defaults.notificationTypes.logs).slice(0, 12)
+    },
+    customForms: {
+      ...defaults.customForms,
+      ...(existing.customForms || {}),
+      modalIcon: existing.customForms?.modalIcon || defaults.customForms.modalIcon,
+      modalLabel: existing.customForms?.modalLabel || defaults.customForms.modalLabel,
+      controller: existing.customForms?.controller || defaults.customForms.controller,
+      action: existing.customForms?.action || defaults.customForms.action,
+      plugin: existing.customForms?.plugin || defaults.customForms.plugin,
+      contextParam: existing.customForms?.contextParam || defaults.customForms.contextParam,
+      redirectController: existing.customForms?.redirectController || defaults.customForms.redirectController,
+      redirectAction: existing.customForms?.redirectAction || defaults.customForms.redirectAction,
+      formTemplate: existing.customForms?.formTemplate || defaults.customForms.formTemplate,
+      primaryField: existing.customForms?.primaryField || defaults.customForms.primaryField,
+      primaryLabel: existing.customForms?.primaryLabel || defaults.customForms.primaryLabel,
+      secondaryField: existing.customForms?.secondaryField || defaults.customForms.secondaryField,
+      secondaryLabel: existing.customForms?.secondaryLabel || defaults.customForms.secondaryLabel,
+      selectField: existing.customForms?.selectField || defaults.customForms.selectField,
+      selectOptions: existing.customForms && "selectOptions" in existing.customForms
+        ? existing.customForms.selectOptions
+        : defaults.customForms.selectOptions,
+      submissions: (existing.customForms?.submissions || defaults.customForms.submissions).slice(0, 12)
     },
     advanced: {
       authorization: {
@@ -4941,7 +5173,7 @@ function buildExportContent(project, type) {
   if (type === "subtasks-csv") return buildSubtasksCsv(project);
   if (type === "project-json") {
     return JSON.stringify({
-      exportVersion: "kanboard-static-v0825",
+      exportVersion: "kanboard-static-v0826",
       exportedAt: new Date().toISOString(),
       project: clone(project)
     }, null, 2);
@@ -5979,7 +6211,8 @@ function openDeploymentDialog() {
 }
 
 function renderDeploymentDialog() {
-  const { install, docker, access } = state.deployment;
+  const { install, docker, platform, access } = state.deployment;
+  els.deploymentPlatformInput.innerHTML = DEPLOYMENT_PLATFORM_PROFILES.map((profile) => `<option value="${profile.value}">${profile.label}</option>`).join("");
   els.deploymentMethodInput.value = install.method;
   els.deploymentVersionInput.value = install.sourceVersion;
   els.deploymentPathInput.value = install.installPath;
@@ -6002,6 +6235,16 @@ function renderDeploymentDialog() {
   els.dockerHealthcheckInput.checked = Boolean(docker.healthcheckEnabled);
   els.dockerComposeProfileInput.value = docker.composeProfile;
   els.dockerSmtpInput.checked = Boolean(docker.smtpTransportPlanned);
+  els.deploymentPlatformInput.value = platform.selected;
+  els.platformPackageInput.checked = Boolean(platform.packageSetConfirmed);
+  els.platformWebServerInput.checked = Boolean(platform.webServerConfigured);
+  els.platformPhpRuntimeInput.checked = Boolean(platform.phpRuntimeConfigured);
+  els.platformArchiveInput.checked = Boolean(platform.archiveDownloaded);
+  els.platformDataOwnerInput.checked = Boolean(platform.dataOwnerConfirmed);
+  els.platformDailyJobInput.checked = Boolean(platform.dailyJobPlanned);
+  els.platformSelinuxInput.checked = Boolean(platform.selinuxConfigured);
+  els.platformWindowsRuntimeInput.checked = Boolean(platform.windowsRuntimeInstalled);
+  els.platformIisRewriteInput.checked = Boolean(platform.iisRewriteInstalled);
   els.accessWebServerInput.value = access.webServer;
   els.accessRewriteInput.checked = Boolean(access.urlRewrite);
   els.accessSubfolderInput.value = access.subfolder;
@@ -6018,22 +6261,24 @@ function renderDeploymentDialog() {
   renderDeploymentSummary();
   renderDeploymentRisks();
   renderDeploymentLogs();
+  renderPlatformSteps();
   els.deploymentRunbookPreview.value = buildDeploymentRunbookPreview();
   const risks = deploymentRiskMessages();
   els.deploymentStatus.textContent = risks[0] || "部署检查已通过，安装、访问和反向代理配置处于可发布状态。";
 }
 
 function renderDeploymentSummary() {
-  const { install, docker, access } = state.deployment;
+  const { install, docker, platform, access } = state.deployment;
   const risks = deploymentRiskMessages();
+  const profile = platformProfile(platform.selected);
   els.deploymentSummary.innerHTML = `
     <div class="analytics-card">
       <span>安装方式</span>
       <strong>${deploymentMethodLabel(install.method)}</strong>
     </div>
     <div class="analytics-card">
-      <span>Docker</span>
-      <strong>${docker.enabled ? docker.imageTag : "未启用"}</strong>
+      <span>平台</span>
+      <strong>${escapeHtml(profile.os)}</strong>
     </div>
     <div class="analytics-card">
       <span>访问层</span>
@@ -6044,6 +6289,32 @@ function renderDeploymentSummary() {
       <strong>${risks.length}</strong>
     </div>
   `;
+}
+
+function renderPlatformSteps() {
+  const { platform } = state.deployment;
+  const profile = platformProfile(platform.selected);
+  const steps = [
+    { title: "系统包", status: platform.packageSetConfirmed, detail: profile.command },
+    { title: "Web Server", status: platform.webServerConfigured, detail: `${profile.service} / ${profile.webServer}` },
+    { title: "PHP 运行方式", status: platform.phpRuntimeConfigured, detail: profile.phpRuntime },
+    { title: "源码路径", status: platform.archiveDownloaded, detail: profile.installPath },
+    { title: "data 权限", status: platform.dataOwnerConfirmed, detail: `owner=${profile.dataOwner}` },
+    { title: "后台任务", status: platform.dailyJobPlanned, detail: profile.os === "Windows" ? "Windows Task Scheduler" : "cron ./cli cronjob" }
+  ];
+  if (profile.requiresSelinux) steps.push({ title: "SELinux", status: platform.selinuxConfigured, detail: "semanage fcontext + restorecon" });
+  if (profile.requiresWindowsRuntime) steps.push({ title: "Windows Runtime", status: platform.windowsRuntimeInstalled, detail: "Visual C++ Redistributable + PHP runtime" });
+  if (profile.requiresIisRewrite) steps.push({ title: "IIS Rewrite", status: platform.iisRewriteInstalled, detail: "IIS URL Rewrite module" });
+  if (profile.staleNotice) steps.push({ title: "文档时效", status: false, detail: "官网标注部分平台教程可能需要按当前发行版复核" });
+  els.platformStepList.innerHTML = steps.map((step) => `
+    <div class="settings-item platform-step-item ${step.status ? "pass" : "fail"}">
+      <div>
+        <strong>${escapeHtml(step.title)}</strong>
+        <span>${escapeHtml(step.detail)}</span>
+      </div>
+      <span class="role-pill">${step.status ? "已确认" : "待核对"}</span>
+    </div>
+  `).join("");
 }
 
 function renderDeploymentRisks() {
@@ -6074,6 +6345,8 @@ function renderDeploymentLogs() {
 }
 
 function updateDeploymentFromDialog() {
+  const selectedPlatform = els.deploymentPlatformInput.value;
+  const profile = platformProfile(selectedPlatform);
   state.deployment.install = {
     ...state.deployment.install,
     method: els.deploymentMethodInput.value,
@@ -6102,9 +6375,22 @@ function updateDeploymentFromDialog() {
     composeProfile: els.dockerComposeProfileInput.value,
     smtpTransportPlanned: els.dockerSmtpInput.checked
   };
+  state.deployment.platform = {
+    ...state.deployment.platform,
+    selected: selectedPlatform,
+    packageSetConfirmed: els.platformPackageInput.checked,
+    webServerConfigured: els.platformWebServerInput.checked,
+    phpRuntimeConfigured: els.platformPhpRuntimeInput.checked,
+    archiveDownloaded: els.platformArchiveInput.checked,
+    dataOwnerConfirmed: els.platformDataOwnerInput.checked,
+    dailyJobPlanned: els.platformDailyJobInput.checked,
+    selinuxConfigured: els.platformSelinuxInput.checked,
+    windowsRuntimeInstalled: els.platformWindowsRuntimeInput.checked,
+    iisRewriteInstalled: els.platformIisRewriteInput.checked
+  };
   state.deployment.access = {
     ...state.deployment.access,
-    webServer: els.accessWebServerInput.value,
+    webServer: els.accessWebServerInput.value || profile.webServer,
     urlRewrite: els.accessRewriteInput.checked,
     subfolder: els.accessSubfolderInput.value.trim(),
     dataDenyRule: els.accessDataDenyInput.checked,
@@ -6119,6 +6405,15 @@ function updateDeploymentFromDialog() {
     outboundNetworkRestricted: els.accessOutboundRestrictedInput.checked
   };
   state.deployment = normalizeDeployment(state.deployment);
+  persist();
+  renderDeploymentDialog();
+}
+
+function runPlatformChecklistSimulation() {
+  const { platform } = state.deployment;
+  const profile = platformProfile(platform.selected);
+  state.deployment.platform.lastChecklistAt = new Date().toISOString();
+  addDeploymentLog("platform install", `${profile.label} checklist ${deploymentRiskMessages().some((message) => message.includes("平台") || message.includes("SELinux") || message.includes("Windows") || message.includes("IIS")) ? "has warnings" : "ready"}`);
   persist();
   renderDeploymentDialog();
 }
@@ -6143,7 +6438,8 @@ function addDeploymentLog(action, result) {
 }
 
 function deploymentRiskMessages() {
-  const { install, docker, access } = state.deployment;
+  const { install, docker, platform, access } = state.deployment;
+  const profile = platformProfile(platform.selected);
   const messages = [];
   if (!install.requirementsChecked) messages.push("安装前尚未确认 Kanboard 运行要求。");
   if (!install.defaultPasswordChanged) messages.push("默认 admin/admin 密码尚未标记为已修改。");
@@ -6161,6 +6457,17 @@ function deploymentRiskMessages() {
     if (!docker.healthcheckEnabled) messages.push("Docker healthcheck 未开启，无法表达存活和就绪检查。");
     if (!docker.smtpTransportPlanned) messages.push("官方 Docker 镜像不适合使用 mail/sendmail，应规划 SMTP 或邮件服务插件。");
   }
+  if (!platform.packageSetConfirmed) messages.push("平台安装：尚未确认系统包和 PHP 扩展清单。");
+  if (!platform.webServerConfigured) messages.push("平台安装：Web Server 虚拟主机或站点尚未配置。");
+  if (!platform.phpRuntimeConfigured) messages.push("平台安装：PHP 运行方式尚未确认。");
+  if (!platform.archiveDownloaded) messages.push("平台安装：Kanboard 源码包下载和解压步骤尚未确认。");
+  if (!platform.dataOwnerConfirmed) messages.push(`平台安装：data 目录属主尚未确认为 ${profile.dataOwner}。`);
+  if (!platform.dailyJobPlanned) messages.push("平台安装：每日 cronjob 或 Windows 计划任务尚未规划。");
+  if (profile.requiresSelinux && !platform.selinuxConfigured) messages.push("SELinux 平台需要配置 Kanboard data 目录上下文和写入策略。");
+  if (profile.requiresWindowsRuntime && !platform.windowsRuntimeInstalled) messages.push("Windows 平台需要先确认 Visual C++ Redistributable 与 PHP 运行库。");
+  if (profile.requiresIisRewrite && !platform.iisRewriteInstalled) messages.push("IIS 场景需要安装 URL Rewrite 模块并配置 web.config。");
+  if (profile.staleNotice) messages.push("平台安装教程标注可能需要按当前发行版复核，不能直接照搬旧包名。");
+  if (profile.webServer !== access.webServer) messages.push(`平台选择为 ${profile.webServer}，但访问层 Web Server 当前为 ${access.webServer}。`);
   if (access.urlRewrite && access.webServer !== "apache" && !access.dataDenyRule) {
     messages.push("非 Apache URL Rewrite 场景需要显式配置 data 目录拒绝访问规则。");
   }
@@ -6178,7 +6485,8 @@ function deploymentRiskMessages() {
 }
 
 function buildDeploymentRunbookPreview() {
-  const { install, docker, access } = state.deployment;
+  const { install, docker, platform, access } = state.deployment;
+  const profile = platformProfile(platform.selected);
   const image = `${docker.registry}:${docker.imageTag}`;
   const subfolder = access.subfolder ? access.subfolder.replace(/\/$/, "") : "";
   const lines = [
@@ -6193,6 +6501,19 @@ function buildDeploymentRunbookPreview() {
     `default_password_changed=${install.defaultPasswordChanged}`,
     `data_directory_protected=${install.dataDirectoryProtected}`,
     `data_directory_writable=${install.dataDirectoryWritable}`,
+    "",
+    "# Platform guide",
+    `profile=${profile.label}`,
+    `package_tool=${profile.packageTool}`,
+    `package_command=${profile.command}`,
+    `web_server=${profile.webServer}`,
+    `php_runtime=${profile.phpRuntime}`,
+    `service=${profile.service}`,
+    `data_owner=${profile.dataOwner}`,
+    profile.requiresSelinux ? "selinux=semanage fcontext + restorecon required" : null,
+    profile.requiresWindowsRuntime ? "windows_runtime=Visual C++ Redistributable and PHP runtime required" : null,
+    profile.requiresIisRewrite ? "iis_rewrite=IIS URL Rewrite module required" : null,
+    profile.os === "Windows" ? "daily_job=Windows Task Scheduler runs php cli cronjob" : "daily_job=crontab runs ./cli cronjob",
     "",
     "# URL rewrite",
     `define('ENABLE_URL_REWRITE', ${phpBool(access.urlRewrite)});`,
@@ -6218,11 +6539,15 @@ function buildDeploymentRunbookPreview() {
     `healthcheck=${docker.healthcheckEnabled ? "curl http://localhost/healthcheck.php" : "disabled"}`,
     `compose_profile=${docker.composeProfile}`
   ];
-  return lines.join("\n");
+  return lines.filter((line) => line !== null).join("\n");
 }
 
 function deploymentMethodLabel(value) {
   return DEPLOYMENT_METHODS.find((item) => item.value === value)?.label || value;
+}
+
+function platformProfile(value) {
+  return DEPLOYMENT_PLATFORM_PROFILES.find((profile) => profile.value === value) || DEPLOYMENT_PLATFORM_PROFILES[0];
 }
 
 function openDeveloperDialog() {
@@ -6592,7 +6917,7 @@ function openExtensionDialog() {
 }
 
 function renderExtensionDialog() {
-  const { authProviders, automaticActions, notificationTypes, advanced } = state.extensions;
+  const { authProviders, automaticActions, notificationTypes, customForms, advanced } = state.extensions;
   els.authProviderInterfaceInput.innerHTML = AUTH_PROVIDER_INTERFACES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
   els.actionEventInput.innerHTML = EXTENSION_ACTION_EVENTS.map((eventName) => `<option value="${eventName}">${eventName}</option>`).join("");
   els.notificationScopeInput.innerHTML = NOTIFICATION_SCOPES.map((item) => `<option value="${item.value}">${item.label}</option>`).join("");
@@ -6625,6 +6950,26 @@ function renderExtensionDialog() {
   els.notificationScopeInput.value = notificationTypes.scope;
   els.notificationEventInput.value = notificationTypes.selectedEvent;
   els.notificationEndpointInput.value = notificationTypes.endpoint;
+  els.customFormEnabledInput.checked = Boolean(customForms.enabled);
+  els.customFormIconInput.value = customForms.modalIcon;
+  els.customFormLabelInput.value = customForms.modalLabel;
+  els.customFormControllerInput.value = customForms.controller;
+  els.customFormActionInput.value = customForms.action;
+  els.customFormPluginInput.value = customForms.plugin;
+  els.customFormContextParamInput.value = customForms.contextParam;
+  els.customFormRedirectControllerInput.value = customForms.redirectController;
+  els.customFormRedirectActionInput.value = customForms.redirectAction;
+  els.customFormTemplateInput.value = customForms.formTemplate;
+  els.customFormPrimaryFieldInput.value = customForms.primaryField;
+  els.customFormPrimaryLabelInput.value = customForms.primaryLabel;
+  els.customFormSecondaryFieldInput.value = customForms.secondaryField;
+  els.customFormSecondaryLabelInput.value = customForms.secondaryLabel;
+  els.customFormSelectFieldInput.value = customForms.selectField;
+  els.customFormSelectOptionsInput.value = customForms.selectOptions;
+  els.customFormCsrfInput.checked = Boolean(customForms.csrf);
+  els.customFormSingleModalInput.checked = Boolean(customForms.oneFormPerModal);
+  els.customFormValidationInput.checked = Boolean(customForms.validateRequired);
+  els.customFormRedisplayInput.checked = Boolean(customForms.redisplayOnError);
   els.advancedAuthorizationScopeInput.value = advanced.authorization.scope;
   els.advancedAuthorizationControllerInput.value = advanced.authorization.controller;
   els.advancedAuthorizationActionInput.value = advanced.authorization.action;
@@ -6668,6 +7013,7 @@ function renderExtensionDialog() {
   els.authProviderPreview.value = buildAuthProviderPreview();
   els.actionExtensionPreview.value = buildAutomaticActionExtensionPreview();
   els.notificationExtensionPreview.value = buildNotificationTypePreview();
+  els.customFormPreview.value = buildCustomFormPreview();
   els.advancedAccessPreview.value = buildAdvancedAccessPreview();
   els.advancedProviderPreview.value = buildAdvancedProviderPreview();
   els.advancedSchemaPreview.value = buildAdvancedSchemaPreview();
@@ -6728,7 +7074,7 @@ function renderAuthFlowList() {
 }
 
 function renderExtensionLogs() {
-  const { automaticActions, notificationTypes, advanced } = state.extensions;
+  const { automaticActions, notificationTypes, customForms, advanced } = state.extensions;
   els.actionExtensionLogList.innerHTML = automaticActions.logs.length
     ? automaticActions.logs.map((entry) => `
       <div class="settings-item extension-log-item">
@@ -6749,6 +7095,16 @@ function renderExtensionLogs() {
       </div>
     `).join("")
     : `<div class="empty-state">暂无通知类型投递日志</div>`;
+  els.customFormSubmissionList.innerHTML = customForms.submissions.length
+    ? customForms.submissions.map((entry) => `
+      <div class="settings-item extension-log-item">
+        <div>
+          <strong>${escapeHtml(entry.form)}</strong>
+          <span>${escapeHtml(entry.status)} · ${formatTime(entry.createdAt)}</span>
+        </div>
+      </div>
+    `).join("")
+    : `<div class="empty-state">暂无自定义表单模拟提交</div>`;
   els.advancedLogList.innerHTML = advanced.logs.length
     ? advanced.logs.map((entry) => `
       <div class="settings-item extension-log-item">
@@ -6807,6 +7163,29 @@ function updateExtensionFromDialog() {
     scope: els.notificationScopeInput.value,
     selectedEvent: els.notificationEventInput.value,
     endpoint: els.notificationEndpointInput.value.trim()
+  };
+  state.extensions.customForms = {
+    ...state.extensions.customForms,
+    enabled: els.customFormEnabledInput.checked,
+    modalIcon: els.customFormIconInput.value.trim() || "plus",
+    modalLabel: els.customFormLabelInput.value.trim() || "记录 PM 决策",
+    controller: els.customFormControllerInput.value.trim() || "PmWorkflowFormController",
+    action: els.customFormActionInput.value.trim() || "saveDecision",
+    plugin: els.customFormPluginInput.value.trim() || "PmWorkflow",
+    contextParam: els.customFormContextParamInput.value.trim() || "task_id",
+    redirectController: els.customFormRedirectControllerInput.value.trim() || "TaskViewController",
+    redirectAction: els.customFormRedirectActionInput.value.trim() || "show",
+    formTemplate: els.customFormTemplateInput.value.trim() || "pmworkflow:decision_form",
+    primaryField: els.customFormPrimaryFieldInput.value.trim() || "decision_title",
+    primaryLabel: els.customFormPrimaryLabelInput.value.trim() || "决策标题",
+    secondaryField: els.customFormSecondaryFieldInput.value.trim() || "decision_context",
+    secondaryLabel: els.customFormSecondaryLabelInput.value.trim() || "背景说明",
+    selectField: els.customFormSelectFieldInput.value.trim() || "decision_type",
+    selectOptions: els.customFormSelectOptionsInput.value.trim(),
+    csrf: els.customFormCsrfInput.checked,
+    oneFormPerModal: els.customFormSingleModalInput.checked,
+    validateRequired: els.customFormValidationInput.checked,
+    redisplayOnError: els.customFormRedisplayInput.checked
   };
   state.extensions.advanced = {
     ...state.extensions.advanced,
@@ -6917,6 +7296,24 @@ function simulateNotificationTypeDelivery() {
   renderExtensionDialog();
 }
 
+function simulateCustomFormValidation() {
+  const now = new Date().toISOString();
+  const { customForms } = state.extensions;
+  const customFormRisks = extensionRiskMessages().filter((message) => message.includes("Custom Form"));
+  const status = customFormRisks.length ? "表单流程有提示" : "validate + redirect OK";
+  state.extensions.customForms.lastValidationAt = now;
+  state.extensions.customForms.submissions.unshift({
+    id: uid("custom-form-submission"),
+    form: customForms.formTemplate,
+    status,
+    createdAt: now
+  });
+  state.extensions.customForms.submissions = state.extensions.customForms.submissions.slice(0, 12);
+  addAdvancedExtensionLog("Custom Forms", status);
+  persist();
+  renderExtensionDialog();
+}
+
 function addAdvancedExtensionLog(type, status) {
   state.extensions.advanced.logs.unshift({
     id: uid("advanced-extension-log"),
@@ -6982,7 +7379,7 @@ function generateAdvancedPluginPreview() {
 }
 
 function extensionRiskMessages() {
-  const { authProviders, automaticActions, notificationTypes, advanced } = state.extensions;
+  const { authProviders, automaticActions, notificationTypes, customForms, advanced } = state.extensions;
   const messages = [];
   if (authProviders.enabled && !authProviders.className.includes("\\")) {
     messages.push("认证提供者类名应使用完整 namespace，便于 AuthenticationManager 注册。");
@@ -7019,6 +7416,27 @@ function extensionRiskMessages() {
   }
   if (!notificationTypes.endpoint) {
     messages.push("通知类型缺少外部投递 endpoint，模拟投递会失败。");
+  }
+  if (customForms.enabled && (!customForms.controller || !customForms.action || !customForms.plugin)) {
+    messages.push("Custom Form: controller、action 和 plugin 需要同时定义，modal 表单才能提交到插件控制器。");
+  }
+  if (customForms.enabled && !customForms.formTemplate.includes(":")) {
+    messages.push("Custom Form: 模板建议使用 plugin:template_name 格式，便于 setTemplateOverride 之外的插件模板定位。");
+  }
+  if (customForms.enabled && !customForms.contextParam) {
+    messages.push("Custom Form: 缺少 task_id/project_id 等上下文参数，提交后可能无法定位业务对象。");
+  }
+  if (customForms.enabled && !customForms.csrf) {
+    messages.push("Custom Form: 表单提交应保留 CSRF token，避免写入型 action 暴露。");
+  }
+  if (customForms.enabled && !customForms.oneFormPerModal) {
+    messages.push("Custom Form: Kanboard modal 中建议只放一个 form，避免 submit 按钮和错误回显混乱。");
+  }
+  if (customForms.enabled && customForms.validateRequired && (!customForms.primaryField || !customForms.primaryLabel)) {
+    messages.push("Custom Form: 开启必填校验时需要主字段 key 和 label。");
+  }
+  if (customForms.enabled && !customForms.redisplayOnError) {
+    messages.push("Custom Form: 校验失败时应回显表单和 errors，否则用户只能重新填写。");
   }
   if (advanced.authorization.scope === "project" && !advanced.authorization.projectRoleCheck) {
     messages.push("AccessMap: 项目级权限建议保留 project role 检查，否则可能绕过项目成员权限。");
@@ -7168,6 +7586,41 @@ function buildNotificationTypePreview() {
     registerProject ? `    $this->projectNotificationTypeModel->setType('${escapeConfigValue(notificationTypes.typeKey)}', t('${escapeConfigValue(notificationTypes.label)}'), '${escapeConfigValue(notificationTypes.handlerClass)}');` : null,
     "}"
   ].filter((line) => line !== null).join("\n");
+}
+
+function buildCustomFormPreview() {
+  const { customForms } = state.extensions;
+  const options = customForms.selectOptions.split(",").map((item) => item.trim()).filter(Boolean);
+  return [
+    "<?php",
+    "// Template: task/sidebar or dashboard/sidebar",
+    `<?= $this->modal->medium('${escapeConfigValue(customForms.modalIcon)}', t('${escapeConfigValue(customForms.modalLabel)}'), '${escapeConfigValue(customForms.controller)}', '${escapeConfigValue(customForms.action)}', array('plugin' => '${escapeConfigValue(customForms.plugin)}', '${escapeConfigValue(customForms.contextParam)}' => $task['id'])) ?>`,
+    "",
+    `// Template: ${escapeConfigValue(customForms.formTemplate)}`,
+    `<?= $this->form->open(array('method' => 'post', 'action' => $this->url->href('${escapeConfigValue(customForms.controller)}', '${escapeConfigValue(customForms.action)}', array('plugin' => '${escapeConfigValue(customForms.plugin)}')))) ?>`,
+    customForms.csrf ? "<?= $this->form->csrf() ?>" : "<?php // CSRF disabled in this prototype state ?>",
+    `<?= $this->form->label(t('${escapeConfigValue(customForms.primaryLabel)}'), '${escapeConfigValue(customForms.primaryField)}') ?>`,
+    `<?= $this->form->text('${escapeConfigValue(customForms.primaryField)}', $values, $errors, array('required')) ?>`,
+    `<?= $this->form->label(t('${escapeConfigValue(customForms.secondaryLabel)}'), '${escapeConfigValue(customForms.secondaryField)}') ?>`,
+    `<?= $this->form->textarea('${escapeConfigValue(customForms.secondaryField)}', $values, $errors) ?>`,
+    `<?= $this->form->select('${escapeConfigValue(customForms.selectField)}', array(${options.map((item) => `'${escapeConfigValue(item)}' => t('${escapeConfigValue(item)}')`).join(", ")}), $values, $errors) ?>`,
+    "<?= $this->modal->submitButtons() ?>",
+    "<?= $this->form->close() ?>",
+    "",
+    "// Controller action",
+    `public function ${escapeConfigValue(customForms.action)}()`,
+    "{",
+    "    $values = $this->request->getValues();",
+    `    $errors = ${customForms.validateRequired ? "empty($values['" + escapeConfigValue(customForms.primaryField) + "']) ? array('" + escapeConfigValue(customForms.primaryField) + "' => array(t('This field is required'))) : array()" : "array()" };`,
+    "    if (! empty($errors)) {",
+    customForms.redisplayOnError
+      ? `        return $this->response->html($this->template->render('${escapeConfigValue(customForms.formTemplate)}', array('values' => $values, 'errors' => $errors)));`
+      : "        return $this->response->text('validation failed');",
+    "    }",
+    "    $this->flash->success(t('Form saved successfully.'));",
+    `    return $this->response->redirect($this->url->to('${escapeConfigValue(customForms.redirectController)}', '${escapeConfigValue(customForms.redirectAction)}', array('${escapeConfigValue(customForms.contextParam)}' => $values['${escapeConfigValue(customForms.contextParam)}'])));`,
+    "}"
+  ].join("\n");
 }
 
 function buildAdvancedAccessPreview() {

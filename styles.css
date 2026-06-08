@@ -1848,17 +1848,26 @@ textarea:focus {
   padding-right: 2px;
 }
 
-.deployment-risk-item,
-.deployment-log-item {
-  grid-template-columns: minmax(0, 1fr);
+.platform-step-list {
+  max-height: 430px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
-.deployment-risk-item.pass {
+.deployment-risk-item,
+.deployment-log-item,
+.platform-step-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.deployment-risk-item.pass,
+.platform-step-item.pass {
   background: #f0f8f5;
   border-color: #cfe7dc;
 }
 
-.deployment-risk-item.fail {
+.deployment-risk-item.fail,
+.platform-step-item.fail {
   background: #fff8ed;
   border-color: #ead2a4;
 }
@@ -1869,7 +1878,8 @@ textarea:focus {
 #pluginSkeletonPreview,
 #authProviderPreview,
 #actionExtensionPreview,
-#notificationExtensionPreview {
+#notificationExtensionPreview,
+#customFormPreview {
   width: 100%;
   min-height: 280px;
   resize: vertical;
@@ -1886,6 +1896,7 @@ textarea:focus {
 #pluginSkeletonPreview,
 #actionExtensionPreview,
 #notificationExtensionPreview,
+#customFormPreview,
 #advancedAccessPreview,
 #advancedProviderPreview {
   min-height: 460px;

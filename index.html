@@ -1223,6 +1223,66 @@
       <section class="settings-two-column">
         <div class="detail-section">
           <div class="detail-heading">
+            <h4>平台安装教程</h4>
+            <span>Debian / Ubuntu / RHEL / Windows</span>
+          </div>
+          <div class="system-config-grid">
+            <label>
+              <span>安装平台</span>
+              <select id="deploymentPlatformInput"></select>
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformPackageInput" type="checkbox">
+              <span>已确认系统包与 PHP 扩展清单</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformWebServerInput" type="checkbox">
+              <span>Web Server 虚拟主机已配置</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformPhpRuntimeInput" type="checkbox">
+              <span>PHP 运行方式已配置</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformArchiveInput" type="checkbox">
+              <span>源码包下载与解压已确认</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformDataOwnerInput" type="checkbox">
+              <span>data 目录属主与权限已确认</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformDailyJobInput" type="checkbox">
+              <span>每日 Cron / 计划任务已规划</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformSelinuxInput" type="checkbox">
+              <span>SELinux 上下文已处理</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformWindowsRuntimeInput" type="checkbox">
+              <span>Windows VC Runtime / PHP 运行库已安装</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="platformIisRewriteInput" type="checkbox">
+              <span>IIS URL Rewrite 已安装</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runPlatformChecklistBtn" type="button">模拟平台安装检查</button>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>平台步骤</h4>
+            <span>Packages / Services / Ownership</span>
+          </div>
+          <div class="settings-list platform-step-list" id="platformStepList"></div>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
             <h4>URL 与访问层</h4>
             <span>Rewrite / data deny</span>
           </div>
@@ -1729,6 +1789,107 @@
       <section class="settings-two-column">
         <div class="detail-section">
           <div class="detail-heading">
+            <h4>Custom Forms</h4>
+            <span>Modal / Form / Validation</span>
+          </div>
+          <label class="checkbox-control settings-checkbox">
+            <input id="customFormEnabledInput" type="checkbox">
+            <span>启用自定义表单入口</span>
+          </label>
+          <div class="system-config-grid">
+            <label>
+              <span>Modal Icon</span>
+              <input id="customFormIconInput" maxlength="40">
+            </label>
+            <label>
+              <span>按钮文案</span>
+              <input id="customFormLabelInput" maxlength="80">
+            </label>
+            <label>
+              <span>Controller</span>
+              <input id="customFormControllerInput" maxlength="100">
+            </label>
+            <label>
+              <span>Action</span>
+              <input id="customFormActionInput" maxlength="80">
+            </label>
+            <label>
+              <span>Plugin</span>
+              <input id="customFormPluginInput" maxlength="80">
+            </label>
+            <label>
+              <span>上下文参数</span>
+              <input id="customFormContextParamInput" maxlength="80">
+            </label>
+            <label>
+              <span>重定向 Controller</span>
+              <input id="customFormRedirectControllerInput" maxlength="100">
+            </label>
+            <label>
+              <span>重定向 Action</span>
+              <input id="customFormRedirectActionInput" maxlength="80">
+            </label>
+            <label>
+              <span>模板</span>
+              <input id="customFormTemplateInput" maxlength="120">
+            </label>
+            <label>
+              <span>主字段 Key</span>
+              <input id="customFormPrimaryFieldInput" maxlength="80">
+            </label>
+            <label>
+              <span>主字段 Label</span>
+              <input id="customFormPrimaryLabelInput" maxlength="80">
+            </label>
+            <label>
+              <span>备注字段 Key</span>
+              <input id="customFormSecondaryFieldInput" maxlength="80">
+            </label>
+            <label>
+              <span>备注字段 Label</span>
+              <input id="customFormSecondaryLabelInput" maxlength="80">
+            </label>
+            <label>
+              <span>Select 字段 Key</span>
+              <input id="customFormSelectFieldInput" maxlength="80">
+            </label>
+            <label>
+              <span>Select 选项</span>
+              <input id="customFormSelectOptionsInput" maxlength="160">
+            </label>
+          </div>
+          <div class="system-toggle-stack">
+            <label class="checkbox-control settings-checkbox">
+              <input id="customFormCsrfInput" type="checkbox">
+              <span>保留 CSRF token</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="customFormSingleModalInput" type="checkbox">
+              <span>单个 modal 只放一个 form</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="customFormValidationInput" type="checkbox">
+              <span>提交前校验必填字段</span>
+            </label>
+            <label class="checkbox-control settings-checkbox">
+              <input id="customFormRedisplayInput" type="checkbox">
+              <span>校验失败回显表单</span>
+            </label>
+          </div>
+          <button class="secondary-button" id="runCustomFormValidationBtn" type="button">模拟表单校验</button>
+          <div class="settings-list extension-scroll-list" id="customFormSubmissionList"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-heading">
+            <h4>Custom Form 代码</h4>
+            <span>modal / form / redirect</span>
+          </div>
+          <textarea id="customFormPreview" rows="28" readonly></textarea>
+        </div>
+      </section>
+      <section class="settings-two-column">
+        <div class="detail-section">
+          <div class="detail-heading">
             <h4>访问控制与路由</h4>
             <span>AccessMap / Route</span>
           </div>
@@ -1959,6 +2120,12 @@
               <div>
                 <strong>Notification Types</strong>
                 <span>通过 user/project notification type model 注册处理器，并实现 NotificationInterface。</span>
+              </div>
+            </div>
+            <div class="settings-item extension-doc-item">
+              <div>
+                <strong>Custom Forms</strong>
+                <span>通过 modal、form helper、controller POST 处理、错误回显和 redirect 构建插件表单流程。</span>
               </div>
             </div>
             <div class="settings-item extension-doc-item">

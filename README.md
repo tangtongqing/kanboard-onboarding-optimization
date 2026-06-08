@@ -1,6 +1,6 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.25 插件进阶扩展补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.26 平台安装与自定义表单补齐
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -65,6 +65,7 @@
 - [x] Webhook / JSON-RPC API / 插件开发骨架补齐 V0.8.23
 - [x] 认证提供者 / 自动动作 / 通知类型插件扩展补齐 V0.8.24
 - [x] 授权架构 / 自定义路由 / Provider / Schema / Helper / Override 插件进阶扩展补齐 V0.8.25
+- [x] Debian / Ubuntu / RHEL / Windows 平台安装与 Custom Forms 补齐 V0.8.26
 - [ ] 功能优化 PRD
 - [ ] Figma 高保真原型图
 
@@ -83,7 +84,7 @@
 | `项目配置与协作补齐说明-V0.7.md` | 项目设置、成员角色、分类标签、自定义筛选和泳道配置说明 |
 | `分析时间与自动化补齐说明-V0.8.md` | 项目分析、时间跟踪、循环任务、自动化和通知中心说明 |
 | `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
-| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 305 个核心检查项 |
+| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 320 个核心检查项 |
 | `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
 | `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
 | `PM工作流看板说明-V0.8.3.md` | 用 Kanboard 复现完整产品开发流程的列、泳道、卡片和产品判断 |
@@ -109,6 +110,7 @@
 | `开发者集成补齐说明-V0.8.23.md` | 根据 Kanboard Webhooks、API、Plugin Registration、Hooks 和 Metadata 文档补齐开发者集成入口 |
 | `插件扩展能力补齐说明-V0.8.24.md` | 根据 Kanboard Authentication Providers、Automatic Actions 和 Notification Types 文档补齐插件扩展能力 |
 | `插件进阶扩展补齐说明-V0.8.25.md` | 根据 Kanboard Authorization、Custom Routes、Provider、Schema、Helper、Events 和 Overrides 文档补齐插件进阶扩展能力 |
+| `平台安装与自定义表单补齐说明-V0.8.26.md` | 根据 Kanboard Custom Forms、Debian、Ubuntu、RHEL 和 Windows 安装文档补齐静态能力 |
 | `index.html` | 可运行的 Kanboard MVP 静态原型 |
 | `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
 | `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
@@ -154,6 +156,8 @@
 | `设计图/kanboard-v0.8.23-developer-integrations.png` | V0.8.23 Webhook、API 与插件开发者集成截图 |
 | `设计图/kanboard-v0.8.24-extension-lab.png` | V0.8.24 认证、自动动作与通知类型扩展截图 |
 | `设计图/kanboard-v0.8.25-plugin-advanced.png` | V0.8.25 插件进阶扩展能力截图 |
+| `设计图/kanboard-v0.8.26-platform-install.png` | V0.8.26 平台安装教程截图 |
+| `设计图/kanboard-v0.8.26-custom-forms.png` | V0.8.26 Custom Forms 插件表单截图 |
 | `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
 
 ## 版本节奏
@@ -193,15 +197,16 @@
 | V0.8.23 | Webhook、JSON-RPC API、插件开发骨架与集成风险补齐 | 已完成 |
 | V0.8.24 | 认证提供者、自动动作、通知类型插件扩展能力补齐 | 已完成 |
 | V0.8.25 | 授权架构、Avatar、Custom Routes、外部链接/任务 Provider、Schema、Helper、Events、Overrides 插件进阶扩展补齐 | 已完成 |
-| V0.8.26 | 平台化安装文档、Custom Forms 或剩余官网能力继续核对 | 下一步 |
+| V0.8.26 | Debian、Ubuntu、RHEL、Windows 平台安装与 Custom Forms 补齐 | 已完成 |
+| V0.8.27 | 继续核对 API procedure、管理配置或剩余官网细项 | 下一步 |
 | V0.9 | Figma 高保真原型 | 待完整复现后进入 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
 ## 下一步
 
 继续根据 Kanboard 官网补齐剩余系统级功能：
-- 继续核对 Custom Forms、平台化安装教程以及可能遗漏的管理员信息架构。
-- Debian/Ubuntu/RHEL/Windows 等平台化安装教程是否还需要进入静态复现。
+- 继续核对 API Reference 中更细的 procedure 是否需要进入静态复现。
+- 检查管理员信息架构、配置文件细项和数据库文档是否仍有遗漏。
 - 补齐到静态复现差距进一步收敛后，再进入 V0.9 Figma 高保真原型。
 
 ## 本地打开
@@ -210,4 +215,4 @@
 
 ## 当前截图
 
-![Kanboard 插件进阶扩展能力 V0.8.25](设计图/kanboard-v0.8.25-plugin-advanced.png)
+![Kanboard 平台安装教程 V0.8.26](设计图/kanboard-v0.8.26-platform-install.png)
