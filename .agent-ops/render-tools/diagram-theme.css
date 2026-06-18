@@ -1,0 +1,28 @@
+svg {
+  font-family: Aptos, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.nodeLabel p,
+.edgeLabel p {
+  line-height: 1.4;
+  margin: 0;
+}
+
+.edgeLabel p {
+  padding: 2px 5px;
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+.cluster-label text,
+.cluster-label span {
+  color: #111827;
+  fill: #111827;
+  font-weight: 700;
+}
+
+.node rect,
+.node polygon,
+.node path {
+  stroke-width: 1.5px;
+}

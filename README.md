@@ -1,6 +1,8 @@
 # 🔨 项目1：传统产品功能优化
 
-> 状态：进行中 | 启动日期：2026-05-31 | 当前版本：V0.8.27 API 方法细化补齐
+> 状态：进行中 | 启动日期：2026-05-31 | 当前实现版本：V0.8.27 API 方法细化补齐
+
+> 产品设计生命周期状态：前期设计产物补齐中。当前已补齐 PD-001~PD-009 假设版（机会定义、研究计划、PRD 骨架、用户故事、流程图与信息架构、交互状态规格、设计原则与非目标、高保真前置页面清单与设计 brief、设计系统整理），但真实用户研究、低保真线框、实际高保真/Figma、可用性测试和作品集叙事尚未系统完成。真实进度以 `docs/00-project-governance/产品生命周期真实进度基线.md` 为准。
 
 > 仓库边界：本目录是独立实战项目目录，Git/GitHub 只管理本目录内容，不包含学习日志、课程笔记、知识库、学习计划等学习资料。
 
@@ -67,103 +69,27 @@
 - [x] 授权架构 / 自定义路由 / Provider / Schema / Helper / Override 插件进阶扩展补齐 V0.8.25
 - [x] Debian / Ubuntu / RHEL / Windows 平台安装与 Custom Forms 补齐 V0.8.26
 - [x] API Procedure Explorer / Task、File、Link API 方法细化补齐 V0.8.27
-- [ ] 功能优化 PRD
+- [x] 功能优化 PRD 骨架（PD-003，假设版）
+- [ ] 研究验证后的功能优化 PRD
+- [ ] 低保真线框与关键状态
 - [ ] Figma 高保真原型图
 
-## 项目文档
+## 文档中心
 
-| 文档 | 说明 |
-|---|---|
-| `项目实战路线图.md` | 从 V0.1 到 V1.0 的实战推进节奏 |
-| `Kanboard新手项目创建与任务拆解优化-启动说明.md` | 选题、问题定义和版本计划 |
-| `竞品分析报告-V0.2.md` | Kanboard / WeKan / Trello / Notion 对比 |
-| `用户研究与需求池-V0.2.md` | 用户画像、痛点、需求池和 P0 范围 |
-| `复现范围说明-V0.3.md` | Kanboard MVP 复现边界和功能分层 |
-| `静态页面完成说明-V0.4.md` | 静态页面增强复现范围和后续 Figma 计划 |
-| `新手创建向导说明-V0.5.md` | 模板创建向导的产品判断、功能范围和验证记录 |
-| `Kanboard完整复现差距清单-V0.6.md` | 完整复现前的功能差距、分期范围和暂不复现边界 |
-| `项目配置与协作补齐说明-V0.7.md` | 项目设置、成员角色、分类标签、自定义筛选和泳道配置说明 |
-| `分析时间与自动化补齐说明-V0.8.md` | 项目分析、时间跟踪、循环任务、自动化和通知中心说明 |
-| `静态功能验收报告-V0.8.md` | V0.3-V0.8 已承诺静态功能的自动化验收结论、边界和下一步判断 |
-| `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本，覆盖 320 个核心检查项 |
-| `界面视觉优化说明-V0.8.1.md` | 进入 Figma 前的静态界面视觉优化说明，记录去 AI 味的设计判断 |
-| `界面重设计说明-V0.8.2.md` | 使用前端设计类 Skill 重塑界面视觉系统的说明、DFII 评分和验收结果 |
-| `PM工作流看板说明-V0.8.3.md` | 用 Kanboard 复现完整产品开发流程的列、泳道、卡片和产品判断 |
-| `多项目示例说明-V0.8.4.md` | 在默认看板中补齐第二个轻量项目，说明多项目场景与产品判断 |
-| `个人产品经理学习路线说明-V0.8.5.md` | 将个人学习项目改造成“从 0 成为优秀产品经理”的成长路线 |
-| `固定侧栏滚动修复说明-V0.8.6.md` | 修复桌面端整页滚动问题，让左侧导航固定、右侧工作区独立滚动 |
-| `泳道空列精简与流程状态升级说明-V0.8.7.md` | 增加隐藏空列显示优化，并升级 PM 工作流和学习项目流程状态 |
-| `项目周期时间系统说明-V0.8.8.md` | 增加项目级周期、卡片计划实际日期、阶段周期分析和风险提示 |
-| `列显示面板优化说明-V0.8.9.md` | 将一排隐藏列按钮收敛为可展开的列显示选择面板 |
-| `弹窗关闭逻辑修复说明-V0.8.10.md` | 修复必填表单弹窗点击关闭或取消时被 required 校验拦截的问题 |
-| `泳道建模逻辑修正说明-V0.8.11.md` | 根据 Kanboard 官方泳道模型修正主 PM 项目默认泳道设计 |
-| `视图与菜单补齐说明-V0.8.12.md` | 根据 Kanboard 官方项目视图补齐 Calendar、Gantt 和 Board 菜单 |
-| `活动附件快捷键补齐说明-V0.8.13.md` | 根据 Kanboard 官网与官方文档补齐项目活动流、任务附件和快捷键 |
-| `项目文件与权限补齐说明-V0.8.14.md` | 根据 Kanboard 官方 Project Overview、Project File API 和 Project Permission API 补齐项目文件库与权限配置 |
-| `公共访问与订阅补齐说明-V0.8.15.md` | 根据 Kanboard iCalendar、RSS/Atom 和公共访问机制补齐项目订阅入口 |
-| `导入导出补齐说明-V0.8.16.md` | 根据 Kanboard CLI CSV 导出和 API 迁移能力补齐静态导入导出入口 |
-| `插件管理补齐说明-V0.8.17.md` | 根据 Kanboard 插件安装、插件目录和 CLI 插件命令补齐静态插件管理入口 |
-| `全局用户与用户组管理补齐说明-V0.8.18.md` | 根据 Kanboard Users and Groups、User API、Group API 补齐实例级用户与组管理 |
-| `系统认证与安全配置补齐说明-V0.8.19.md` | 根据 Kanboard API 认证、LDAP、反向代理认证、配置文件和安全文档补齐系统配置 |
-| `运维任务与后台执行补齐说明-V0.8.20.md` | 根据 Kanboard CLI、Cronjob、Background Worker 和 Email 配置补齐运维执行层 |
-| `运行环境数据库升级补齐说明-V0.8.21.md` | 根据 Kanboard Requirements、Configuration、SQLite、Upgrade 和 Performance 文档补齐运行环境检查 |
-| `安装部署与访问安全补齐说明-V0.8.22.md` | 根据 Kanboard Installation、Docker、URL Rewriting、Reverse Proxy 和 Security 文档补齐部署检查 |
-| `开发者集成补齐说明-V0.8.23.md` | 根据 Kanboard Webhooks、API、Plugin Registration、Hooks 和 Metadata 文档补齐开发者集成入口 |
-| `插件扩展能力补齐说明-V0.8.24.md` | 根据 Kanboard Authentication Providers、Automatic Actions 和 Notification Types 文档补齐插件扩展能力 |
-| `插件进阶扩展补齐说明-V0.8.25.md` | 根据 Kanboard Authorization、Custom Routes、Provider、Schema、Helper、Events 和 Overrides 文档补齐插件进阶扩展能力 |
-| `平台安装与自定义表单补齐说明-V0.8.26.md` | 根据 Kanboard Custom Forms、Debian、Ubuntu、RHEL 和 Windows 安装文档补齐静态能力 |
-| `API方法细化补齐说明-V0.8.27.md` | 根据 Kanboard API Reference 中 Task、Project File、Task File、Link Procedures 补齐 API 方法细化能力 |
-| `index.html` | 可运行的 Kanboard MVP 静态原型 |
-| `styles.css` / `app.js` | 页面样式与看板交互逻辑 |
-| `设计图/kanboard-mvp-v0.3.png` | V0.3 页面截图 |
-| `设计图/kanboard-static-v0.4.png` | V0.4 页面截图 |
-| `设计图/kanboard-template-v0.5.png` | V0.5 新手创建向导截图 |
-| `设计图/kanboard-v0.6-fuller-reproduction.png` | V0.6 多视图和概览截图 |
-| `设计图/kanboard-v0.7-project-settings.png` | V0.7 项目设置截图 |
-| `设计图/kanboard-v0.8-analytics-automation.png` | V0.8 项目分析截图 |
-| `设计图/kanboard-v0.8.1-visual-polish.png` | V0.8.1 静态界面视觉优化截图 |
-| `设计图/kanboard-v0.8.2-command-desk-redesign.png` | V0.8.2 Open-source Command Desk 界面重设计截图 |
-| `设计图/kanboard-v0.8.3-pm-workflow.png` | V0.8.3 PM 工作流看板截图 |
-| `设计图/kanboard-v0.8.4-multi-project-demo.png` | V0.8.4 多项目示例截图 |
-| `设计图/kanboard-v0.8.5-pm-learning-roadmap.png` | V0.8.5 产品经理学习路线截图 |
-| `设计图/kanboard-v0.8.6-fixed-sidebar-scroll.png` | V0.8.6 固定侧栏与右侧滚动截图 |
-| `设计图/kanboard-v0.8.7-lane-compact-workflow.png` | V0.8.7 泳道空列精简与流程状态升级截图 |
-| `设计图/kanboard-v0.8.8-project-cycle-system.png` | V0.8.8 项目周期时间系统截图 |
-| `设计图/kanboard-v0.8.9-column-picker.png` | V0.8.9 列显示面板优化截图 |
-| `设计图/kanboard-v0.8.10-dialog-close-fix.png` | V0.8.10 弹窗关闭逻辑修复截图 |
-| `设计图/kanboard-v0.8.11-swimlane-model-fix.png` | V0.8.11 泳道建模逻辑修正截图 |
-| `设计图/kanboard-v0.8.12-calendar-view.png` | V0.8.12 Calendar 日历视图截图 |
-| `设计图/kanboard-v0.8.12-gantt-view.png` | V0.8.12 Gantt 甘特视图截图 |
-| `设计图/kanboard-v0.8.13-task-attachments.png` | V0.8.13 任务附件截图 |
-| `设计图/kanboard-v0.8.13-activity-stream.png` | V0.8.13 项目活动流截图 |
-| `设计图/kanboard-v0.8.14-project-files-permissions.png` | V0.8.14 项目文件与用户组权限设置截图 |
-| `设计图/kanboard-v0.8.14-overview-permissions.png` | V0.8.14 Overview 文件与访问权限摘要截图 |
-| `设计图/kanboard-v0.8.15-public-access-settings.png` | V0.8.15 公共访问设置截图 |
-| `设计图/kanboard-v0.8.15-subscription-links.png` | V0.8.15 iCalendar 与 RSS/Atom 订阅截图 |
-| `设计图/kanboard-v0.8.16-export-preview.png` | V0.8.16 任务 CSV 导出预览截图 |
-| `设计图/kanboard-v0.8.16-import-preview.png` | V0.8.16 项目 JSON 导入预览截图 |
-| `设计图/kanboard-v0.8.17-plugin-installer-disabled.png` | V0.8.17 插件安装器默认关闭状态截图 |
-| `设计图/kanboard-v0.8.17-plugin-installer-enabled.png` | V0.8.17 插件安装、升级后状态截图 |
-| `设计图/kanboard-v0.8.18-user-directory.png` | V0.8.18 全局用户目录截图 |
-| `设计图/kanboard-v0.8.18-group-membership.png` | V0.8.18 用户组成员关系截图 |
-| `设计图/kanboard-v0.8.19-system-settings-default.png` | V0.8.19 系统设置默认配置截图 |
-| `设计图/kanboard-v0.8.19-auth-risk-config.png` | V0.8.19 外部认证风险状态截图 |
-| `设计图/kanboard-v0.8.19-config-preview.png` | V0.8.19 config.php 预览截图 |
-| `设计图/kanboard-v0.8.20-operations-default.png` | V0.8.20 运维任务默认状态截图 |
-| `设计图/kanboard-v0.8.20-operations-run-log.png` | V0.8.20 Cronjob、Worker、邮件和 CLI 运行日志截图 |
-| `设计图/kanboard-v0.8.21-runtime-default.png` | V0.8.21 运行环境默认状态截图 |
-| `设计图/kanboard-v0.8.21-runtime-upgrade-readiness.png` | V0.8.21 PostgreSQL 与升级准备状态截图 |
-| `设计图/kanboard-v0.8.22-deployment-default.png` | V0.8.22 部署检查默认状态截图 |
-| `设计图/kanboard-v0.8.22-docker-healthcheck.png` | V0.8.22 Docker 与 healthcheck 状态截图 |
-| `设计图/kanboard-v0.8.23-developer-integrations.png` | V0.8.23 Webhook、API 与插件开发者集成截图 |
-| `设计图/kanboard-v0.8.24-extension-lab.png` | V0.8.24 认证、自动动作与通知类型扩展截图 |
-| `设计图/kanboard-v0.8.25-plugin-advanced.png` | V0.8.25 插件进阶扩展能力截图 |
-| `设计图/kanboard-v0.8.26-platform-install.png` | V0.8.26 平台安装教程截图 |
-| `设计图/kanboard-v0.8.26-custom-forms.png` | V0.8.26 Custom Forms 插件表单截图 |
-| `设计图/kanboard-v0.8.27-api-procedure-explorer.png` | V0.8.27 API Procedure Explorer 截图 |
-| `版本记录.md` | 每一轮迭代的变更、判断和下一步 |
+详细文档索引见 `docs/README.md`。根目录只保留项目总览、可运行静态原型、测试入口和设计图入口。
 
-## 版本节奏
+| 分类 | 位置 | 说明 |
+|---|---|---|
+| 项目治理 | `docs/00-project-governance/` | 启动说明、路线图、真实进度基线、双智能体协作方案、版本记录 |
+| 研究与发现 | `docs/01-research-discovery/` | 竞品分析、用户假设、产品机会、用户研究计划 |
+| 需求与验收 | `docs/02-requirements/` | PRD 骨架、用户故事、验收标准 |
+| UX 设计 | `docs/03-ux-design/` | 流程图、信息架构、交互状态、设计原则与非目标 |
+| 实现迭代 | `docs/04-implementation-log/` | V0.3~V0.8.27 静态原型与功能复现说明 |
+| 验收资料 | `docs/05-validation/` | 静态功能验收报告 |
+| 自动化测试 | `tests/static-feature-audit-v08.js` | Playwright 静态功能验收脚本 |
+| 设计图资产 | `设计图/` | 页面截图、Mermaid PNG/SVG 导出图 |
+
+## 版本与产品设计节奏
 
 | 版本 | 目标 | 状态 |
 |---|---|---|
@@ -202,16 +128,19 @@
 | V0.8.25 | 授权架构、Avatar、Custom Routes、外部链接/任务 Provider、Schema、Helper、Events、Overrides 插件进阶扩展补齐 | 已完成 |
 | V0.8.26 | Debian、Ubuntu、RHEL、Windows 平台安装与 Custom Forms 补齐 | 已完成 |
 | V0.8.27 | API Procedure Explorer：Task / Project File / Task File / Link API 方法细化补齐 | 已完成 |
-| V0.8.28 | 继续核对 Admin/Settings、数据库配置、安全配置或剩余 API procedures | 下一步 |
-| V0.9 | Figma 高保真原型 | 待完整复现后进入 |
+| V0.8.28 | 继续补齐系统级功能 | 已暂停，不作为默认主线 |
+| PD-001~PD-009 | 问题定义、研究计划、PRD、用户故事、流程、状态、原则、页面 Brief、设计系统 | 假设版已完成 |
+| PD-010 | 低保真线框与关键状态 | 下一步 |
+| PD-011 | 实际高保真 / Figma 视觉稿 | 待低保真确认后进入 |
+| PD-012 | 正式可用性测试执行与结论 | 未开始；测试计划与模板已在 PD-002 完成 |
 | V1.0 | 作品集版文档与原型说明 | 未开始 |
 
 ## 下一步
 
-继续根据 Kanboard 官网补齐剩余系统级功能：
-- 继续核对 Admin/Settings、数据库配置、安全配置是否仍有适合静态复现的细项。
-- 继续检查 API Reference 中 Project、Board、User、Group 等剩余 procedure 是否需要进一步细化。
-- 补齐到静态复现差距进一步收敛后，再进入 V0.9 Figma 高保真原型。
+按 `product-design-workflow` 继续产品设计主线，不再默认推进 V0.8.28：
+- 执行 PD-010，使用 `product` register 和 `impeccable shape` 完成桌面端与 390px 低保真线框及关键状态。
+- 使用现有交互原型和低保真方案开展小样本形成性测试，回写 PD-003~PD-009 中的待验证假设。
+- 低保真与验证结论确认后进入 PD-011；高保真阶段使用 `impeccable craft`，交付前执行 `critique` 和 `audit`。
 
 ## 本地打开
 

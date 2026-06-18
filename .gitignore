@@ -9,6 +9,12 @@ desktop.ini
 *.log
 *.tmp
 __pycache__/
+node_modules/
+
+# Local tool workspaces and generated diagram QA artifacts
+.mimocode/
+.agent-ops/render-tools/sources/
+.agent-ops/render-tools/qa/
 
 # Local secrets
 .env

@@ -102,7 +102,7 @@
 
 ## 截图
 
-![Kanboard API Procedure Explorer V0.8.27](设计图/kanboard-v0.8.27-api-procedure-explorer.png)
+![Kanboard API Procedure Explorer V0.8.27](../../../设计图/kanboard-v0.8.27-api-procedure-explorer.png)
 
 ## 尚未覆盖
 
