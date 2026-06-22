@@ -13,6 +13,7 @@ node_modules/
 
 # Local tool workspaces and generated diagram QA artifacts
 .mimocode/
+.impeccable/live/sessions/
 .agent-ops/render-tools/sources/
 .agent-ops/render-tools/qa/
 

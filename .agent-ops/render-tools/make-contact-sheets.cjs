@@ -4,7 +4,9 @@ const sharp = require("sharp");
 
 const workspace = path.resolve(__dirname, "../..");
 const qaDir = path.join(__dirname, "qa");
-const folders = ["PD-005", "PD-006", "PD-007", "PD-008", "PD-009"];
+const requestedFolder = process.argv[2] || null;
+const folders = ["PD-005", "PD-006", "PD-007", "PD-008", "PD-009", "PD-010", "PD-010A", "PD-010C"]
+  .filter((folder) => !requestedFolder || folder === requestedFolder);
 const cellWidth = 560;
 const cellHeight = 400;
 const columns = 3;

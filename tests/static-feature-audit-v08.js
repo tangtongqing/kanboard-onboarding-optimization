@@ -181,6 +181,197 @@ async function testDialogCancelBypassesRequiredFields(page) {
   check((await page.locator("#cardDialog[open]").count()) === 0, "card dialog close bypasses required title");
 }
 
+// PD-010B R06/R08/R11/R14 整改回归。
+// 该函数在修复前应失败，修复后应通过。运行于默认 1280 视口与 390 视口两段。
+async function testProjectDialogRemediation(page) {
+  // ---- R11：模板示例卡身份标记 ----
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  await page.fill("#projectNameInput", "Example Badge Audit");
+  await page.fill("#projectDescInput", "verify example flag");
+  await saveForm(page, "#projectForm");
+  let project = await getActiveProject(page);
+  const templateCards = allCards(project);
+  check(templateCards.length > 0, "template project has example cards");
+  check(templateCards.every((card) => card.isExample === true), "every template card carries isExample flag");
+  check(await page.locator(".column .card .example-label").first().isVisible(), "example badge renders on board card");
+  await page.reload();
+  await page.waitForSelector("#board");
+  project = await getActiveProject(page);
+  check(allCards(project).every((card) => card.isExample === true), "example flag persists after reload");
+  check(await page.locator(".column .card .example-label").first().isVisible(), "example badge persists after reload");
+  // 兼容修复前已保存的模板卡：缺少字段时从模板生成活动记录迁移。
+  await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key));
+    const project = state.projects.find((item) => item.id === state.activeProjectId);
+    const card = project.columns.flatMap((column) => column.cards)[0];
+    delete card.isExample;
+    localStorage.setItem(key, JSON.stringify(state));
+  }, STORAGE_KEY);
+  await page.reload();
+  await page.waitForSelector("#board");
+  project = await getActiveProject(page);
+  check(allCards(project)[0].isExample === true, "legacy template card migrates example flag from activity");
+  check(await page.locator(".column .card .example-label").first().isVisible(), "legacy template card renders example badge after migration");
+  // 空白项目和用户新增任务不得带示例标记
+  await fresh(page);
+  await createBlankProject(page, "Blank Example Audit");
+  const blankProjectState = await getState(page);
+  const blankProject = activeProjectFrom(blankProjectState);
+  const firstColumn = blankProject.columns[0];
+  const firstLane = blankProject.swimlanes[0];
+  await quickCreateCard(page, firstColumn.id, firstLane.id, "User Card Audit");
+  project = await getActiveProject(page);
+  const blankCards = allCards(project);
+  check(blankCards.every((card) => card.isExample !== true), "blank project and user cards are not examples");
+  check((await page.locator(".column .card .example-label").count()) === 0, "no example badge on user-created cards");
+
+  // ---- R06：行内错误与 ARIA ----
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  check((await page.locator("#projectNameError").count()) === 1, "project name error node exists");
+  check((await page.locator("#projectNameInput").getAttribute("aria-describedby")) === "projectNameError", "name input describes error node");
+  // 触发必填失败：清空名称后提交（绕过原生 required 用 JS 提交）
+  await page.fill("#projectNameInput", "");
+  await page.locator("#saveProjectBtn").evaluate((btn) => btn.click());
+  await page.waitForFunction(() => document.querySelector("#projectNameInput")?.getAttribute("aria-invalid") === "true");
+  check((await page.locator("#projectDialog[open]").count()) === 1, "project dialog stays open on empty name");
+  const afterEmpty = await getState(page);
+  check(afterEmpty.projects.length === 2, "empty name does not create project");
+  check((await page.locator("#projectNameError").textContent()).includes("请输入项目名称"), "inline error text renders");
+  check(await page.locator("#projectNameInput").getAttribute("aria-invalid") === "true", "name input marked aria-invalid on error");
+  // 输入有效名称后清除错误
+  await page.fill("#projectNameInput", "Recovered Audit");
+  await page.waitForFunction(() => document.querySelector("#projectNameInput")?.getAttribute("aria-invalid") !== "true");
+  check((await page.locator("#projectNameInput").getAttribute("aria-invalid")) !== "true", "aria-invalid cleared after valid input");
+  check((await page.locator("#projectNameError").textContent()).trim() === "", "error text cleared after valid input");
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+
+  // ---- R14：未保存关闭确认 ----
+  // 每段用 removeAllListeners 干净隔离 dialog handler，避免与全局 accept 竞争。
+  // pristine 关闭不确认（任务单：默认模板选择本身不应让刚打开的弹窗立即变脏）
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  let confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.accept();
+  });
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 0, "pristine close does not confirm");
+  check((await page.locator("#projectDialog[open]").count()) === 0, "pristine close exits dialog");
+
+  // dirty 关闭并取消确认：弹窗保持打开且输入保留
+  await page.click("#newProjectBtn");
+  await page.fill("#projectNameInput", "Dirty Keep Audit");
+  confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.dismiss();
+  });
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 1, "dirty close triggers confirm");
+  check((await page.locator("#projectDialog[open]").count()) === 1, "cancel confirm keeps dialog open");
+  check((await page.locator("#projectNameInput").inputValue()) === "Dirty Keep Audit", "cancel confirm preserves input");
+
+  // dirty 确认离开：弹窗关闭且未创建
+  confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.accept();
+  });
+  const beforeLeave = (await getState(page)).projects.length;
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 1, "dirty close re-confirms on leave");
+  check((await page.locator("#projectDialog[open]").count()) === 0, "confirm leave closes dialog");
+  const afterLeave = await getState(page);
+  check(afterLeave.projects.length === beforeLeave, "confirm leave does not create project");
+
+  // dirty ESC 路径也受保护
+  await page.click("#newProjectBtn");
+  await page.fill("#projectNameInput", "Dirty Esc Audit");
+  confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.dismiss();
+  });
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 1, "dirty ESC triggers confirm");
+  check((await page.locator("#projectDialog[open]").count()) === 1, "cancel ESC confirm keeps dialog open");
+
+  // 创建方式变化与底部取消按钮也必须走同一 dirty 保护。
+  await page.check('input[name="projectMode"][value="blank"]');
+  confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.dismiss();
+  });
+  await page.locator('#projectForm button[value="cancel"]').last().click();
+  await page.waitForFunction(() => document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 1, "dirty mode change triggers confirm from cancel button");
+  check((await page.locator("#projectDialog[open]").count()) === 1, "cancel button dismiss keeps dialog open");
+  // 恢复全局 accept handler（与 main 顶部一致）
+  page.removeAllListeners("dialog");
+  page.on("dialog", async (dialog) => { await dialog.accept(); });
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+
+  // 模板选择变化同样判定为 dirty。
+  await page.click("#newProjectBtn");
+  await page.locator(".template-option").nth(1).click();
+  confirmCalls = 0;
+  page.removeAllListeners("dialog");
+  page.on("dialog", (dialog) => {
+    confirmCalls += 1;
+    dialog.dismiss();
+  });
+  await page.locator('#projectForm button[value="cancel"]').last().click();
+  await page.waitForFunction(() => document.querySelector("#projectDialog")?.open);
+  check(confirmCalls === 1, "dirty template selection triggers confirm");
+  check((await page.locator("#projectDialog[open]").count()) === 1, "template confirm dismiss keeps dialog open");
+  page.removeAllListeners("dialog");
+  page.on("dialog", async (dialog) => { await dialog.accept(); });
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+
+  // ---- R08：390px 移动端底部操作固定 ----
+  await page.setViewportSize({ width: 390, height: 900 });
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  await page.fill("#projectNameInput", "Mobile Sticky Audit");
+  // 分别检查顶部、中间和底部滚动位置，避免只验证终点。
+  const sticky = await page.evaluate(() => {
+    const form = document.querySelector("#projectDialog form");
+    const actions = document.querySelector("#projectDialog .modal-actions");
+    const positions = [0, form.scrollHeight / 2, form.scrollHeight].map((scrollTop) => {
+      form.scrollTop = scrollTop;
+      const rect = actions.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    });
+    return {
+      positions,
+      viewportHeight: window.innerHeight,
+      scrollX: window.scrollX,
+      clientWidth: document.documentElement.clientWidth
+    };
+  });
+  check(sticky.positions.every((position) => position.top >= 0 && position.bottom <= sticky.viewportHeight), "mobile modal actions stay in viewport across scroll positions");
+  check(sticky.scrollX === 0 && sticky.clientWidth <= 390, "mobile project dialog has no horizontal overflow");
+  await page.locator("#projectDialog .modal-header .icon-button").click();
+  await page.waitForFunction(() => !document.querySelector("#projectDialog")?.open);
+  await page.setViewportSize({ width: 1280, height: 900 });
+}
+
 async function testProjectCrudAndTemplates(page) {
   await fresh(page);
   await page.click("#newProjectBtn");
@@ -621,7 +812,10 @@ async function testImportExport(page) {
   const parsed = JSON.parse(exportJson);
   check(parsed.exportVersion === "kanboard-static-v0827", "project JSON export version renders");
   check(parsed.project.columns.length >= 1, "project JSON export includes columns");
-  await page.fill("#importJsonInput", exportJson);
+  await page.locator("#importJsonInput").evaluate((input, value) => {
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }, exportJson);
   await page.click("#previewImportBtn");
   check(await page.locator("#importProjectBtn").isEnabled(), "JSON import preview enables import");
   await page.click("#importProjectBtn");
@@ -1147,6 +1341,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
   try {
     await testInitialShell(page);
     await testDialogCancelBypassesRequiredFields(page);
+    await testProjectDialogRemediation(page);
     await testProjectCrudAndTemplates(page);
     await testColumnAndSwimlaneCrud(page);
     await testCardCrudDetailsAndPersistence(page);

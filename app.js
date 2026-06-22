@@ -1257,6 +1257,7 @@ let draftProjectSettings = null;
 let shortcutPrefix = "";
 let shortcutPrefixTimer = null;
 let selectedTemplateId = PROJECT_TEMPLATES[0].id;
+let projectDialogSnapshot = null;
 let draftImportProject = null;
 
 const els = {
@@ -1657,6 +1658,7 @@ const els = {
   projectForm: document.querySelector("#projectForm"),
   projectDialogTitle: document.querySelector("#projectDialogTitle"),
   projectNameInput: document.querySelector("#projectNameInput"),
+  projectNameError: document.querySelector("#projectNameError"),
   projectDescInput: document.querySelector("#projectDescInput"),
   projectCreateOptions: document.querySelector("#projectCreateOptions"),
   projectModeInputs: [...document.querySelectorAll('input[name="projectMode"]')],
@@ -1796,6 +1798,18 @@ els.showClosedInput.addEventListener("change", toggleClosedVisibility);
 els.hideEmptyColumnsInput.addEventListener("change", toggleEmptyColumnVisibility);
 els.projectModeInputs.forEach((input) => input.addEventListener("change", renderProjectCreateOptions));
 els.projectForm.addEventListener("submit", saveProjectFromDialog);
+els.projectNameInput.addEventListener("invalid", (event) => {
+  event.preventDefault();
+  showProjectNameError();
+});
+els.projectNameInput.addEventListener("input", clearProjectNameError);
+// PD-010B R14：ESC 触发的 cancel 事件统一走未保存确认。
+els.projectDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  if (requestProjectDialogClose()) {
+    els.projectDialog.close();
+  }
+});
 els.projectSettingsForm.addEventListener("submit", saveProjectSettings);
 els.addMemberBtn.addEventListener("click", addDraftMember);
 els.addProjectFileBtn.addEventListener("click", addDraftProjectFile);
@@ -3188,6 +3202,7 @@ function makeCard(options) {
     recurring: options.recurring || { pattern: "", nextDate: "" },
     swimlaneId: options.swimlaneId || "",
     isClosed: Boolean(options.isClosed),
+    isExample: Boolean(options.isExample),
     links: options.links || [],
     subtasks: (options.subtasks || []).map((task) => ({ id: uid("subtask"), title: task.title, done: Boolean(task.done) })),
     comments: options.comments || [],
@@ -3245,6 +3260,9 @@ function normalizeState() {
         card.links ||= [];
         card.attachments ||= [];
         card.isClosed ??= false;
+        if (card.isExample == null) {
+          card.isExample = card.activity.some((entry) => /由「.+」模板生成/.test(entry.text || ""));
+        }
         card.actualTime ||= "";
         card.schedule = normalizeSchedule(card.schedule);
         card.timeLogs ||= [];
@@ -4688,7 +4706,7 @@ function createCardElement(card, columnId, swimlaneId) {
   cardEl.dataset.swimlaneId = swimlaneId;
   cardEl.innerHTML = `
     <div class="card-topline">
-      <h4>${escapeHtml(card.title)}${card.isClosed ? `<span class="closed-label">已关闭</span>` : ""}</h4>
+      <h4>${escapeHtml(card.title)}${card.isExample ? `<span class="example-label" title="模板生成的示例任务，可编辑或删除">示例</span>` : ""}${card.isClosed ? `<span class="closed-label">已关闭</span>` : ""}</h4>
       <div class="card-sort">
         <button class="mini-button" type="button" data-action="move-up" aria-label="上移">↑</button>
         <button class="mini-button" type="button" data-action="move-down" aria-label="下移">↓</button>
@@ -4827,6 +4845,7 @@ function openProjectDialog(projectId = null) {
   const project = projectId ? state.projects.find((item) => item.id === projectId) : null;
   els.projectDialogTitle.textContent = project ? "编辑项目" : "新建项目";
   els.projectNameInput.value = project?.name || "";
+  clearProjectNameError();
   els.projectDescInput.value = project?.description || "";
   els.projectCreateOptions.style.display = project ? "none" : "grid";
   els.saveProjectBtn.textContent = project ? "保存" : "创建项目";
@@ -4838,11 +4857,53 @@ function openProjectDialog(projectId = null) {
     renderProjectCreateOptions();
   }
   els.projectDialog.showModal();
+  captureProjectDialogSnapshot();
   els.projectNameInput.focus();
 }
 
 function selectedProjectMode() {
   return els.projectModeInputs.find((input) => input.checked)?.value || "template";
+}
+
+// PD-010B R14：未保存关闭确认。在打开弹窗时记录初始快照，关闭前对比判断是否变脏。
+// 默认模板选择本身不算脏（与打开时的初始选择一致），只有用户改动字段才算脏。
+function captureProjectDialogSnapshot() {
+  projectDialogSnapshot = {
+    name: els.projectNameInput.value,
+    description: els.projectDescInput.value,
+    mode: selectedProjectMode(),
+    templateId: selectedTemplateId,
+    editingProjectId
+  };
+}
+
+function isProjectDialogDirty() {
+  if (!projectDialogSnapshot) return false;
+  if (els.projectNameInput.value !== projectDialogSnapshot.name) return true;
+  if (els.projectDescInput.value !== projectDialogSnapshot.description) return true;
+  if (selectedProjectMode() !== projectDialogSnapshot.mode) return true;
+  if (selectedTemplateId !== projectDialogSnapshot.templateId) return true;
+  return false;
+}
+
+function clearProjectDialogSnapshot() {
+  projectDialogSnapshot = null;
+}
+
+// 统一关闭确认入口。返回 true 表示用户确认离开（可关闭），false 表示继续编辑。
+// 由 submit(cancel) 与 dialog cancel(ESC) 两条路径共用，避免重复弹窗。
+function requestProjectDialogClose() {
+  if (!isProjectDialogDirty()) {
+    clearProjectDialogSnapshot();
+    return true;
+  }
+  const leave = window.confirm("确定离开吗？未保存的内容将丢失");
+  if (leave) {
+    clearProjectDialogSnapshot();
+    return true;
+  }
+  els.projectNameInput.focus();
+  return false;
 }
 
 function renderProjectCreateOptions() {
@@ -4942,6 +5003,7 @@ function createProjectFromTemplate(name, description, templateId) {
       ...clone(templateCard),
       swimlaneId: lane.id
     });
+    card.isExample = true;
     card.activity = addActivity(card.activity, `由「${template.name}」模板生成`);
     column.cards.push(card);
   });
@@ -4958,11 +5020,35 @@ function createProjectFromTemplate(name, description, templateId) {
   return project;
 }
 
+function showProjectNameError() {
+  els.projectNameError.textContent = "请输入项目名称";
+  els.projectNameInput.setAttribute("aria-invalid", "true");
+}
+
+function clearProjectNameError() {
+  if (els.projectNameError.textContent) els.projectNameError.textContent = "";
+  if (els.projectNameInput.getAttribute("aria-invalid") === "true") {
+    els.projectNameInput.setAttribute("aria-invalid", "false");
+  }
+}
+
 function saveProjectFromDialog(event) {
-  if (event.submitter?.value === "cancel") return;
+  // cancel 路径：先阻止 form method=dialog 自动关闭，走统一的未保存确认。
+  // pristine 直接关闭；dirty 弹确认，用户取消则保持打开、保留输入。
+  if (event.submitter?.value === "cancel") {
+    event.preventDefault();
+    if (requestProjectDialogClose()) {
+      els.projectDialog.close();
+    }
+    return;
+  }
   event.preventDefault();
   const name = els.projectNameInput.value.trim();
-  if (!name) return;
+  if (!name) {
+    showProjectNameError();
+    els.projectNameInput.focus();
+    return;
+  }
 
   if (editingProjectId) {
     const project = state.projects.find((item) => item.id === editingProjectId);
@@ -4978,6 +5064,7 @@ function saveProjectFromDialog(event) {
   }
 
   editingProjectId = null;
+  clearProjectDialogSnapshot();
   els.projectDialog.close();
   persist();
   render();
@@ -9121,6 +9208,7 @@ function cloneCardForCopy(card) {
     id: uid("card"),
     title: `${card.title} - 副本`,
     isClosed: false,
+    isExample: false,
     subtasks: (card.subtasks || []).map((task) => ({ ...task, id: uid("subtask") })),
     comments: clone(card.comments || []),
     links: clone(card.links || []),

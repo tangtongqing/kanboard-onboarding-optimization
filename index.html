@@ -142,7 +142,8 @@
       </div>
       <label>
         <span>项目名称</span>
-        <input id="projectNameInput" required maxlength="40">
+        <input id="projectNameInput" required maxlength="40" aria-describedby="projectNameError" aria-invalid="false">
+        <em id="projectNameError" class="field-error" aria-live="polite"></em>
       </label>
       <label>
         <span>项目描述</span>

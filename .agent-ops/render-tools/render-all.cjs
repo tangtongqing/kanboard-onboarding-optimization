@@ -6,7 +6,8 @@ const mermaidConfigPath = path.join(__dirname, "mermaid-config.json");
 const puppeteerConfigPath = path.join(__dirname, "puppeteer-config.json");
 const cssFile = path.join(__dirname, "diagram-theme.css");
 const sourceDir = path.join(__dirname, "sources");
-const requestedName = process.argv[2] || null;
+const requestedJob = process.argv[2]?.startsWith("PD-") ? process.argv[2] : null;
+const requestedName = requestedJob ? process.argv[3] || null : process.argv[2] || null;
 
 const jobs = [
   {
@@ -66,6 +67,48 @@ const jobs = [
       "pd-009-wizard-component-application",
       "pd-009-decision-inheritance"
     ]
+  },
+  {
+    doc: "docs/03-ux-design/低保真线框与关键状态-PD-010.md",
+    output: "设计图/PD-010",
+    names: [
+      "pd-010-core-screen-state-map",
+      "pd-010-desktop-p002-default",
+      "pd-010-desktop-p004-template-selection",
+      "pd-010-desktop-p005-template-preview",
+      "pd-010-desktop-p006-blank-form",
+      "pd-010-p009-success-board",
+      "pd-010-mobile-p002-p004-selection",
+      "pd-010-mobile-p005-p006-preview-form",
+      "pd-010-key-state-board",
+      "pd-010-scroll-fixed-relationship",
+      "pd-010-focus-order"
+    ]
+  },
+  {
+    doc: "docs/05-validation/低保真形成性评审与结构决策-PD-010A.md",
+    output: "设计图/PD-010A",
+    names: [
+      "pd-010a-expert-walkthrough-evidence-flow",
+      "pd-010a-severity-remediation-flow",
+      "pd-010a-pd011-gate-decision"
+    ]
+  },
+  {
+    doc: "docs/05-validation/低保真对照测试资产-PD-010C.md",
+    output: "设计图/PD-010C",
+    names: [
+      "pd-010c-v03a-template-card",
+      "pd-010c-v03b-template-card",
+      "pd-010c-v04a-flat-preview",
+      "pd-010c-v04b-sectioned-preview",
+      "pd-010c-v05a-default-template-flow",
+      "pd-010c-v05b-default-blank-flow",
+      "pd-010c-v06a-mobile-fullscreen",
+      "pd-010c-v06b-mobile-dialog",
+      "pd-010c-counterbalance-allocation",
+      "pd-010c-moderator-operation-flow"
+    ]
   }
 ];
 
@@ -84,6 +127,7 @@ async function main() {
 
   try {
     for (const job of jobs) {
+      if (requestedJob && path.basename(job.output) !== requestedJob) continue;
       const docPath = path.join(workspace, job.doc);
       const blocks = mermaidBlocks(fs.readFileSync(docPath, "utf8"));
       if (blocks.length !== job.names.length) {
