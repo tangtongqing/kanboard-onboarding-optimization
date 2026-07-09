@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity=".10"/></filter>
+    <filter id="shadowStrong" x="-20%" y="-20%" width="140%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity=".22"/></filter>
+  </defs>
+  <rect x="0" y="0" width="1200" height="800" rx="0" fill="#f5f6f8" stroke="none" />
+  <text x="32" y="42" font-family="Inter, Arial, sans-serif" font-size="18" fill="#1f2937" font-weight="700" >12 Specs - Local Analytics Triggers</text>
+  
+      <rect x="70" y="92" width="1060" height="620" rx="8" fill="#fff" stroke="#d8dde6" filter="url(#shadow)"/>
+      <text x="110" y="142" font-family="Inter, Arial, sans-serif" font-size="24" fill="#1f2937" font-weight="800" >本地模拟埋点触发边界</text>
+      
+          <rect x="126" y="198" width="420" height="82" rx="6" fill="#eaf1ff" stroke="#2f5fbb" />
+          <text x="148" y="232" font-family="Inter, Arial, sans-serif" font-size="15" fill="#2f5fbb" font-weight="800" >first_action_guidance_shown</text>
+          <text x="148" y="260" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >not_seen → shown</text>
+        
+          <rect x="618" y="198" width="420" height="82" rx="6" fill="#f8fafc" stroke="#5f6b7a" />
+          <text x="640" y="232" font-family="Inter, Arial, sans-serif" font-size="15" fill="#5f6b7a" font-weight="800" >first_action_guidance_dismissed</text>
+          <text x="640" y="260" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >点击关闭 / tap 关闭</text>
+        
+          <rect x="126" y="324" width="420" height="82" rx="6" fill="#ecfdf3" stroke="#16803c" />
+          <text x="148" y="358" font-family="Inter, Arial, sans-serif" font-size="15" fill="#16803c" font-weight="800" >first_action_drag_completed</text>
+          <text x="148" y="386" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >首拖成功</text>
+        
+          <rect x="618" y="324" width="420" height="82" rx="6" fill="#ecfdf3" stroke="#16803c" />
+          <text x="640" y="358" font-family="Inter, Arial, sans-serif" font-size="15" fill="#16803c" font-weight="800" >first_action_edit_completed</text>
+          <text x="640" y="386" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >首编成功</text>
+        
+          <rect x="126" y="450" width="420" height="82" rx="6" fill="#fde8e8" stroke="#c62828" />
+          <text x="148" y="484" font-family="Inter, Arial, sans-serif" font-size="15" fill="#c62828" font-weight="800" >first_action_delete_confirmed</text>
+          <text x="148" y="512" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >确认删除</text>
+        
+          <rect x="618" y="450" width="420" height="82" rx="6" fill="#fff4e8" stroke="#e65100" />
+          <text x="640" y="484" font-family="Inter, Arial, sans-serif" font-size="15" fill="#e65100" font-weight="800" >first_action_guidance_suppressed</text>
+          <text x="640" y="512" font-family="Inter, Arial, sans-serif" font-size="13" fill="#1f2937" font-weight="400" >互斥组件激活</text>
+        
+      <rect x="126" y="604" width="912" height="52" rx="6" fill="#f8fafc" stroke="#d8dde6" />
+      <text x="150" y="636" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="700" >样例 localStorage key: kanboard:firstCoreActionGuidance:{projectId}</text>
+    
+</svg>

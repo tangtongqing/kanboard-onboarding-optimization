@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity=".10"/></filter>
+    <filter id="shadowStrong" x="-20%" y="-20%" width="140%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity=".22"/></filter>
+  </defs>
+  <rect x="0" y="0" width="1440" height="900" rx="0" fill="#f5f6f8" stroke="none" />
+  <text x="32" y="42" font-family="Inter, Arial, sans-serif" font-size="18" fill="#1f2937" font-weight="700" >03 Desktop - 1st Delete Modal</text>
+  
+    <rect x="0" y="64" width="1440" height="1" rx="0" fill="#d8dde6" stroke="none" />
+    <rect x="0" y="0" width="1440" height="64" rx="0" fill="#ffffff" stroke="none" />
+    <text x="32" y="39" font-family="Inter, Arial, sans-serif" font-size="18" fill="#2f5fbb" font-weight="800" >Kanboard</text>
+    <rect x="1260" y="18" width="118" height="32" rx="4" fill="#2f5fbb" stroke="none" />
+    <text x="1290" y="39" font-family="Inter, Arial, sans-serif" font-size="13" fill="#fff" font-weight="700" >创建任务</text>
+    <rect x="0" y="65" width="236" height="835" rx="0" fill="#fff" stroke="none" />
+    <text x="32" y="112" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5f6b7a" font-weight="700" >项目向导</text>
+    <text x="32" y="148" font-family="Inter, Arial, sans-serif" font-size="15" fill="#1f2937" font-weight="700" >新手项目创建</text>
+    <text x="32" y="178" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5f6b7a" font-weight="400" >任务拆解优化</text>
+    <line x1="236" y1="65" x2="236" y2="900" stroke="#d8dde6" />
+    <text x="272" y="112" font-family="Inter, Arial, sans-serif" font-size="22" fill="#1f2937" font-weight="750" >新手创建体验优化看板</text>
+    <text x="272" y="140" font-family="Inter, Arial, sans-serif" font-size="13" fill="#5f6b7a" font-weight="400" >首次核心操作轻引导 · PD-019B</text>
+    
+        <rect x="272" y="184" width="260" height="520" rx="8" fill="#f8fafc" stroke="#d8dde6" />
+        <text x="290" y="218" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="700" >待学</text>
+        <text x="496" y="218" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="700" >2</text>
+      
+        <rect x="556" y="184" width="260" height="520" rx="8" fill="#f8fafc" stroke="#d8dde6" />
+        <text x="574" y="218" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="700" >进行中</text>
+        <text x="780" y="218" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="700" >1</text>
+      
+        <rect x="840" y="184" width="260" height="520" rx="8" fill="#f8fafc" stroke="#d8dde6" />
+        <text x="858" y="218" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="700" >已完成</text>
+        <text x="1064" y="218" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="700" >2</text>
+      
+    
+    <rect x="282" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <text x="298" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >把示例任务改成真实任务</text>
+    
+    <text x="298" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >可拖动 · 可双击编辑</text>
+    <rect x="298" y="320" width="58" height="22" rx="4" fill="#eaf1ff" stroke="none" />
+    <text x="315" y="335" font-family="Inter, Arial, sans-serif" font-size="11" fill="#2f5fbb" font-weight="650" >新手</text>
+    <circle cx="488" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="495" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="502" cy="332" r="2.2" fill="#5f6b7a"/>
+  
+    
+    <rect x="282" y="376" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <text x="298" y="408" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >拆成第一个小步骤</text>
+    
+    <text x="298" y="434" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >建议 10 分钟内完成</text>
+    <rect x="298" y="452" width="58" height="22" rx="4" fill="#eaf1ff" stroke="none" />
+    <text x="315" y="467" font-family="Inter, Arial, sans-serif" font-size="11" fill="#2f5fbb" font-weight="650" >新手</text>
+    <circle cx="488" cy="464" r="2.2" fill="#5f6b7a"/><circle cx="495" cy="464" r="2.2" fill="#5f6b7a"/><circle cx="502" cy="464" r="2.2" fill="#5f6b7a"/>
+  
+    
+    <rect x="566" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <text x="582" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >补充任务验收标准</text>
+    
+    <text x="582" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >进行中 · 1 条检查项</text>
+    <rect x="582" y="320" width="58" height="22" rx="4" fill="#eaf1ff" stroke="none" />
+    <text x="599" y="335" font-family="Inter, Arial, sans-serif" font-size="11" fill="#2f5fbb" font-weight="650" >新手</text>
+    <circle cx="772" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="779" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="786" cy="332" r="2.2" fill="#5f6b7a"/>
+  
+    
+    <rect x="850" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <text x="866" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >项目创建完成</text>
+    
+    <text x="866" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >已完成 · 自动保存</text>
+    <rect x="866" y="320" width="58" height="22" rx="4" fill="#eaf1ff" stroke="none" />
+    <text x="883" y="335" font-family="Inter, Arial, sans-serif" font-size="11" fill="#2f5fbb" font-weight="650" >新手</text>
+    <circle cx="1056" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="1063" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="1070" cy="332" r="2.2" fill="#5f6b7a"/>
+  
+    
+    
+    
+        <rect x="0" y="0" width="1440" height="900" rx="0" fill="rgba(0,0,0,.40)" stroke="none" />
+        <rect x="540" y="340" width="360" height="174" rx="8" fill="#fff" stroke="#d8dde6" filter="url(#shadowStrong)"/>
+        <text x="566" y="378" font-family="Inter, Arial, sans-serif" font-size="16" fill="#1f2937" font-weight="750" >彻底删除任务吗？</text>
+        <text x="566" y="410" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >删除会彻底移除此卡片，本地数据不可恢复。这是你第</text><text x="566" y="428" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >一次删除操作，确认要继续吗？</text>
+        <rect x="640" y="460" width="104" height="36" rx="4" fill="#ebf3fc" stroke="none" />
+        <text x="664" y="483" font-family="Inter, Arial, sans-serif" font-size="13" fill="#2f5fbb" font-weight="700" >取消删除</text>
+        <rect x="760" y="460" width="104" height="36" rx="4" fill="#fde8e8" stroke="none" />
+        <text x="784" y="483" font-family="Inter, Arial, sans-serif" font-size="13" fill="#c62828" font-weight="700" >确认删除</text>
+      
+  
+</svg>
