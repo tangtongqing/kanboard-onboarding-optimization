@@ -89,10 +89,21 @@ async function testInitialShell(page) {
   const learningProject = state.projects.find((item) => item.name === "个人学习计划项目");
   check(state.projects.length === 2, "demo has two projects");
   check(Boolean(learningProject), "demo includes personal learning project");
-  check(learningProject.columns.length === 6, "learning project has six growth columns");
+  check(learningProject.columns.length === 3, "learning project has three growth columns");
+  check(learningProject.columns[0].title === "待学" && learningProject.columns[1].title === "学习中" && learningProject.columns[2].title === "已学完", "learning project has correct columns: 待学, 学习中, 已学完");
   check(learningProject.swimlanes.length === 7, "learning project has seven PM learning swimlanes");
-  check(allCards(learningProject).length === 19, "learning project has nineteen PM growth cards");
-  check(allCards(learningProject).some((card) => card.title === "写出第一版 PRD 框架"), "learning project includes PRD practice");
+  check(allCards(learningProject).length === 3, "learning project has three PM growth cards");
+  const expectedTitles = [
+    "【学习示范】理解产品经理职责与能力模型",
+    "【学习示范】建立常用产品术语清单",
+    "【学习示范】整理第一章的知识点脑图"
+  ];
+  const cards = allCards(learningProject);
+  for (const title of expectedTitles) {
+    check(cards.some(c => c.title === title), `learning project has example card: ${title}`);
+  }
+  check(cards.every(c => c.isExample === true), "all learning template cards carry isExample badge");
+  check(cards.every(c => c.criteria && c.pitfall && c.suggestion), "all learning template cards contain criteria, pitfall, and suggestion quality guidance");
   check(project.columns.length === 11, "demo has eleven PM workflow columns");
   check(project.swimlanes.length === 1, "demo PM project uses one main workflow swimlane");
   check(allCards(project).length === 25, "demo has twenty-five PM workflow cards");
@@ -372,6 +383,113 @@ async function testProjectDialogRemediation(page) {
   await page.setViewportSize({ width: 1280, height: 900 });
 }
 
+async function testProjectDialogD02Implementation(page) {
+  await fresh(page);
+  await page.click("#newProjectBtn");
+
+  const templateOptions = page.locator(".template-option");
+  check((await templateOptions.count()) === 4, "D02 template picker still renders four templates");
+  const firstTemplateText = await templateOptions.first().textContent();
+  check(firstTemplateText.includes("3 列 · 7 泳道 · 3 张示例卡"), "D02 learning template shows true count summary");
+  const previewText = await page.locator("#templatePreview").textContent();
+  check(previewText.includes("待学 → 学习中 → 已学完"), "D02 template preview includes column chain");
+  check(previewText.includes("【学习示范】理解产品经理职责与能力模型"), "D02 template preview includes example card titles");
+
+  check((await page.locator("#templatePreview .preview-box").count()) === 3, "D02 template preview has three hierarchy sections");
+  const previewTitles = await page.locator("#templatePreview .preview-box strong").allTextContents();
+  check(previewTitles.some((text) => text.includes("看板列")), "D02 preview includes column section");
+  check(previewTitles.some((text) => text.includes("泳道")), "D02 preview includes swimlane section");
+  check(previewTitles.some((text) => text.includes("示例任务")), "D02 preview includes example task section");
+  
+  const exampleTasksText = await page.locator("#templatePreview .preview-box").last().locator("span").textContent();
+  check(exampleTasksText.split("/").length === 3, "D02 preview renders three example task titles");
+  check((await page.locator("#templatePreview p").textContent()).includes("从 0 开始"), "D02 preview keeps learning template description");
+
+  const previewSectionStyle = await page.locator("#templatePreview .preview-box").first().evaluate((node) => {
+    const styles = getComputedStyle(node);
+    return {
+      background: styles.backgroundColor,
+      borderLeftWidth: styles.borderLeftWidth,
+      borderRadius: styles.borderRadius
+    };
+  });
+  check(previewSectionStyle.background === "rgb(246, 248, 250)", "D02 preview box uses #f6f8fa panel-soft background");
+  check(previewSectionStyle.borderRadius === "6px", "D02 preview box keeps 6px radius");
+  const previewBoxBorder = await page.locator("#templatePreview .preview-box").first().evaluate((node) => getComputedStyle(node).borderLeftWidth);
+  check(previewBoxBorder === "1px", "D02 preview box has 1px border");
+
+  const focusStyles = await page.locator(".template-option").first().evaluate((node) => {
+    node.focus();
+    const styles = getComputedStyle(node);
+    return { outlineStyle: styles.outlineStyle, outlineWidth: styles.outlineWidth };
+  });
+  check(focusStyles.outlineStyle !== "none" && parseFloat(focusStyles.outlineWidth) >= 2, "D02 template option has visible focus outline");
+  const modeFocusStyles = await page.locator('input[name="projectMode"][value="template"]').evaluate((node) => {
+    node.focus();
+    const styles = getComputedStyle(node.closest(".mode-card"));
+    return { outlineStyle: styles.outlineStyle, outlineWidth: styles.outlineWidth };
+  });
+  check(modeFocusStyles.outlineStyle !== "none" && parseFloat(modeFocusStyles.outlineWidth) >= 2, "D02 creation mode card has visible focus outline");
+
+  const desktopActionHeight = await page.locator("#saveProjectBtn").evaluate((node) => parseFloat(getComputedStyle(node).minHeight));
+  check(desktopActionHeight >= 36, "D02 desktop primary action min-height is at least 36px");
+
+  const loadingSeen = await page.evaluate(() => {
+    window.__pd011cLoadingSeen = false;
+    const original = window.setCreateButtonLoading;
+    window.setCreateButtonLoading = (loading) => {
+      if (loading) window.__pd011cLoadingSeen = true;
+      if (typeof original === "function") {
+        original(loading);
+      }
+    };
+    return true;
+  });
+  check(loadingSeen, "D02 loading hook installed for audit");
+  await page.fill("#projectNameInput", "D02 Visual Audit");
+  await page.click("#saveProjectBtn");
+  check(await page.evaluate(() => window.__pd011cLoadingSeen === true), "D02 create flow enters loading state");
+  await pause();
+  check((await page.locator("#toastContainer .toast").first().textContent()).includes("已创建：D02 Visual Audit"), "D02 create success toast renders project name");
+  const toastStyle = await page.locator("#toastContainer .toast").first().evaluate((node) => {
+    const styles = getComputedStyle(node);
+    return { borderLeftWidth: styles.borderLeftWidth, boxShadow: styles.boxShadow, zIndex: getComputedStyle(node.parentElement).zIndex };
+  });
+  check(toastStyle.borderLeftWidth === "1px", "D02 toast avoids decorative side stripe");
+  check(toastStyle.zIndex === "95", "D02 toast uses bounded z-index");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  const mobileMetrics = await page.evaluate(() => {
+    const dialog = document.querySelector("#projectDialog");
+    const form = document.querySelector("#projectDialog form");
+    const actions = document.querySelector("#projectDialog .modal-actions");
+    const primary = document.querySelector("#saveProjectBtn");
+    const templateArea = document.querySelector("#templateArea");
+    const modeGrid = document.querySelector("#projectCreateOptions");
+    form.scrollTop = form.scrollHeight;
+    return {
+      dialogWidth: dialog.getBoundingClientRect().width,
+      actionsBottom: actions.getBoundingClientRect().bottom,
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      primaryMinHeight: parseFloat(getComputedStyle(primary).minHeight),
+      templateColumns: getComputedStyle(templateArea).gridTemplateColumns.split(" ").length,
+      modeColumns: getComputedStyle(modeGrid).gridTemplateColumns.split(" ").length,
+      scrollX: window.scrollX,
+      clientWidth: document.documentElement.clientWidth
+    };
+  });
+  check(mobileMetrics.dialogWidth <= 358, "D02 mobile project dialog fits 390px with side margins");
+  check(mobileMetrics.primaryMinHeight >= 44, "D02 mobile primary action min-height is at least 44px");
+  check(mobileMetrics.actionsBottom <= mobileMetrics.viewportHeight, "D02 mobile sticky actions remain visible after scroll");
+  check(mobileMetrics.templateColumns === 1, "D02 mobile template area collapses to one column");
+  check(mobileMetrics.modeColumns === 1, "D02 mobile creation mode collapses to one column");
+  check(mobileMetrics.scrollX === 0 && mobileMetrics.clientWidth <= 390, "D02 mobile implementation has no horizontal overflow");
+  await page.setViewportSize({ width: 1280, height: 900 });
+}
+
 async function testProjectCrudAndTemplates(page) {
   await fresh(page);
   await page.click("#newProjectBtn");
@@ -382,9 +500,9 @@ async function testProjectCrudAndTemplates(page) {
   await saveForm(page, "#projectForm");
   let project = await getActiveProject(page);
   check(project.name === "Template Audit", "template project becomes active");
-  check(project.columns.length === 6, "template project has generated learning columns");
+  check(project.columns.length === 3, "template project has generated learning columns");
   check(project.swimlanes.length === 7, "template project has PM learning swimlanes");
-  check(allCards(project).length === 19, "template project has PM learning cards");
+  check(allCards(project).length === 3, "template project has PM learning cards");
 
   await fresh(page);
   const blankId = await createBlankProject(page, "Blank Audit");
@@ -517,6 +635,9 @@ async function testCardCrudDetailsAndPersistence(page) {
 
   await page.locator(`.card[data-card-id="${card.id}"]`).click();
   await page.click("#deleteCardBtn");
+  if (await page.locator("#firstDeleteConfirmBtn").isVisible()) {
+    await page.click("#firstDeleteConfirmBtn");
+  }
   await pause();
   project = await getActiveProject(page);
   check(!allCards(project).some((item) => item.id === card.id), "card delete removes card");
@@ -1330,9 +1451,92 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
   check(layout.sidebarTopBefore === 0 && layout.sidebarTopAfter === 0, "desktop sidebar stays fixed while workspace scrolls");
 }
 
+// PD-011I-R1: 移动端触控高度与长弹窗遮挡专项测试
+async function testMobileTouchAndModalRefinement(page) {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fresh(page);
+
+  // 1. 390px 下页面无横向溢出
+  const noHorizontalOverflow = await page.evaluate(() => {
+    return document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+  });
+  check(noHorizontalOverflow, "390px: no horizontal page overflow");
+
+  // 2. 侧栏高度不超过视口高度的 32%
+  const sidebarHeightRatio = await page.evaluate(() => {
+    const sidebar = document.querySelector(".sidebar");
+    return sidebar.getBoundingClientRect().height / window.innerHeight;
+  });
+  check(sidebarHeightRatio <= 0.32, `390px: sidebar height ratio ${sidebarHeightRatio.toFixed(2)} <= 0.32`);
+
+  // 3. 项目标题在首屏内可见
+  const projectTitleInView = await page.evaluate(() => {
+    const title = document.querySelector("#projectTitle");
+    if (!title) return false;
+    const rect = title.getBoundingClientRect();
+    return rect.bottom <= window.innerHeight && rect.top >= 0;
+  });
+  check(projectTitleInView, "390px: project title is visible in first viewport");
+
+  // 4. 顶部操作按钮 min-height >= 44px
+  const topbarButtonMinHeight = await page.evaluate(() => {
+    const btn = document.querySelector(".topbar-actions .secondary-button");
+    if (!btn) return 0;
+    const computed = getComputedStyle(btn);
+    return Math.max(btn.offsetHeight, parseInt(computed.minHeight) || 0);
+  });
+  check(topbarButtonMinHeight >= 44, `390px: topbar button height ${topbarButtonMinHeight}px >= 44px`);
+
+  // 5. 顶部操作区可横向滚动
+  const topbarScrollable = await page.evaluate(() => {
+    const actions = document.querySelector(".topbar-actions");
+    if (!actions) return false;
+    return actions.scrollWidth > actions.clientWidth;
+  });
+  check(topbarScrollable, "390px: topbar actions is horizontally scrollable");
+
+  // 6. 长弹窗底部操作可达性测试
+  await page.click("#systemSettingsBtn");
+  await pause();
+  const systemSettingsHasForm = await page.locator("#systemSettingsDialog form").count();
+  if (systemSettingsHasForm > 0) {
+    // 滚动表单到底部
+    await page.evaluate(() => {
+      const form = document.querySelector("#systemSettingsDialog form");
+      if (form) form.scrollTop = form.scrollHeight;
+    });
+    await pause();
+
+    const modalContentAccessible = await page.evaluate(() => {
+      const form = document.querySelector("#systemSettingsDialog form");
+      const actions = document.querySelector("#systemSettingsDialog .modal-actions");
+      if (!form || !actions) return true;
+      
+      // Get the last actual content element before actions
+      const lastContentElement = Array.from(form.children).filter(el => el !== actions).pop();
+      if (!lastContentElement) return true;
+
+      const lastContentRect = lastContentElement.getBoundingClientRect();
+      const actionsRect = actions.getBoundingClientRect();
+
+      // Check that the bottom edge of the last content element is strictly above or equal to the top edge of actions
+      return lastContentRect.bottom <= actionsRect.top;
+    });
+    check(modalContentAccessible, "390px: system settings modal bottom content accessible");
+
+    await page.locator('#systemSettingsDialog .modal-actions button[value="cancel"]').click();
+    await pause();
+  } else {
+    check(true, "390px: system settings modal form not found, skipped");
+  }
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.on("pageerror", err => console.error("BROWSER PAGEERROR:", err.stack || err.message));
   page.setDefaultTimeout(8000);
   page.on("dialog", async (dialog) => {
     await dialog.accept();
@@ -1342,6 +1546,7 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testInitialShell(page);
     await testDialogCancelBypassesRequiredFields(page);
     await testProjectDialogRemediation(page);
+    await testProjectDialogD02Implementation(page);
     await testProjectCrudAndTemplates(page);
     await testColumnAndSwimlaneCrud(page);
     await testCardCrudDetailsAndPersistence(page);
@@ -1359,6 +1564,8 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
     await testOperations(page);
     await testDesktopSidebarFixedWorkspaceScroll(page);
     await testMobileDialogBounds(page);
+    await testMobileTouchAndModalRefinement(page);
+    await testFirstActionGuidance(page);
     console.log(`\n${passed} checks passed.`);
   } finally {
     await browser.close();
@@ -1367,3 +1574,212 @@ async function testDesktopSidebarFixedWorkspaceScroll(page) {
   console.error(error.stack || error.message);
   process.exit(1);
 });
+
+async function testFirstActionGuidance(page) {
+  // 12. 空白项目初始无提示，创建第一张卡片后才允许触发
+  await fresh(page);
+  const blankId = await createBlankProject(page, "Blank Guidance Audit");
+  let editDot = await page.locator(".first-action-guidance-edit-dot").count();
+  check(editDot === 0, "blank project has no edit dot initially");
+  
+  // Create first real card in blank project
+  let projectState = await getActiveProject(page);
+  let colId = projectState.columns[0].id;
+  let laneId = projectState.swimlanes[0].id;
+  await quickCreateCard(page, colId, laneId, "User First Card");
+  
+  // Verify edit dot is shown on first card
+  editDot = await page.locator(".first-action-guidance-edit-dot").count();
+  check(editDot === 1, "blank project shows edit dot after first card is created");
+  
+  // 1. 桌面端 hover/focus 第一张卡约 0.8 秒后出现拖拽提示
+  const cardEl = page.locator(".card").first();
+  await cardEl.hover();
+  await page.waitForTimeout(1000);
+  let dragPopover = page.locator(".first-action-guidance-popover");
+  check(await dragPopover.count() === 1, "hover first card shows drag popover after 0.8s");
+  check((await dragPopover.textContent()).includes("试着把这个任务"), "drag popover contains drag instruction text");
+  let events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let dragShownEvent = events.slice().reverse().find(e => e.eventName === "first_action_guidance_shown" && e.payload.text?.includes("试着把这个任务"));
+  check(dragShownEvent?.payload.field === "dragCard", "drag shown event payload includes field: dragCard");
+
+  // 10. Checklist panel / mobile drawer / Tooltip / Dialog 打开时轻引导 suppressed, 并上报
+  await page.click("#newProjectBtn");
+  await page.waitForTimeout(100);
+  check(await dragPopover.count() === 0, "popover is suppressed when dialog opens");
+  
+  events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let suppressedEvent = events.find(e => e.eventName === "first_action_guidance_suppressed");
+  check(Boolean(suppressedEvent), "suppressed event logged when dialog opened");
+  check(suppressedEvent.payload.field === "dragCard", "suppressed event payload includes field: dragCard");
+  check(suppressedEvent.payload.reason === "active_dialog_open", "suppressed event reason is active_dialog_open");
+
+  // Close project dialog
+  await page.locator('#projectDialog button[value="cancel"]').first().click();
+  await page.waitForTimeout(100);
+
+  // 3. 第一张示例卡出现编辑提示点，hover/focus 后出现编辑 Popover
+  const dotEl = page.locator(".first-action-guidance-edit-dot").first();
+  await dotEl.hover();
+  await page.waitForTimeout(500);
+  let editPopover = page.locator(".first-action-guidance-popover");
+  check(await editPopover.count() === 1, "hover edit dot shows edit popover after 0.3s");
+  check((await editPopover.textContent()).includes("双击可把示例卡"), "edit popover text is correct");
+  events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let editShownEvent = events.slice().reverse().find(e => e.eventName === "first_action_guidance_shown" && e.payload.text?.includes("双击可把示例卡"));
+  check(editShownEvent?.payload.field === "editCard", "edit shown event payload includes field: editCard");
+
+  // 4. 双击卡片打开编辑弹窗，editCard 写入 completed
+  await cardEl.dblclick();
+  await page.waitForTimeout(100);
+  check(await page.locator("#cardDialog").first().evaluate(node => node.open), "double click opens card dialog");
+  
+  let gState = await page.evaluate((bId) => JSON.parse(localStorage.getItem(`kanboard:first-action-guidance:${bId}`)), blankId);
+  check(gState.editCard === "completed", "double click sets editCard to completed");
+  check(Boolean(gState.updatedAt), "guidanceState contains updatedAt ISO string");
+  
+  // 5. 首次删除弹出 PD-019C 专属确认层，不走原生 confirm
+  await page.click("#deleteCardBtn");
+  await page.waitForTimeout(100);
+  let customDeleteDialog = page.locator("#firstDeleteConfirmDialog");
+  check(await customDeleteDialog.evaluate(node => node.open), "first delete opens custom delete confirm dialog");
+
+  // 6. 取消删除后卡片保留，并写入 first_delete_cancelled
+  await page.click("#firstDeleteCancelBtn");
+  await page.waitForTimeout(100);
+  check(await customDeleteDialog.evaluate(node => !node.open), "canceling delete closes custom delete dialog");
+  let cardCount = await page.locator(".card").count();
+  check(cardCount === 1, "card is preserved after cancel delete");
+  
+  events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let cancelEvent = events.find(e => e.eventName === "first_delete_cancelled");
+  check(Boolean(cancelEvent), "first_delete_cancelled event logged");
+  check(cancelEvent.payload.field === "deleteCard", "cancel event payload includes field");
+  check(Boolean(cancelEvent.payload.cardId), "cancel event payload includes cardId");
+
+  // 重置 deleteCard 状态以独立测试确认逻辑
+  await page.evaluate((bId) => {
+    const state = JSON.parse(localStorage.getItem(`kanboard:first-action-guidance:${bId}`));
+    state.deleteCard = "not_seen";
+    localStorage.setItem(`kanboard:first-action-guidance:${bId}`, JSON.stringify(state));
+  }, blankId);
+
+  // 7. 确认删除后卡片删除，并写入 first_delete_confirmed
+  await page.click("#deleteCardBtn");
+  await page.waitForTimeout(100);
+  await page.click("#firstDeleteConfirmBtn");
+  await page.waitForTimeout(100);
+  cardCount = await page.locator(".card").count();
+  check(cardCount === 0, "card is deleted after confirm delete");
+  
+  events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let confirmEvent = events.find(e => e.eventName === "first_delete_confirmed");
+  check(Boolean(confirmEvent), "first_delete_confirmed event logged");
+  check(confirmEvent.payload.field === "deleteCard", "confirm event payload includes field");
+  check(Boolean(confirmEvent.payload.cardId), "confirm event payload includes cardId");
+
+  // Create another card to test second delete
+  projectState = await getActiveProject(page);
+  colId = projectState.columns[0].id;
+  laneId = projectState.swimlanes[0].id;
+  await quickCreateCard(page, colId, laneId, "User Second Card");
+  
+  // 8. 二次删除不再展示首次删除说明层
+  await page.locator(".card").first().dblclick();
+  await page.waitForTimeout(100);
+  await page.click("#deleteCardBtn");
+  await page.waitForTimeout(100);
+  check(await customDeleteDialog.evaluate(node => !node.open), "second delete does not open custom delete dialog");
+  cardCount = await page.locator(".card").count();
+  check(cardCount === 0, "second delete directly deletes card via native confirm");
+
+  // Create card again to test menu and dragstart completed
+  projectState = await getActiveProject(page);
+  colId = projectState.columns[0].id;
+  laneId = projectState.swimlanes[0].id;
+  await quickCreateCard(page, colId, laneId, "User Third Card");
+  
+  // 9. 首次打开任务菜单出现发现提示，且菜单项仍可点击
+  const menuSummary = page.locator(".card .board-menu summary").first();
+  await menuSummary.click();
+  await page.waitForTimeout(100);
+  let menuPopover = page.locator(".first-action-guidance-popover");
+  check(await menuPopover.count() === 1, "clicking menu summary shows taskMenu popover");
+  check((await menuPopover.textContent()).includes("这里还有复制"), "taskMenu popover text is correct");
+  events = await page.evaluate(() => JSON.parse(localStorage.getItem("kanboard:activation-events") || "[]"));
+  let menuShownEvent = events.slice().reverse().find(e => e.eventName === "first_action_guidance_shown" && e.payload.text?.includes("这里还有复制"));
+  check(menuShownEvent?.payload.field === "taskMenu", "taskMenu shown event payload includes field: taskMenu");
+  
+  await page.click('[data-action="edit-card"]');
+  await page.waitForTimeout(100);
+  check(await page.locator("#cardDialog").first().evaluate(node => node.open), "taskMenu action is still clickable and opens dialog");
+  await page.locator('#cardDialog button[value="cancel"]').first().click();
+  await page.waitForTimeout(100);
+  
+  gState = await page.evaluate((bId) => JSON.parse(localStorage.getItem(`kanboard:first-action-guidance:${bId}`)), blankId);
+  check(gState.taskMenu === "completed", "clicking action completed taskMenu guidance");
+
+  // Test 2: dragstart sets dragCard to completed
+  const thirdCard = page.locator(".card").first();
+  await thirdCard.evaluate(node => {
+    const ev = new DragEvent("dragstart", { bubbles: true });
+    Object.defineProperty(ev, "dataTransfer", { value: new DataTransfer() });
+    node.dispatchEvent(ev);
+  });
+  await page.waitForTimeout(100);
+  gState = await page.evaluate((bId) => JSON.parse(localStorage.getItem(`kanboard:first-action-guidance:${bId}`)), blankId);
+  check(gState.dragCard === "completed", "dragstart sets dragCard to completed");
+
+  // 11. 390px 下无水平溢出，移动端使用 inline strip / Bottom Sheet
+  await page.setViewportSize({ width: 390, height: 844 });
+  await fresh(page);
+  await page.click("#newProjectBtn");
+  await page.fill("#projectNameInput", "Mobile Audit");
+  await saveForm(page, "#projectForm");
+  await page.waitForTimeout(100);
+  
+  let popoverCount = await page.locator(".first-action-guidance-popover").count();
+  check(popoverCount === 0, "no popover is rendered on 390px viewport");
+  
+  let inlineStrip = page.locator(".first-action-guidance-inline");
+  check(await inlineStrip.count() === 1, "mobile inline strip is rendered on 390px viewport");
+  
+  const overflowInfo = await page.evaluate(() => {
+    const docWidth = document.documentElement.clientWidth;
+    const overflowing = [];
+    document.querySelectorAll("*").forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.right > docWidth) {
+        overflowing.push({
+          tag: el.tagName,
+          id: el.id,
+          className: el.className,
+          right: rect.right,
+          clientWidth: el.clientWidth,
+          scrollWidth: el.scrollWidth
+        });
+      }
+    });
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: docWidth,
+      overflowing: overflowing.slice(0, 10)
+    };
+  });
+  check(overflowInfo.scrollWidth <= overflowInfo.clientWidth, "mobile viewport has no horizontal overflow");
+
+  // 13. kanboard:activation-events 超过 100条时裁剪为最近 90条
+  await page.evaluate(() => {
+    const events = Array.from({ length: 110 }, (_, i) => ({ eventName: `test_event_${i}`, payload: {} }));
+    localStorage.setItem("kanboard:activation-events", JSON.stringify(events));
+  });
+  await page.evaluate(() => {
+    trackActivationEvent("trigger_event", { projectId: "test" });
+  });
+  let eventLength = await page.evaluate(() => {
+    return JSON.parse(localStorage.getItem("kanboard:activation-events")).length;
+  });
+  check(eventLength === 91, "events array trimmed to last 90 items + the new one (total 91) when exceeding 100");
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+}

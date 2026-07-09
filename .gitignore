@@ -12,10 +12,13 @@ __pycache__/
 node_modules/
 
 # Local tool workspaces and generated diagram QA artifacts
+.agent-ops/
+.agents/
 .mimocode/
+.impeccable/
+scratch/
+task.md
 .impeccable/live/sessions/
-.agent-ops/render-tools/sources/
-.agent-ops/render-tools/qa/
 
 # Local secrets
 .env

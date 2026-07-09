@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>作品集打印版导出源 (PD-023)</title>
+    <style>
+        /* 基础与排版系统 */
+        :root {
+            --primary: #1D52B7;
+            --primary-light: #E8F0FE;
+            --text-main: #202124;
+            --text-muted: #5F6368;
+            --border-color: #DADCE0;
+            --bg-page: #F8F9FA;
+            --bg-card: #FFFFFF;
+            --accent-orange: #E8710A;
+            --bg-warning: #FEF7E0;
+            --text-warning: #B06000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-page);
+            line-height: 1.5;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* 导出定位页眉说明 */
+        .meta-header {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .meta-header h1 {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .meta-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .boundary-box {
+            background-color: var(--bg-warning);
+            border-left: 4px solid var(--accent-orange);
+            padding: 16px;
+            margin-top: 16px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .boundary-box h3 {
+            font-size: 14px;
+            color: var(--text-warning);
+            margin-bottom: 6px;
+        }
+
+        .boundary-box ul {
+            list-style-type: none;
+            font-size: 13px;
+            color: var(--text-warning);
+        }
+
+        .boundary-box li {
+            margin-bottom: 4px;
+            padding-left: 12px;
+            position: relative;
+        }
+
+        .boundary-box li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-orange);
+        }
+
+        /* 16:9 横版演示纸张容器 (适合幻灯片打印) */
+        .portfolio-page {
+            background: var(--bg-card);
+            width: 297mm; /* A4 横向宽度 */
+            height: 171.7mm; /* 接近 16:9 比例 */
+            margin: 40px auto;
+            padding: 20mm;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+        }
+
+        /* 页眉与页脚样式 */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 12px;
+            height: 18%;
+        }
+
+        .slide-header .title-group h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .slide-header .title-group h3 {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .slide-header .page-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        /* 主体布局：内容 + 视觉展示区 */
+        .slide-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            height: 70%;
+            margin-top: 15px;
+        }
+
+        .slide-content-left {
+            width: 52%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bullet-list {
+            list-style: none;
+        }
+
+        .bullet-list li {
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-main);
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .bullet-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .speech-hint {
+            background: #F1F3F4;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--text-muted);
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .speech-hint strong {
+            color: var(--text-main);
+        }
+
+        /* 右侧视觉资产区 */
+        .slide-visual-right {
+            width: 45%;
+            border: 1px dashed var(--border-color);
+            background: #FAFAFA;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            padding: 8px;
+        }
+
+        .slide-visual-right img {
+            max-width: 100%;
+            max-height: 82%;
+            object-fit: contain;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .asset-label {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .image-placeholder {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 页脚区域 */
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            height: 8%;
+        }
+
+        .slide-footer .risk-alert {
+            color: var(--accent-orange);
+            font-weight: 500;
+        }
+
+        /* 打印媒介专有样式 */
+        @media print {
+            body {
+                background: #FFFFFF;
+            }
+            .meta-header {
+                display: none; /* 打印时隐藏说明页 */
+            }
+            .portfolio-page {
+                margin: 0;
+                border: none;
+                box-shadow: none;
+                width: 297mm;
+                height: 210mm; /* A4 标准横版高度，由打印机按比例缩放 */
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- A. 作品集打印版导出定位说明 (仅屏幕可见) -->
+    <div class="meta-header">
+        <h1>作品集打印版 HTML 导出源</h1>
+        <p><strong>纸张与版式选择：</strong>本模板选用 <strong>A4 横版 (Landscape, 297mm * 171.7mm)</strong> 比例进行编排。</p>
+        <p><strong>选择理由：</strong>产品经理作品集（Portfolio）通常作为幻灯片或横向长文档投递和展示。横向画布能完美容纳看板的“列/泳道”宽屏网格布局，在打印转 PDF 时能够确保截图比例不失真、不发生重叠。</p>
+        <p><strong>打印指南：</strong>在浏览器中按下 <code>Ctrl + P</code> (或 <code>Cmd + P</code>)，将纸张方向设为 <strong>横向 (Landscape)</strong>，背景图形设为 <strong>显示 (Enable Background Graphics)</strong>，即可无失真打印或直接导出为 PDF。</p>
+        
+        <div class="boundary-box">
+            <h3>🚨 真实性边界红线自检声明（已内置于每页页脚风险提示处）</h3>
+            <ul>
+                <li><strong>未接入真人测试</strong>：数据非招募式测试，仅代表专家走查与公开案例。</li>
+                <li><strong>未接入真实物理设备</strong>：移动端效果仅基于 Chromium 390px 视口仿真，不宣称覆盖物理手机。</li>
+                <li><strong>Figma 写入受阻</strong>：PD-019B 高保真原图由于沙箱权限限制在本地规格书定义，未直接物理写入 Figma。</li>
+                <li><strong>无真实业务数据</strong>：449 checks 仅表示静态集成功能可达性，不宣传实际线上转化或留存业务指标。</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- B. 10 页正式版式 -->
+
+    <!-- 第 1 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>空白看板与新手用户的冷启动困境</h2>
+                <h3>第 1 页：项目背景与新手起步断层</h3>
+            </div>
+            <span class="page-badge">Page 01 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>空白项目路径：项目创建后无默认列与泳道，新手陷入“如何组织结构”的困惑。</li>
+                    <li>示例卡操作焦虑：面对系统默认卡片不敢编辑，担心损坏看板原配置。</li>
+                    <li>突破口定位：不推行大规模系统功能扩张，聚焦打磨冷启动激活路径。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>Kanboard 虽然功能强大，但新建项目后空空如也，导致新手在起步时面临双重困境——不知道该设几列，以及不敢修改示例任务。这才是流失的核心原因。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-018D/01-desktop-template-checklist-0of3.png" alt="空白项目冷启动界面">
+                <span class="asset-label">视觉资产：设计图/PD-018D/01-desktop-template-checklist-0of3.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：GitHub Issues 新手抱怨及 Hacker News 社区公开讨论</span>
+            <span class="risk-alert">⚠️ 边界提醒：研究来源为二手真实公开案例，未实施招募式真人测试</span>
+        </div>
+    </section>
+
+    <!-- 第 2 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>公开案例证据驱动与主动边界声明</h2>
+                <h3>第 2 页：研究方法与设计证据基准</h3>
+            </div>
+            <span class="page-badge">Page 02 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>公开研究导入：通过收集官方社区与 Issues 中的新手讨论，校准激活断层。</li>
+                    <li>专家路径走查：模拟看板新手在空白页面的交互历程，锁定高频焦虑决策点。</li>
+                    <li>边界透明度：诚实声明条件限制，移动端仅通过 390px 视口完成布局仿真。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>我在此主动声明项目边界：本研究未进行招募式测试，移动端也是通过 390px 视口来验证的。诚实地将限制写明，能让我们的方案聚焦在真实的场景里。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <div class="image-placeholder">
+                    <p><strong>[ 证据地图与模拟走查 ]</strong></p>
+                    <p style="font-size: 11px; margin-top: 8px;">证据文档：docs/05-validation/公开用户证据研究与模拟走查-PD-010D-R.md</p>
+                </div>
+                <span class="asset-label">视觉资产：文字占位 (docs/05-validation/公开用户证据研究与模拟走查-PD-010D-R.md)</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：docs/05-validation/公开用户证据研究与模拟走查-PD-010D-R.md</span>
+            <span class="risk-alert">⚠️ 边界提醒：主动声明未进行任何招募式真人对比测试</span>
+        </div>
+    </section>
+
+    <!-- 第 3 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>轻量级设计干预与高级路径保护</h2>
+                <h3>第 3 页：核心设计目标与非目标取舍</h3>
+            </div>
+            <span class="page-badge">Page 03 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>三阶段干预：模板初始化引导（建前）、Checklist 动作激发（建后）、首次操作防御（行动）。</li>
+                    <li>高级路径隔离：老用户或选择空白看板的用户，不受任何新增引导的打扰。</li>
+                    <li>刚性非目标：不触碰系统底层数据结构，不引入注册登录或任何变现收费系统。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>我们在给新手做加法的同时，对高级用户做了减法——空白项目路径完全被隔离，不显示任何新手引导。同时我们不修改 Kanboard 的底层数据库。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <div class="image-placeholder">
+                    <p><strong>[ 设计原则与非目标拓扑 ]</strong></p>
+                    <p style="font-size: 11px; margin-top: 8px;">文档参考：docs/03-ux-design/设计原则与非目标-PD-007.md</p>
+                </div>
+                <span class="asset-label">视觉资产：文字占位 (docs/03-ux-design/设计原则与非目标-PD-007.md)</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：docs/03-ux-design/设计原则与非目标-PD-007.md</span>
+            <span class="risk-alert">⚠️ 边界提醒：引导状态跨页面互斥避让，保持极简设计</span>
+        </div>
+    </section>
+
+    <!-- 第 4 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>初始化场景模板：提供结构的起点</h2>
+                <h3>第 4 页：建前引导——模板初始化与可编辑示例卡</h3>
+            </div>
+            <span class="page-badge">Page 04 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>高频场景模板：提供学习计划、工作任务、冲刺追踪、Bug 管理四套初始化模板。</li>
+                    <li>实时结构预览：新建弹窗右侧动态生成所选模板的列与泳道，创建前即感知结构。</li>
+                    <li>卡片实体活化：示例卡包含验收与修改提示，双击可改，使其成为工作抓手。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>我们把示例卡设计成“可双击编辑的任务”而不是干瘪的说明书，并提供建前预览。熟练用户仍可选择空白模板跳过。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/kanboard-template-v0.5.png" alt="创建前模板选择预览">
+                <span class="asset-label">视觉资产：设计图/kanboard-template-v0.5.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：设计图/kanboard-template-v0.5.png 及本地状态控制</span>
+            <span class="risk-alert">⚠️ 边界提醒：高保真原图物理交付受限于 Figma 授权，已在本地提供详细标注</span>
+        </div>
+    </section>
+
+    <!-- 第 5 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>新手激活 Checklist：挑战激发核心探索</h2>
+                <h3>第 5 页：建后引导——Checklist 控制器与操作回退容错</h3>
+            </div>
+            <span class="page-badge">Page 05 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>3项挑战任务：① 修改示例卡标题 $\rightarrow$ ② 拖拽到下一列 $\rightarrow$ ③ 在首列新建卡片。</li>
+                    <li>回退容错机制：若新手删除示例卡，挑战一自动切换为“双击创建并保存卡片”。</li>
+                    <li>本地状态机：`localStorage` 基于项目 ID 隔离，确保跨会话持久保存，完成后永久闭合。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>Checklist 在右下角提供 3 步任务引导破冰。最有意思的是它的 Fallback 机制：如果示例卡被用户删了，第一步挑战会自动变为“双击创建任意卡片”，流程不会卡死。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-018D/03-desktop-checklist-1of3.png" alt="新手激活 Checklist 悬浮状态">
+                <span class="asset-label">视觉资产：设计图/PD-018D/03-desktop-checklist-1of3.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：设计图/PD-018D/ 系列回归截图与本地 LocalStorage 埋点</span>
+            <span class="risk-alert">⚠️ 边界提醒：数据状态仅在前端本地持久化，未接入后端数据库</span>
+        </div>
+    </section>
+
+    <!-- 第 6 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>概念消除：白话 Tooltip 气泡与定位避让</h2>
+                <h3>第 6 页：界面信息解释——高频术语大白话气泡与边缘防御</h3>
+            </div>
+            <span class="page-badge">Page 06 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>术语消除：将“WIP限制”、“泳道”等 10 个晦涩词汇绑定气泡，提供白话大意。</li>
+                    <li>边缘自适应：动态计算屏幕边缘位置，自动翻转气泡朝向，防止文字遮挡。</li>
+                    <li>全局互斥避让：当 Tooltip 显示时，如果存在新手 Popover 引导，自动触发抑制（suppress）。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>我们把专业名词变成了大白话。点击问号即可显示，气泡会自动检测并避让屏幕边缘。并且它与引导有互斥机制，一次只把焦点给一个组件。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-018D/08-desktop-tooltip-wip.png" alt="WIP限制白话提示气泡">
+                <span class="asset-label">视觉资产：设计图/PD-018D/08-desktop-tooltip-wip.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：设计图/PD-018D/08-desktop-tooltip-wip.png 及边缘翻转计算</span>
+            <span class="risk-alert">⚠️ 边界提醒：帮助问号针对高频词配置，老用户可忽略</span>
+        </div>
+    </section>
+
+    <!-- 第 7 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>首次交互防御：一次性轻引导机制</h2>
+                <h3>第 7 页：行动层引导——首次拖拽/编辑/删除轻量 Popover</h3>
+            </div>
+            <span class="page-badge">Page 07 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>一次性引导：拖拽 Popover 在 hover 卡片 0.8s 后触发，开始拖拽瞬间永久闭合。</li>
+                    <li>柔性删除拦截：设计自定义 Dialog 拦截首次卡片删除，消除误操作产生的畏难情绪。</li>
+                    <li>退场机制：弹出 Dialog 时，其它悬浮的 Popover 全部自动退场，防止产生视觉疲劳。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>轻引导的核心是“随用随现，用完即逝”。比如卡片编辑红点、首次删除确认框，它们都是一次性的，并且在有对话框或提示时自动被 suppressed，绝不骚扰用户。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-019D/03-desktop-drag-guidance-popover.png" alt="拖拽轻引导 Popover">
+                <span class="asset-label">视觉资产：设计图/PD-019D/03-desktop-drag-guidance-popover.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：设计图/PD-019D/03-desktop-drag-guidance-popover.png 与全局焦点控制</span>
+            <span class="risk-alert">⚠️ 边界提醒：一次性状态记录在 LocalStorage 状态机中</span>
+        </div>
+    </section>
+
+    <!-- 第 8 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>手机端自适应：受限空间下的方案映射</h2>
+                <h3>第 8 页：移动端体验——390px 视口下的替代性交互设计</h3>
+            </div>
+            <span class="page-badge">Page 08 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>组件降级替换：Popover 降级为 32px 的 inline 提示条；Checklist 折叠为气泡。</li>
+                    <li>触控目标增强：所有触控高度均提升至 44px 以上，防止手机端误触。</li>
+                    <li>视口溢出防护：网格容器定义为 `minmax(0, 1fr)` 自动裁切，绝不溢出视口产生横卷。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>在 390px 移动视口下，空间有限，我把拖拽 Popover 替换为 inline 提示条，删除对话框降级为底部滑盖 Bottom Sheet，并优化了所有触控高度至 44px。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-019D/10-mobile-390-inline-guidance.png" alt="移动端 390px 仿真界面与 inline 提示条">
+                <span class="asset-label">视觉资产：设计图/PD-019D/10-mobile-390-inline-guidance.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：设计图/PD-019D/10-mobile-390-inline-guidance.png 及 390px 视口运行</span>
+            <span class="risk-alert">⚠️ 边界提醒：仿真以 Chromium 390px 为准，非真实物理手机物理验证</span>
+        </div>
+    </section>
+
+    <!-- 第 9 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>三阶段集成测试：无 Mock 验证闭环</h2>
+                <h3>第 9 页：验证证据——449 项断言测试与 26 张回归截图</h3>
+            </div>
+            <span class="page-badge">Page 09 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>测试递增覆盖：精修基线 403 项 $\rightarrow$ 激活加入 408 项 $\rightarrow$ 轻引导集成 449 项全量测试通过。</li>
+                    <li>截图证据链：26 张回归截图与 LocalStorage 日志对应，无 Mock 运行。</li>
+                    <li>状态验证：全自动断言触发，从代码运行底层保证引导显示、消失和回退无回退风险。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>我们用 449 项静态集成审计来确保方案实现的完整性。在不需要 Mock 数据的情况下，完成了各节点触发、抑制与自适应定位的真机可达性断言，并生成 26 张截图证据。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <img src="../../设计图/PD-019D/12-localstorage-guidance-state-and-events.png" alt="本地 LocalStorage 与 449 项测试断言控制">
+                <span class="asset-label">视觉资产：设计图/PD-019D/12-localstorage-guidance-state-and-events.png</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：tests/static-feature-audit-v08.js 与 Playwright 回归日志</span>
+            <span class="risk-alert">⚠️ 边界提醒：449 checks 仅证明代码功能可达，非真实业务数据提升</span>
+        </div>
+    </section>
+
+    <!-- 第 10 页 -->
+    <section class="portfolio-page">
+        <div class="slide-header">
+            <div class="title-group">
+                <h2>直面不足：我们的局限与演进方向</h2>
+                <h3>第 10 页：限制与反思——三大真实局限性与未来验证计划</h3>
+            </div>
+            <span class="page-badge">Page 10 / 10</span>
+        </div>
+        <div class="slide-body">
+            <div class="slide-content-left">
+                <ul class="bullet-list">
+                    <li>真人测试缺失：受限于条件未实施真实用户测试，目前基于公开二手案例分析。</li>
+                    <li>真机设备缺席：未覆盖物理手机（仅 Chromium 视口仿真），可能遗漏多终端细微兼容性。</li>
+                    <li>下一步验证：招募 5 名典型看板新手，以出声思考法走查这套新手激活与防御机制。</li>
+                </ul>
+                <div class="speech-hint">
+                    <strong>口播提示：</strong>作为一个严谨的产品经理，我必须说明当前的局限：我们没有进行招募式测试，移动端也是视口仿真，且 Figma 因为权限阻塞。下一步，招募 5 个新手做可用性测试是核心任务。
+                </div>
+            </div>
+            <div class="slide-visual-right">
+                <div class="image-placeholder">
+                    <p><strong>[ 反思与下一步行动拓扑 ]</strong></p>
+                    <p style="font-size: 11px; margin-top: 8px;">反思章节：作品集叙事-PD-013.md 第九节</p>
+                </div>
+                <span class="asset-label">视觉资产：文字占位 (作品集叙事-PD-013.md 第九节)</span>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <span>证据来源：作品集叙事-PD-013.md § 9. 结果与反思</span>
+            <span class="risk-alert">⚠️ 边界提醒：主动披露限制，保持交付真实性与克制口径</span>
+        </div>
+    </section>
+
+</body>
+</html>

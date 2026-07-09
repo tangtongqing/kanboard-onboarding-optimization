@@ -1,4 +1,17 @@
-﻿const STORAGE_KEY = "kanboard-static-v0827";
+let activePopoverElement = null;
+const HELP_DICTIONARY = {
+  swimlane: "泳道：用于横向划分任务的分类通道（如‘个人’与‘团队’），像泳池的泳道一样，让不同类别的任务互不干扰。",
+  wipLimit: "WIP限制：本阶段允许同时处理的最大卡片数。限制它是为了强迫自己专注推进，防止贪多嚼不烂导致什么都没做完。",
+  assignee: "负责人：具体去执行和跟进该任务的成员。个人项目可默认指派给自己，建议一件事只有一个明确负责人，防止责任不清。",
+  priority: "优先级：决定卡片处理的紧急先后顺序。当多件事堆在手头时，优先去处理高优先级的任务。",
+  dueDate: "截止日期：期望该任务做完的最晚期限。过期未完成的卡片在看板上会有醒目的延误警示。",
+  category: "分类：纵向的核心专业分类（一张卡只能选一个分类），如‘前端开发’或‘界面设计’，用于卡片的主要职能分组。",
+  tags: "标签：跨层级的扁平标记，一张卡可以贴多个标签（如‘急件’、‘Sprint1’），用于看板卡片极其灵活的组合过滤。",
+  estimate: "预估工时：完成该任务预计需要的工时（小时）。建议将任务控制在 2-8 小时之间，太大的任务请拆细后再放入。",
+  spent: "实际工时：实际在任务上已经花掉的小时数。在任务挪入‘已完成’时填入，可以用来跟原预估工时做对比复盘。",
+  blockRisk: "阻塞 / 风险：标记任务受阻的关联关系（如A任务‘阻塞’了B任务），或在评论中记录风险。这有助于团队识别并协助排除延期隐患。"
+};
+const STORAGE_KEY = "kanboard-static-v0827";
 const DEFAULT_PLUGIN_CATALOG = [
   {
     id: "github-auth",
@@ -702,27 +715,24 @@ const PROJECT_TEMPLATES = [
     name: "个人学习项目",
     description: "适合从 0 开始学习产品经理能力，把认知、调研、PRD、原型、协作和作品集训练拆成可推进任务。",
     columns: [
-      { key: "plan", title: "待规划", wipLimit: 0 },
-      { key: "learn", title: "资料学习", wipLimit: 4 },
-      { key: "case", title: "案例拆解", wipLimit: 3 },
-      { key: "practice", title: "实操产出", wipLimit: 3 },
-      { key: "review", title: "复盘完善", wipLimit: 2 },
-      { key: "mastered", title: "已掌握", wipLimit: 0 }
+      { key: "todo", title: "待学", wipLimit: 0 },
+      { key: "doing", title: "学习中", wipLimit: 3 },
+      { key: "done", title: "已学完", wipLimit: 0 }
     ],
     swimlanes: [
       { key: "foundation", title: "产品认知", description: "角色、术语和基础产品思维" },
       { key: "research", title: "用户研究", description: "访谈、画像、旅程和真实场景" },
       { key: "analysis", title: "需求分析", description: "需求池、优先级、MVP 和竞品判断" },
       { key: "solution", title: "方案表达", description: "PRD、原型、流程、指标和评审材料" },
-      { key: "delivery", title: "协作交付", description: "研发沟通、测试验收、上线发布和风险处理" },
+      { key: "delivery", title: "协作交付", description: "研发沟通、测试验收、上线发布 and 风险处理" },
       { key: "growth", title: "数据增长", description: "埋点、运营反馈、复盘和下一轮迭代" },
       { key: "portfolio", title: "作品集求职", description: "项目故事线、面试表达和长期成长记录" }
     ],
     cards: [
       {
-        column: "mastered",
+        column: "done",
         swimlane: "foundation",
-        title: "理解产品经理职责与能力模型",
+        title: "【学习示范】理解产品经理职责与能力模型",
         description: "搞清楚产品经理不是画原型的人，而是发现问题、定义方案、推动落地的人。",
         assignee: "我",
         category: "产品认知",
@@ -730,6 +740,9 @@ const PROJECT_TEMPLATES = [
         color: "blue",
         tags: ["入门", "能力模型"],
         estimate: "1.5",
+        criteria: "1. 列出产品经理的日常工作流核心产出。\n2. 对比自己当前的优势和技能短板，制定出接下来 4 周的刻意练习方向。\n3. 说明产品经理与交互设计师在日常合作中的核心分工边界。",
+        pitfall: "避坑：不要以为PM只要把原型画好看就行，最核心的是方案解决什么问题，给用户带来什么实际价值。不要沦为‘原型画图仔’。",
+        suggestion: "【改成你的任务】：双击标题修改为‘自查我的产品经理能力模型与短板’，结合自身经历列出你最需补充的核心技能。",
         subtasks: [
           { title: "梳理 PM 日常工作内容", done: true },
           { title: "列出自己当前短板", done: true },
@@ -737,9 +750,9 @@ const PROJECT_TEMPLATES = [
         ]
       },
       {
-        column: "mastered",
+        column: "done",
         swimlane: "foundation",
-        title: "建立产品术语清单",
+        title: "【学习示范】建立常用产品术语清单",
         description: "把需求池、PRD、MVP、用户旅程、验收标准、埋点等高频概念整理成自己的语言。",
         assignee: "我",
         category: "基础知识",
@@ -747,292 +760,31 @@ const PROJECT_TEMPLATES = [
         color: "gray",
         tags: ["术语", "基础"],
         estimate: "1",
+        criteria: "1. 至少收集 20 个产品研发高频黑话或术语。\n2. 用大白话（非学术定义）为每个术语写一句最易懂的解释。\n3. 分享给身边的开发，询问是否有偏见或理解不一致之处。",
+        pitfall: "易错：千万别照抄百度百科百科式说教定义，一定要用你和外行沟通时能一句话讲明白的大白话，这能锻炼你的沟通降维能力。",
+        suggestion: "【改成你的任务】：双击标题修改为‘整理我自己的Kanboard常用黑话与术语库’，结合本原型定义的 10 个词汇写下初版解读。",
         subtasks: [
           { title: "整理 20 个产品术语", done: true },
           { title: "为每个术语写一句解释", done: true }
         ]
       },
       {
-        column: "case",
-        swimlane: "research",
-        title: "拆解 Kanboard 的核心用户路径",
-        description: "从新建项目到创建任务、拖动卡片，画出用户第一次使用 Kanboard 的完整路径。",
-        assignee: "我",
-        category: "产品体验",
-        priority: "高",
-        color: "green",
-        tags: ["体验拆解", "Kanboard"],
-        estimate: "2",
-        subtasks: [
-          { title: "记录关键页面", done: true },
-          { title: "标出新手卡点", done: false },
-          { title: "输出路径图", done: false }
-        ]
-      },
-      {
-        column: "practice",
-        swimlane: "research",
-        title: "完成一次用户访谈练习",
-        description: "围绕“新手如何拆任务”访谈 1-2 个同学或朋友，练习从回答里提炼真实问题。",
-        assignee: "我",
-        category: "用户研究",
-        priority: "高",
-        color: "amber",
-        tags: ["访谈", "用户研究"],
-        estimate: "3",
-        subtasks: [
-          { title: "准备访谈提纲", done: true },
-          { title: "完成访谈记录", done: false },
-          { title: "提炼 3 个痛点", done: false }
-        ]
-      },
-      {
-        column: "practice",
-        swimlane: "analysis",
-        title: "整理需求池并做优先级排序",
-        description: "把调研、竞品和自己的体验问题统一放入需求池，再用影响范围和实现成本排序。",
-        assignee: "我",
-        category: "需求分析",
-        priority: "高",
-        color: "rose",
-        tags: ["需求池", "优先级"],
-        estimate: "2",
-        subtasks: [
-          { title: "合并重复需求", done: false },
-          { title: "标注 P0/P1/P2", done: false },
-          { title: "说明排序理由", done: false }
-        ]
-      },
-      {
-        column: "practice",
-        swimlane: "solution",
-        title: "写出第一版 PRD 框架",
-        description: "用背景、目标、用户场景、功能范围、流程、验收标准组织一份可讨论的产品文档。",
-        assignee: "我",
-        category: "PRD",
-        priority: "高",
-        color: "blue",
-        tags: ["PRD", "产品文档"],
-        estimate: "4",
-        subtasks: [
-          { title: "写清楚问题背景", done: true },
-          { title: "列出 P0 功能范围", done: false },
-          { title: "补充验收标准", done: false }
-        ]
-      },
-      {
-        column: "practice",
-        swimlane: "solution",
-        title: "绘制低保真原型与页面流程",
-        description: "先用静态页面或 Figma 低保真表达关键路径，再进入高保真视觉细化。",
-        assignee: "我",
-        category: "原型",
-        priority: "中",
-        color: "green",
-        tags: ["原型", "流程"],
-        estimate: "3",
-        subtasks: [
-          { title: "画出首页状态", done: false },
-          { title: "画出新建项目路径", done: false },
-          { title: "标注关键交互", done: false }
-        ]
-      },
-      {
-        column: "learn",
-        swimlane: "growth",
-        title: "设计数据指标与埋点问题",
-        description: "练习从目标反推指标，例如创建完成率、模板使用率、任务创建数和次日回访。",
-        assignee: "我",
-        category: "数据分析",
-        priority: "中",
-        color: "amber",
-        tags: ["指标", "埋点"],
-        estimate: "2",
-        subtasks: [
-          { title: "定义北极星指标", done: false },
-          { title: "列出 5 个过程指标", done: false },
-          { title: "说明每个指标的用途", done: false }
-        ]
-      },
-      {
-        column: "plan",
-        swimlane: "delivery",
-        title: "模拟一次研发评审与排期沟通",
-        description: "把需求讲给开发视角的人听，练习解释价值、边界、依赖和取舍。",
-        assignee: "我",
-        category: "项目协作",
-        priority: "中",
-        color: "rose",
-        tags: ["评审", "沟通"],
-        estimate: "2",
-        subtasks: [
-          { title: "准备评审材料", done: false },
-          { title: "列出可能被问到的问题", done: false },
-          { title: "记录评审修改点", done: false }
-        ]
-      },
-      {
-        column: "plan",
-        swimlane: "delivery",
-        title: "编写测试验收清单",
-        description: "把功能是否完成转成可检查的验收项，练习从 PM 视角保障交付质量。",
-        assignee: "我",
-        category: "测试验收",
-        priority: "中",
-        color: "blue",
-        tags: ["验收", "测试"],
-        estimate: "1.5",
-        subtasks: [
-          { title: "写出核心流程验收项", done: false },
-          { title: "补充异常状态", done: false },
-          { title: "确认移动端可用性", done: false }
-        ]
-      },
-      {
-        column: "review",
-        swimlane: "growth",
-        title: "复盘上线运营和用户反馈",
-        description: "练习用上线结果反推下一轮需求，而不是把发布当成项目终点。",
-        assignee: "我",
-        category: "复盘",
-        priority: "中",
-        color: "gray",
-        tags: ["上线", "复盘"],
-        estimate: "2",
-        subtasks: [
-          { title: "记录上线目标", done: false },
-          { title: "收集反馈问题", done: false },
-          { title: "拆出下一轮优化点", done: false }
-        ]
-      },
-      {
-        column: "plan",
-        swimlane: "portfolio",
-        title: "整理产品作品集故事线",
-        description: "把这个 Kanboard 实战项目整理成作品集表达：问题、洞察、方案、验证和迭代。",
-        assignee: "我",
-        category: "作品集",
-        priority: "高",
-        color: "green",
-        tags: ["作品集", "求职"],
-        estimate: "4",
-        subtasks: [
-          { title: "整理项目背景", done: false },
-          { title: "截图关键版本", done: false },
-          { title: "写出项目复盘", done: false }
-        ]
-      },
-      {
-        column: "learn",
+        column: "doing",
         swimlane: "foundation",
-        title: "学习经典产品方法论",
-        description: "理解用户价值、业务价值、MVP、北极星指标、AARRR 和增长漏斗等常用方法。",
+        title: "【学习示范】整理第一章的知识点脑图",
+        description: "阅读第一章节的核心理论，并亲自动手使用思维导图工具画出知识框架，记录感到困惑的 3 个技术点。",
         assignee: "我",
-        category: "方法论",
-        priority: "中",
-        color: "amber",
-        tags: ["方法论", "PM"],
-        estimate: "2",
-        subtasks: [
-          { title: "整理 5 个常用模型", done: false },
-          { title: "给每个模型配一个例子", done: false }
-        ]
-      },
-      {
-        column: "case",
-        swimlane: "research",
-        title: "绘制用户画像与用户旅程",
-        description: "把访谈和观察结果沉淀成用户画像，再画出用户从触发到完成任务的路径。",
-        assignee: "我",
-        category: "用户研究",
-        priority: "中",
-        color: "blue",
-        tags: ["画像", "旅程"],
-        estimate: "2",
-        subtasks: [
-          { title: "定义目标用户", done: false },
-          { title: "画出用户旅程阶段", done: false }
-        ]
-      },
-      {
-        column: "case",
-        swimlane: "analysis",
-        title: "完成竞品分析报告",
-        description: "选择 3 个同类产品，对比核心路径、信息架构、优势缺口和可借鉴点。",
-        assignee: "我",
-        category: "竞品分析",
+        category: "脑图",
         priority: "高",
-        color: "gray",
-        tags: ["竞品", "分析"],
-        estimate: "3",
-        subtasks: [
-          { title: "选择竞品对象", done: false },
-          { title: "截图关键路径", done: false },
-          { title: "输出对比结论", done: false }
-        ]
-      },
-      {
-        column: "learn",
-        swimlane: "analysis",
-        title: "练习定义 MVP 与不做范围",
-        description: "把需求拆成必须做、可以后置、明确不做三类，训练产品边界感。",
-        assignee: "我",
-        category: "MVP",
-        priority: "高",
-        color: "rose",
-        tags: ["MVP", "范围"],
-        estimate: "1.5",
-        subtasks: [
-          { title: "列出 P0 功能", done: false },
-          { title: "说明暂不做原因", done: false }
-        ]
-      },
-      {
-        column: "practice",
-        swimlane: "delivery",
-        title: "制定上线检查与风险预案",
-        description: "练习从发布窗口、灰度范围、回滚方案、客服话术和监控指标检查上线准备。",
-        assignee: "我",
-        category: "上线",
-        priority: "中",
         color: "green",
-        tags: ["上线", "风险"],
-        estimate: "2",
+        tags: ["脑图", "难点攻关"],
+        estimate: "3",
+        criteria: "1. 用思维导图输出第一章结构脑图，分支至少包含 3 层细分概念。\n2. 标记出自己感到生疏或难懂 of 3 个概念并写下搜寻到的解析方案。\n3. 保存在本地并附在任务卡片附件中。",
+        pitfall: "避坑：光看书不画图非常容易产生‘我以为我懂了’的幻觉。只有将脑图画到第三层分支时，你才会在卡住的节点暴露真实盲区。",
+        suggestion: "【改成你的任务】：双击标题修改为‘整理 [你要学的书名] 第一章脑图’，并把实际使用的脑图工具（如 XMind/GitMind）写在描述中。",
         subtasks: [
-          { title: "列出上线前检查项", done: false },
-          { title: "准备回滚方案", done: false }
-        ]
-      },
-      {
-        column: "review",
-        swimlane: "portfolio",
-        title: "每周复盘学习产出",
-        description: "每周检查完成了哪些卡片、产出了哪些文档、哪些能力还停留在理解层。",
-        assignee: "我",
-        category: "复盘",
-        priority: "中",
-        color: "blue",
-        tags: ["周复盘", "成长"],
-        estimate: "1",
-        subtasks: [
-          { title: "回顾本周完成任务", done: false },
-          { title: "补齐作品集素材", done: false }
-        ]
-      },
-      {
-        column: "plan",
-        swimlane: "portfolio",
-        title: "准备产品经理面试表达",
-        description: "把项目经历整理成背景、问题、行动、结果和复盘，练习清楚讲出自己的产品判断。",
-        assignee: "我",
-        category: "面试",
-        priority: "中",
-        color: "amber",
-        tags: ["面试", "表达"],
-        estimate: "2",
-        subtasks: [
-          { title: "整理 3 个项目问题", done: false },
-          { title: "准备自我介绍", done: false }
+          { title: "完成第一章精读", done: true },
+          { title: "输出思维导图", done: false }
         ]
       }
     ]
@@ -1042,11 +794,10 @@ const PROJECT_TEMPLATES = [
     name: "求职准备项目",
     description: "适合 PM 实习/校招，把简历、作品集、投递和面试推进放到同一张看板里。",
     columns: [
-      { key: "todo", title: "待准备", wipLimit: 0 },
-      { key: "doing", title: "进行中", wipLimit: 3 },
-      { key: "sent", title: "已投递", wipLimit: 0 },
-      { key: "interview", title: "面试中", wipLimit: 0 },
-      { key: "done", title: "已完成", wipLimit: 0 }
+      { key: "todo", title: "需求调研", wipLimit: 0 },
+      { key: "doing", title: "方案设计", wipLimit: 3 },
+      { key: "testing", title: "原型制作", wipLimit: 0 },
+      { key: "done", title: "复盘迭代", wipLimit: 0 }
     ],
     swimlanes: [
       { key: "materials", title: "材料准备", description: "简历、作品集和自我介绍" },
@@ -1056,14 +807,17 @@ const PROJECT_TEMPLATES = [
       {
         column: "todo",
         swimlane: "materials",
-        title: "完善产品经理实习简历",
-        description: "突出 Kanboard 优化项目中的调研、原型和可运行 Demo。",
+        title: "【求职示范】修改简历中的项目描述为 STAR 结构",
+        description: "将简历上的“负责了后台开发”等流水账式描述，重构为 STAR 结构（情境、任务、行动、结果），突出个人在其中解决的难题。",
         assignee: "我",
         category: "简历",
         priority: "高",
         color: "blue",
         tags: ["简历"],
         estimate: "2",
+        criteria: "1. 描述中包含具体的“量化数字”（如：加载速度提升 40%、排查了 20+ 历史遗留 Bug）。\n2. 突出在资源紧张/时间有限等‘难点情境’下个人做出的核心行动与取舍。",
+        pitfall: "避坑：千万不要光写“参与了某某系统的开发”，面试官想看的是“你如何通过特定技术，解决了什么困难，取得了什么可量化的收益”。",
+        suggestion: "【改成你的任务】：双击标题，将它改为你正在优化的特定项目简历段落（如‘修改Kanboard作品简历’）。",
         subtasks: [
           { title: "补充项目背景", done: false },
           { title: "量化产出结果", done: false }
@@ -1072,26 +826,59 @@ const PROJECT_TEMPLATES = [
       {
         column: "doing",
         swimlane: "materials",
-        title: "整理 3 个作品集项目",
-        description: "每个项目保留问题、方案、过程、结果四段表达。",
+        title: "【求职示范】整理 3 个作品集案例的亮点故事",
+        description: "每个项目保留问题、方案、过程、结果四段表达，以 PPT/PDF 形式整理，并录制 5 分钟演示讲解视频。",
         assignee: "我",
         category: "作品集",
         priority: "高",
         color: "green",
         tags: ["作品集"],
-        estimate: "4"
+        estimate: "4",
+        criteria: "1. 每一个项目亮点都要有一页纸的‘思考链条图’支撑。\n2. 项目演示视频讲解清晰、逻辑没有跳跃，能够让不懂此业务的非技术人员听懂。",
+        pitfall: "易错：避免陷入单纯罗列设计稿和原型的‘交互流水账’，必须有你前期的背景调研（为什么做它）和后期的测试数据证明。",
+        suggestion: "【改成你的任务】：修改标题为‘整理我的 [项目名] 亮点案例’，将产出的作品集 PDF 链接贴在卡片描述中。",
+        subtasks: [
+          { title: "专心整理案例结构", done: false },
+          { title: "录制演示讲解视频", done: false }
+        ]
       },
       {
-        column: "sent",
-        swimlane: "applications",
-        title: "投递 5 个目标岗位",
-        description: "记录公司、岗位、JD 关键词和下一步动作。",
+        column: "testing",
+        swimlane: "materials",
+        title: "【求职示范】搭建在线个人静态作品集网站",
+        description: "用纯 HTML/CSS 快速拼装一个个人作品展示页，列出你的核心得意项目，附带在线演示链接与简历下载按钮。",
         assignee: "我",
-        category: "投递",
+        category: "原型开发",
         priority: "中",
         color: "amber",
-        tags: ["投递"],
-        estimate: "1"
+        tags: ["作品集", "原型开发"],
+        estimate: "8",
+        criteria: "1. 网站页面能本地双击正常渲染且自适应手机视口，无死链接。\n2. 支持在明显位置一键下载你的 PDF 简历。",
+        pitfall: "易错：作品集最关键的是信息排版清晰度，不要花费过多时间在复杂的炫酷 3D 动效上，导致反客为主。",
+        suggestion: "【改成你的任务】：将标题改为你作品集的具体存放位置（如“【作品集】部署到 GitHub Pages”）。",
+        subtasks: [
+          { title: "准备 HTML 框架", done: false },
+          { title: "配置 Github Pages 托管", done: false }
+        ]
+      },
+      {
+        column: "done",
+        swimlane: "applications",
+        title: "【求职示范】对着镜子进行自我介绍录音练习",
+        description: "录下 3 分钟的口头自我介绍，反复播放，检查是否有语气词过多、逻辑混乱或描述不连贯的卡顿点。",
+        assignee: "我",
+        category: "模拟面试",
+        priority: "低",
+        color: "gray",
+        tags: ["模拟面试", "复盘反思"],
+        estimate: "2",
+        criteria: "1. 确保录音中自我介绍重点突出，无大段卡壳，废话字数（如 嗯、啊、那个）占比小于 10%。\n2. 能在 3 分钟内完整、生动地将个人核心卖点传达清楚。",
+        pitfall: "避坑：自我介绍不要重复念简历，而是要用 3 句话总结：“我是谁”、“我最擅长什么核心技术”、“我能为你的公司带来什么独特价值”。",
+        suggestion: "【改成你的任务】：将标题改为“【面试准备】录制 [某公司名] 自我介绍”。",
+        subtasks: [
+          { title: "录音初版自我介绍", done: true },
+          { title: "听录音并修改措辞", done: true }
+        ]
       }
     ]
   },
@@ -1100,11 +887,10 @@ const PROJECT_TEMPLATES = [
     name: "小团队迭代",
     description: "适合 2-5 人小团队管理一轮需求，从需求池推进到发布验收。",
     columns: [
-      { key: "backlog", title: "需求池", wipLimit: 0 },
-      { key: "design", title: "设计中", wipLimit: 2 },
-      { key: "dev", title: "开发中", wipLimit: 3 },
-      { key: "test", title: "测试中", wipLimit: 2 },
-      { key: "done", title: "已发布", wipLimit: 0 }
+      { key: "todo", title: "待办", wipLimit: 0 },
+      { key: "doing", title: "进行中", wipLimit: 3 },
+      { key: "testing", title: "待评审", wipLimit: 2 },
+      { key: "done", title: "已完成", wipLimit: 0 }
     ],
     swimlanes: [
       { key: "product", title: "产品与设计", description: "需求、交互和验收标准" },
@@ -1112,40 +898,49 @@ const PROJECT_TEMPLATES = [
     ],
     cards: [
       {
-        column: "backlog",
+        column: "todo",
         swimlane: "product",
-        title: "定义新手创建向导 P0 范围",
-        description: "明确本轮只做模板选择、预览和生成项目。",
+        title: "【迭代示范】Sprint 01 开发排期与工时测算",
+        description: "召集开发与测试，对本次迭代的需求卡片进行排期估算，并确定本次 Sprint 的最终冻结上线日期。",
         assignee: "PM",
-        category: "需求",
+        category: "会议沟通",
         priority: "高",
         color: "blue",
-        tags: ["P0"],
-        estimate: "2"
+        tags: ["迭代规划", "会议沟通"],
+        estimate: "2",
+        criteria: "1. 所有的看板卡片均已填入了具体的“预估工时”，并指派了明确的负责人。\n2. 会后输出 Sprint 排期表，确定上线冻结窗口。",
+        pitfall: "避坑：估工时要克制乐观主义，请务必预留出至少 20% 的时间缓冲区以应对后期冒出来的回归缺陷。",
+        suggestion: "【改成你的任务】：修改标题为“【迭代】规划 [项目名字] 开发排期”。"
       },
       {
-        column: "design",
-        swimlane: "product",
-        title: "绘制创建向导低保真流程",
-        description: "空白项目 / 从模板开始 / 模板预览 / 创建完成。",
-        assignee: "设计",
-        category: "原型",
-        priority: "中",
-        color: "green",
-        tags: ["流程"],
-        estimate: "3"
-      },
-      {
-        column: "dev",
+        column: "doing",
         swimlane: "engineering",
-        title: "实现模板生成逻辑",
-        description: "从模板数据生成列、泳道和示例任务卡。",
+        title: "【迭代示范】开发登录页面表单的前端实时校验",
+        description: "实现用户输入邮箱、手机号时的前端实时格式校验与非空检查，校验未通过前禁用“登录”提交按钮。",
         assignee: "开发",
-        category: "实现",
+        category: "功能开发",
         priority: "高",
         color: "rose",
-        tags: ["前端"],
-        estimate: "4"
+        tags: ["功能开发", "JS前端"],
+        estimate: "4",
+        criteria: "1. 输入非法邮箱时输入框边框变红并提示红字，控制台无报错。\n2. 输入有效内容后登录按钮状态自动由 disabled 变为 active。",
+        pitfall: "避坑：不要随意创造非标样式，应当直接复用设计系统里的 Input 组件标准状态，保持视觉统一。",
+        suggestion: "【改成你的任务】：修改标题为你要写的具体前端模块（如‘实现Checklist侧边面板’）。"
+      },
+      {
+        column: "testing",
+        swimlane: "product",
+        title: "【迭代示范】产品经理与设计师视觉还原度验收",
+        description: "对照 Figma 像素设计原图检查已经实现的前端页面，微调间距与字体细节，找出并修复布局跑偏。",
+        assignee: "设计",
+        category: "设计验收",
+        priority: "中",
+        color: "green",
+        tags: ["设计验收", "视觉QA"],
+        estimate: "1.5",
+        criteria: "1. 页面视觉还原度高度契合设计稿，且在 390px 视口下回归，无任何卡片重叠。\n2. 各元素对齐线、圆角、字号均符合 Design Tokens 字典。",
+        pitfall: "易错：还原度验收不要只在你的大显示器上点点，请必须开启浏览器开发者工具，检查移动端下的真实折行状态。",
+        suggestion: "【改成你的任务】：将标题修改为你要进行还原度验收的具体组件名。"
       }
     ]
   },
@@ -1154,52 +949,60 @@ const PROJECT_TEMPLATES = [
     name: "Bug 跟踪",
     description: "适合个人开发者或小团队跟踪问题、修复、验证和关闭。",
     columns: [
-      { key: "reported", title: "已报告", wipLimit: 0 },
-      { key: "triage", title: "待确认", wipLimit: 0 },
-      { key: "fixing", title: "修复中", wipLimit: 3 },
-      { key: "verify", title: "待验证", wipLimit: 0 },
-      { key: "closed", title: "已关闭", wipLimit: 0 }
+      { key: "todo", title: "待确认", wipLimit: 0 },
+      { key: "doing", title: "修复中", wipLimit: 3 },
+      { key: "testing", title: "待验证", wipLimit: 0 },
+      { key: "done", title: "已关闭", wipLimit: 0 }
     ],
     swimlanes: [
       { key: "frontend", title: "前端问题", description: "页面、交互和样式问题" },
-      { key: "data", title: "数据问题", description: "保存、状态和字段问题" }
+      { key: "data", title: "数据问题", description: "保存、状态 and 运行环境问题" }
     ],
     cards: [
       {
-        column: "reported",
+        column: "todo",
         swimlane: "frontend",
-        title: "拖拽后卡片状态未及时刷新",
-        description: "复现步骤：拖动任务到另一个列后，指标数字需要立即更新。",
+        title: "【Bug示范】用户点击登录按钮控制台抛出未捕获异常",
+        description: "有用户上报在 Chrome 102 浏览器下输入正确账号密码点击登录无反应。需要去本地复现此情况并抓取日志。",
         assignee: "开发",
-        category: "交互",
+        category: "Bug复现",
         priority: "高",
         color: "rose",
-        tags: ["Bug"],
-        estimate: "1"
+        tags: ["Bug复现", "登录问题"],
+        estimate: "1",
+        criteria: "1. 定位出具体的异常触发链路（如变量名拼写错误）。\n2. 写出稳定的复现步骤并附上错误 Call Stack 日志。",
+        pitfall: "易错：在没有找到稳定复现路径前，不要急于去修改源码，防止把温常性 Bug 掩盖成更难解的悬案。",
+        suggestion: "【改成你的任务】：将标题改为你收到的真实用户缺陷反馈（如“【Bug】修改头像报错”）。"
       },
       {
-        column: "triage",
+        column: "doing",
         swimlane: "data",
-        title: "刷新后评论是否正确保存",
-        description: "验证 localStorage 中评论、子任务、活动记录是否完整保存。",
-        assignee: "测试",
-        category: "数据",
-        priority: "中",
+        title: "【Bug示范】修正 app.js 中的空指针调用缺陷",
+        description: "修复由于未登录状态下访问 user.profile 导致的空指针崩溃。需要在访问变量前加入防御性的 Null 校验。",
+        assignee: "开发",
+        category: "代码修复",
+        priority: "高",
         color: "amber",
-        tags: ["验证"],
-        estimate: "1.5"
+        tags: ["代码修复", "异常处理"],
+        estimate: "2",
+        criteria: "1. 修复代码合入主分支，本地在未登录状态下点击相同位置，页面不再白屏且控制台无报错。\n2. 新增防御断言或可选链 `?.` 语法保护。",
+        pitfall: "避坑：全局修改变量名或重构公共方法时，务必全局搜索引用，防止引发其他地方 of 回归缺陷。",
+        suggestion: "【改成你的任务】：双击标题改为你当前要改写的具体修复代码段。"
       },
       {
-        column: "verify",
+        column: "testing",
         swimlane: "frontend",
-        title: "小屏下模板选择区域是否可用",
-        description: "验证移动端模板列表和预览是否纵向排列。",
-        assignee: "设计",
-        category: "响应式",
+        title: "【Bug示范】在 390px 下回归测试登录流状态",
+        description: "对已解决的登录 Bug 在移动端模拟视口下进行多路回归测验，确保修复了空指针后没有引发移动端样式溢出。",
+        assignee: "测试",
+        category: "回归测试",
         priority: "中",
         color: "gray",
-        tags: ["UI"],
-        estimate: "1"
+        tags: ["回归测试", "验收通过"],
+        estimate: "1",
+        criteria: "1. 多次测试下登录表单输入与弹窗流转正常，且 390px 下看板自适应排版无横向滚动条。\n2. 校验错误文案位置正确、无被遮挡错乱。",
+        pitfall: "易错：回归时不能光测“成功”的用例，还要故意输入错误密码等“异常流”，检查错误校验依然有效。",
+        suggestion: "【改成你的任务】：将标题改为你将要进行回归测试验证的功能模块名。"
       }
     ]
   }
@@ -1761,7 +1564,11 @@ const els = {
   addCommentBtn: document.querySelector("#addCommentBtn"),
   commentList: document.querySelector("#commentList"),
   activityList: document.querySelector("#activityList"),
-  deleteCardBtn: document.querySelector("#deleteCardBtn")
+  deleteCardBtn: document.querySelector("#deleteCardBtn"),
+  onboardingQualityHelper: document.querySelector("#onboardingQualityHelper"),
+  onboardingCriteriaText: document.querySelector("#onboardingCriteriaText"),
+  onboardingPitfallText: document.querySelector("#onboardingPitfallText"),
+  onboardingSuggestionText: document.querySelector("#onboardingSuggestionText")
 };
 
 document.querySelector("#newProjectBtn").addEventListener("click", () => openProjectDialog());
@@ -2237,6 +2044,9 @@ document.addEventListener("keydown", handleKeyboardShortcuts);
 normalizeState();
 persist();
 render();
+initFieldTooltips();
+window.addEventListener('resize', renderOnboardingChecklist);
+initFirstActionGuidanceObserver();
 
 function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -3203,6 +3013,9 @@ function makeCard(options) {
     swimlaneId: options.swimlaneId || "",
     isClosed: Boolean(options.isClosed),
     isExample: Boolean(options.isExample),
+    criteria: options.criteria || "",
+    pitfall: options.pitfall || "",
+    suggestion: options.suggestion || "",
     links: options.links || [],
     subtasks: (options.subtasks || []).map((task) => ({ id: uid("subtask"), title: task.title, done: Boolean(task.done) })),
     comments: options.comments || [],
@@ -3884,6 +3697,12 @@ function render() {
   renderMetrics();
   renderViewControls();
   renderBoard();
+  
+  // Render onboarding checklist
+  renderOnboardingChecklist();
+
+  // Render first action guidance
+  renderFirstActionGuidance();
 }
 
 function renderProjects() {
@@ -4704,9 +4523,26 @@ function createCardElement(card, columnId, swimlaneId) {
   cardEl.dataset.cardId = card.id;
   cardEl.dataset.columnId = columnId;
   cardEl.dataset.swimlaneId = swimlaneId;
+
+  const project = activeProject();
+  const isFirstCard = project && isFirstCardOfProject(project, card.id);
+  const guidanceState = project ? getGuidanceState(project.id) : null;
+  const showEditGuidance = isFirstCard && guidanceState && (guidanceState.editCard === "not_seen" || guidanceState.editCard === "shown");
+
+  const editDotHtml = showEditGuidance ? `<span class="first-action-guidance-edit-dot" title="双击编辑此任务"></span>` : "";
+  let inlineStripHtml = "";
+  if (showEditGuidance) {
+    inlineStripHtml = `
+      <div class="first-action-guidance-inline">
+        <span class="first-action-guidance-inline-text">双击可修改此示例卡</span>
+        <button class="first-action-guidance-inline-close" type="button" aria-label="关闭">×</button>
+      </div>
+    `;
+  }
+
   cardEl.innerHTML = `
     <div class="card-topline">
-      <h4>${escapeHtml(card.title)}${card.isExample ? `<span class="example-label" title="模板生成的示例任务，可编辑或删除">示例</span>` : ""}${card.isClosed ? `<span class="closed-label">已关闭</span>` : ""}</h4>
+      <h4>${editDotHtml}${escapeHtml(card.title)}${card.isExample ? `<span class="example-label" title="模板生成的示例任务，可编辑或删除">示例</span>` : ""}${card.isClosed ? `<span class="closed-label">已关闭</span>` : ""}</h4>
       <div class="card-sort">
         <button class="mini-button" type="button" data-action="move-up" aria-label="上移">↑</button>
         <button class="mini-button" type="button" data-action="move-down" aria-label="下移">↓</button>
@@ -4737,6 +4573,7 @@ function createCardElement(card, columnId, swimlaneId) {
       ${card.tags?.length && !isCompact ? `<div class="tag-row">${card.tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}</div>` : ""}
       ${card.subtasks?.length ? `<div class="progress-bar" title="子任务 ${progress.done}/${progress.total}"><span style="width: ${progress.percent}%"></span></div>` : ""}
     ` : ""}
+    ${inlineStripHtml}
   `;
 
   cardEl.querySelector('[data-action="move-up"]').addEventListener("click", (event) => {
@@ -4747,32 +4584,236 @@ function createCardElement(card, columnId, swimlaneId) {
     event.stopPropagation();
     moveCardWithinLane(columnId, card.id, 1);
   });
-  cardEl.querySelector(".board-menu summary").addEventListener("click", (event) => event.stopPropagation());
+
+  cardEl.querySelector(".board-menu summary").addEventListener("click", (event) => {
+    event.stopPropagation();
+    const projectId = state.activeProjectId;
+    if (projectId && shouldShowGuidance(projectId)) {
+      const guidanceState = getGuidanceState(projectId);
+      if (guidanceState.taskMenu === "not_seen" || guidanceState.taskMenu === "shown") {
+        const detailsEl = cardEl.querySelector(".board-menu");
+        const isOpening = !detailsEl.hasAttribute("open");
+        if (isOpening) {
+          if (!isGuidanceSuppressed()) {
+            setTimeout(() => {
+              const popover = showPopover(detailsEl, "这里还有复制、关闭、移动等更多操作。", "right", "taskMenu", () => {
+                guidanceState.taskMenu = "dismissed";
+                guidanceState.updatedAt = new Date().toISOString();
+                saveGuidanceState(projectId, guidanceState);
+                trackActivationEvent("first_action_guidance_dismissed", { projectId, field: "taskMenu" });
+              });
+              if (popover) {
+                popover.dataset.guidanceType = "taskMenu";
+                if (guidanceState.taskMenu === "not_seen") {
+                  guidanceState.taskMenu = "shown";
+                  guidanceState.updatedAt = new Date().toISOString();
+                  saveGuidanceState(projectId, guidanceState);
+                }
+              }
+            }, 50);
+          }
+        } else {
+          destroyActivePopover();
+          if (guidanceState.taskMenu === "shown" || guidanceState.taskMenu === "not_seen") {
+            guidanceState.taskMenu = "completed";
+            guidanceState.updatedAt = new Date().toISOString();
+            saveGuidanceState(projectId, guidanceState);
+            trackActivationEvent("first_action_guidance_completed", { projectId, field: "taskMenu" });
+          }
+        }
+      }
+    }
+  });
+
   cardEl.querySelector('[data-action="edit-card"]').addEventListener("click", (event) => {
     event.stopPropagation();
     closeBoardMenus();
+    completeTaskMenuGuidance();
     openCardDialog(columnId, card.id, swimlaneId);
   });
   cardEl.querySelector('[data-action="duplicate-card"]').addEventListener("click", (event) => {
     event.stopPropagation();
+    completeTaskMenuGuidance();
     duplicateCardFromBoard(card.id);
   });
   cardEl.querySelector('[data-action="toggle-card"]').addEventListener("click", (event) => {
     event.stopPropagation();
+    completeTaskMenuGuidance();
     toggleCardClosedFromBoard(card.id);
   });
+
   cardEl.addEventListener("click", () => openCardDialog(columnId, card.id, swimlaneId));
+
+  cardEl.addEventListener("dblclick", () => {
+    const projectId = state.activeProjectId;
+    if (projectId && isFirstCardOfProject(activeProject(), card.id)) {
+      const guidanceState = getGuidanceState(projectId);
+      if (guidanceState.editCard === "not_seen" || guidanceState.editCard === "shown") {
+        guidanceState.editCard = "completed";
+        guidanceState.updatedAt = new Date().toISOString();
+        saveGuidanceState(projectId, guidanceState);
+        trackActivationEvent("first_action_guidance_completed", { projectId, field: "editCard" });
+        const dot = cardEl.querySelector(".first-action-guidance-edit-dot");
+        if (dot) dot.remove();
+        const strip = cardEl.querySelector(".first-action-guidance-inline");
+        if (strip) strip.remove();
+        destroyActivePopover();
+      }
+    }
+  });
+
   cardEl.addEventListener("dragstart", (event) => {
     draggedCard = { columnId, cardId: card.id, swimlaneId };
     cardEl.classList.add("dragging");
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", card.id);
+
+    const projectId = state.activeProjectId;
+    if (projectId) {
+      const guidanceState = getGuidanceState(projectId);
+      let stateChanged = false;
+      if (guidanceState.dragCard === "not_seen" || guidanceState.dragCard === "shown") {
+        guidanceState.dragCard = "completed";
+        guidanceState.updatedAt = new Date().toISOString();
+        trackActivationEvent("first_action_guidance_completed", { projectId, field: "dragCard" });
+        stateChanged = true;
+      }
+      if (isFirstCardOfProject(activeProject(), card.id) && 
+          (guidanceState.editCard === "not_seen" || guidanceState.editCard === "shown")) {
+        guidanceState.editCard = "completed";
+        guidanceState.updatedAt = new Date().toISOString();
+        trackActivationEvent("first_action_guidance_completed", { projectId, field: "editCard" });
+        stateChanged = true;
+        const dot = cardEl.querySelector(".first-action-guidance-edit-dot");
+        if (dot) dot.remove();
+        const strip = cardEl.querySelector(".first-action-guidance-inline");
+        if (strip) strip.remove();
+      }
+      if (stateChanged) {
+        saveGuidanceState(projectId, guidanceState);
+      }
+      destroyActivePopover();
+    }
   });
+
   cardEl.addEventListener("dragend", () => {
     draggedCard = null;
     cardEl.classList.remove("dragging");
     document.querySelectorAll(".column.drop-target").forEach((el) => el.classList.remove("drop-target"));
   });
+
+  if (isFirstCard && guidanceState && (guidanceState.dragCard === "not_seen" || guidanceState.dragCard === "shown")) {
+    let hoverTimeout = null;
+    
+    const startHoverTimer = () => {
+      if (window.innerWidth <= 480) return;
+      if (isGuidanceSuppressed()) return;
+      if (guidanceState.dragCard === "dismissed" || guidanceState.dragCard === "completed") return;
+      if (activePopoverElement && activePopoverElement.dataset.guidanceType === "dragCard") return;
+
+      if (!hoverTimeout) {
+        hoverTimeout = setTimeout(() => {
+          if (isGuidanceSuppressed()) return;
+          const popover = showPopover(cardEl, "试着把这个任务拖拽到‘进行中’或者其他列。", "bottom", "dragCard", () => {
+            guidanceState.dragCard = "dismissed";
+            guidanceState.updatedAt = new Date().toISOString();
+            saveGuidanceState(project.id, guidanceState);
+            trackActivationEvent("first_action_guidance_dismissed", { projectId: project.id, field: "dragCard" });
+          });
+          if (popover) {
+            popover.dataset.guidanceType = "dragCard";
+            if (guidanceState.dragCard === "not_seen") {
+              guidanceState.dragCard = "shown";
+              guidanceState.updatedAt = new Date().toISOString();
+              saveGuidanceState(project.id, guidanceState);
+            }
+          }
+        }, 800);
+      }
+    };
+    
+    const clearHoverTimer = () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        hoverTimeout = null;
+      }
+    };
+
+    cardEl.addEventListener("mouseenter", startHoverTimer);
+    cardEl.addEventListener("focus", startHoverTimer);
+    cardEl.addEventListener("mouseleave", clearHoverTimer);
+    cardEl.addEventListener("blur", clearHoverTimer);
+  }
+
+  if (showEditGuidance) {
+    setTimeout(() => {
+      const dotEl = cardEl.querySelector(".first-action-guidance-edit-dot");
+      if (dotEl) {
+        dotEl.tabIndex = 0;
+        let editHoverTimeout = null;
+        
+        const showEditPopover = () => {
+          if (window.innerWidth <= 480) return;
+          if (isGuidanceSuppressed()) return;
+          if (guidanceState.editCard === "dismissed" || guidanceState.editCard === "completed") return;
+          if (activePopoverElement && activePopoverElement.dataset.guidanceType === "editCard") return;
+
+          if (!editHoverTimeout) {
+            editHoverTimeout = setTimeout(() => {
+              if (isGuidanceSuppressed()) return;
+              const popover = showPopover(dotEl, "双击可把示例卡改成你的真实任务。", "right", "editCard", () => {
+                guidanceState.editCard = "dismissed";
+                guidanceState.updatedAt = new Date().toISOString();
+                saveGuidanceState(project.id, guidanceState);
+                trackActivationEvent("first_action_guidance_dismissed", { projectId: project.id, field: "editCard" });
+              });
+              if (popover) {
+                popover.dataset.guidanceType = "editCard";
+                if (guidanceState.editCard === "not_seen") {
+                  guidanceState.editCard = "shown";
+                  guidanceState.updatedAt = new Date().toISOString();
+                  saveGuidanceState(project.id, guidanceState);
+                }
+              }
+            }, 300);
+          }
+        };
+        
+        const clearEditHover = () => {
+          if (editHoverTimeout) {
+            clearTimeout(editHoverTimeout);
+            editHoverTimeout = null;
+          }
+        };
+
+        dotEl.addEventListener("mouseenter", showEditPopover);
+        dotEl.addEventListener("focus", showEditPopover);
+        dotEl.addEventListener("mouseleave", clearEditHover);
+        dotEl.addEventListener("blur", clearEditHover);
+      }
+
+      const closeBtn = cardEl.querySelector(".first-action-guidance-inline-close");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const pId = state.activeProjectId;
+          if (pId) {
+            const gState = getGuidanceState(pId);
+            gState.editCard = "dismissed";
+            gState.updatedAt = new Date().toISOString();
+            saveGuidanceState(pId, gState);
+            trackActivationEvent("first_action_guidance_dismissed", { projectId: pId, field: "editCard" });
+            const dot = cardEl.querySelector(".first-action-guidance-edit-dot");
+            if (dot) dot.remove();
+            const strip = cardEl.querySelector(".first-action-guidance-inline");
+            if (strip) strip.remove();
+            destroyActivePopover();
+          }
+        });
+      }
+    }, 0);
+  }
+
   return cardEl;
 }
 
@@ -5050,17 +5091,40 @@ function saveProjectFromDialog(event) {
     return;
   }
 
+  setCreateButtonLoading(true);
+
   if (editingProjectId) {
     const project = state.projects.find((item) => item.id === editingProjectId);
     project.name = name;
     project.description = els.projectDescInput.value.trim();
   } else {
     const mode = selectedProjectMode();
-    const project = mode === "template"
+    const isTemplateMode = mode === "template";
+    const project = isTemplateMode
       ? createProjectFromTemplate(name, els.projectDescInput.value.trim(), selectedTemplateId)
       : createBlankProject(name, els.projectDescInput.value.trim());
     state.projects.push(project);
     state.activeProjectId = project.id;
+
+    if (isTemplateMode) {
+      const checklistKey = `kanboard:onboarding-checklist:${project.id}`;
+      const initialChecklist = {
+        shown: true,
+        dismissed: false,
+        collapsed: false,
+        completed: {
+          editExampleCard: false,
+          dragCardRight: false,
+          createRealCard: false
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(checklistKey, JSON.stringify(initialChecklist));
+      trackActivationEvent("activation_checklist_shown", { projectId: project.id, templateName: selectedTemplateId });
+    }
+
+    showToast(`已创建：${name}`);
   }
 
   editingProjectId = null;
@@ -5068,6 +5132,8 @@ function saveProjectFromDialog(event) {
   els.projectDialog.close();
   persist();
   render();
+
+  setCreateButtonLoading(false);
 }
 
 function openProjectSettingsDialog() {
@@ -8771,6 +8837,48 @@ function openCardDialog(columnId, cardId = null, swimlaneId = null) {
   editingCard = { columnId, cardId };
   const laneId = card?.swimlaneId || swimlaneId || project.settings.defaultSwimlaneId || project.swimlanes[0].id;
 
+  if (cardId && project) {
+    const isFirstCard = isFirstCardOfProject(project, cardId);
+    if (isFirstCard) {
+      const guidanceState = getGuidanceState(project.id);
+      if (guidanceState.editCard === "not_seen" || guidanceState.editCard === "shown") {
+        guidanceState.editCard = "completed";
+        saveGuidanceState(project.id, guidanceState);
+        trackActivationEvent("first_action_guidance_completed", { projectId: project.id, field: "editCard" });
+        const cardEl = document.querySelector(`.card[data-card-id="${cardId}"]`);
+        if (cardEl) {
+          const dot = cardEl.querySelector(".first-action-guidance-edit-dot");
+          if (dot) dot.remove();
+          const strip = cardEl.querySelector(".first-action-guidance-inline");
+          if (strip) strip.remove();
+        }
+        destroyActivePopover();
+      }
+    }
+  }
+
+  // Onboarding helper card display logic
+  const helperEl = els.onboardingQualityHelper;
+  const criteriaText = els.onboardingCriteriaText;
+  const pitfallText = els.onboardingPitfallText;
+  const suggestionText = els.onboardingSuggestionText;
+
+  if (card && (card.isExample || card.criteria || card.pitfall || card.suggestion)) {
+    if (helperEl) helperEl.style.display = "block";
+    if (criteriaText) criteriaText.textContent = card.criteria || "暂无特定标准";
+    if (pitfallText) pitfallText.textContent = card.pitfall || "暂无特定避坑提示";
+    if (suggestionText) suggestionText.textContent = card.suggestion || "无";
+    if (card.isExample) {
+      trackActivationEvent("example_card_open", {
+        projectId: project.id,
+        cardId: card.id,
+        columnId: columnId
+      });
+    }
+  } else {
+    if (helperEl) helperEl.style.display = "none";
+  }
+
   els.cardDialogTitle.textContent = card ? "编辑任务" : "新增任务";
   els.cardTitleInput.value = card?.title || "";
   els.cardDescInput.value = card?.description || "";
@@ -8854,12 +8962,68 @@ function saveCardFromDialog(event) {
     updatedAt: new Date().toISOString()
   };
 
+  // Pre-save state capture for Checklist task 1
+  const isEditing = Boolean(editingCard.cardId);
+  let wasExample = false;
+  let previousTitle = "";
+  if (isEditing) {
+    const origCard = sourceColumn.cards.find((item) => item.id === editingCard.cardId);
+    if (origCard) {
+      wasExample = Boolean(origCard.isExample);
+      previousTitle = origCard.title;
+    }
+  }
+
   if (editingCard.cardId) {
     const card = sourceColumn.cards.find((item) => item.id === editingCard.cardId);
     payload.activity = addActivity(draftActivity, "更新了任务信息");
     Object.assign(card, payload);
+
+    const checkState = getChecklistState(project.id);
+    if (checkState) {
+      const cards = allCards(project);
+      const hasExamples = cards.some(c => c.isExample);
+      if (wasExample && title !== previousTitle) {
+        updateChecklistProgress(project.id, "editExampleCard", true);
+        trackActivationEvent("example_card_edit_save", {
+          projectId: project.id,
+          cardId: card.id,
+          columnId: sourceColumn.id,
+          previousTitle: previousTitle,
+          currentTitle: title
+        });
+      } else if (!hasExamples && title !== previousTitle) {
+        updateChecklistProgress(project.id, "editExampleCard", true);
+        trackActivationEvent("example_card_edit_save", {
+          projectId: project.id,
+          cardId: card.id,
+          columnId: sourceColumn.id,
+          previousTitle: previousTitle,
+          currentTitle: title,
+          isFallback: true
+        });
+      }
+    }
   } else {
     const card = makeCard(payload);
+    
+    // Check if created in first column (task 3)
+    const checkState = getChecklistState(project.id);
+    if (checkState) {
+      const isFirstColumn = project.columns[0].id === editingCard.columnId;
+      const isPlaceholder = title.includes("示范") || title.includes("占位") || title.includes("示例");
+      const isExampleCard = Boolean(card.isExample);
+      if (isFirstColumn && !isExampleCard && !isPlaceholder) {
+        updateChecklistProgress(project.id, "createRealCard", true);
+        trackActivationEvent("first_real_card_create", {
+          projectId: project.id,
+          cardId: card.id,
+          columnId: sourceColumn.id,
+          title: title
+        });
+      }
+    }
+
     card.comments = draftComments;
     card.activity = addActivity(card.activity, "添加到看板");
     sourceColumn.cards.push(card);
@@ -8871,15 +9035,44 @@ function saveCardFromDialog(event) {
   render();
 }
 
-function deleteEditingCard() {
+function performDeleteEditingCard() {
   if (!editingCard?.cardId) return;
-  if (!confirm("删除这个任务？")) return;
-  const column = activeProject().columns.find((item) => item.id === editingCard.columnId);
-  column.cards = column.cards.filter((card) => card.id !== editingCard.cardId);
+  const project = activeProject();
+  const column = project.columns.find((item) => item.id === editingCard.columnId);
+  if (!column) return;
+  const card = column.cards.find((c) => c.id === editingCard.cardId);
+  const wasExample = card?.isExample === true;
+
+  column.cards = column.cards.filter((c) => c.id !== editingCard.cardId);
+
+  if (wasExample) {
+    trackActivationEvent("example_card_delete", {
+      projectId: project.id,
+      cardId: editingCard.cardId,
+      columnId: column.id
+    });
+    const checkState = getChecklistState(project.id);
+    if (checkState) {
+      renderOnboardingChecklist();
+    }
+  }
+
   editingCard = null;
   els.cardDialog.close();
   persist();
   render();
+}
+
+function deleteEditingCard() {
+  if (!editingCard?.cardId) return;
+  
+  if (shouldInterceptFirstDelete()) {
+    interceptFirstDelete();
+    return;
+  }
+  
+  if (!confirm("删除这个任务？")) return;
+  performDeleteEditingCard();
 }
 
 function toggleEditingCardClosed() {
@@ -9156,6 +9349,19 @@ function handleColumnDrop(event) {
   movingCard.updatedAt = new Date().toISOString();
   movingCard.activity = addActivity(movingCard.activity || [], `移动到“${toColumn.title} / ${targetLane.title}”`);
   toColumn.cards.push(movingCard);
+
+  const fromColumnIndex = project.columns.indexOf(fromColumn);
+  const toColumnIndex = project.columns.indexOf(toColumn);
+  if (toColumnIndex !== -1 && fromColumnIndex !== -1 && toColumnIndex > fromColumnIndex) {
+    updateChecklistProgress(project.id, "dragCardRight", true);
+    trackActivationEvent("first_card_drag", {
+      projectId: project.id,
+      cardId: movingCard.id,
+      fromCol: fromColumn.id,
+      toCol: toColumn.id
+    });
+  }
+
   persist();
   render();
 }
@@ -9177,6 +9383,16 @@ function moveCardWithinLane(columnId, cardId, direction) {
 
 function resetDemoData() {
   if (!confirm("重置会清空当前本地演示数据，继续？")) return;
+  
+  // Clear all onboarding-checklist keys from localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith("kanboard:onboarding-checklist:")) {
+      localStorage.removeItem(key);
+      i--;
+    }
+  }
+
   state = createDemoState();
   persist();
   render();
@@ -9410,3 +9626,746 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+
+/* 新手激活 Onboarding Checklist & Tooltips 核心实现代码 */
+
+function trackActivationEvent(eventName, payload = {}) {
+  const event = {
+    eventName,
+    payload: {
+      ...payload,
+      timestamp: new Date().toISOString()
+    }
+  };
+  
+  try {
+    const cached = localStorage.getItem("kanboard:activation-events");
+    let events = cached ? JSON.parse(cached) : [];
+    if (events.length >= 100) {
+      events = events.slice(events.length - 90);
+    }
+    events.push(event);
+    localStorage.setItem("kanboard:activation-events", JSON.stringify(events));
+  } catch (e) {
+    console.error("Failed to write activation event to localStorage:", e);
+  }
+}
+
+let currentTooltipEl = null;
+
+function initFieldTooltips() {
+  document.querySelectorAll(".help-icon-wrapper").forEach((el) => {
+    const helpKey = el.dataset.help;
+    if (!helpKey || !HELP_DICTIONARY[helpKey]) return;
+
+    // Desktop: hover / focus
+    el.addEventListener("mouseenter", () => showTooltip(el, HELP_DICTIONARY[helpKey]));
+    el.addEventListener("focus", () => showTooltip(el, HELP_DICTIONARY[helpKey]));
+
+    el.addEventListener("mouseleave", hideTooltip);
+    el.addEventListener("blur", hideTooltip);
+
+    // Mobile: click/tap
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // If mobile view <= 480px, toggle click behavior
+      if (window.innerWidth <= 480) {
+        if (currentTooltipEl && currentTooltipEl.dataset.anchor === helpKey) {
+          hideTooltip();
+        } else {
+          showTooltip(el, HELP_DICTIONARY[helpKey], true);
+        }
+      }
+    });
+  });
+
+  // Global click to close tooltips on mobile
+  document.addEventListener("click", () => {
+    if (window.innerWidth <= 480) {
+      hideTooltip();
+    }
+  });
+
+  // Escape key support to close tooltip / drawer
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      hideTooltip();
+      closeMobileChecklistDrawer();
+    }
+  });
+}
+
+function showTooltip(anchorEl, text, isMobile = false) {
+  if (currentTooltipEl) hideTooltip();
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "kanboard-tooltip";
+  tooltip.textContent = text;
+  tooltip.dataset.anchor = anchorEl.dataset.help;
+  document.body.appendChild(tooltip);
+  currentTooltipEl = tooltip;
+
+  trackActivationEvent("field_help_open", { fieldName: anchorEl.dataset.help, isMobile });
+
+  const rect = anchorEl.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+  
+  let top = rect.top + window.scrollY - tooltipRect.height - 8;
+  let left = rect.left + window.scrollX + (rect.width / 2) - (tooltipRect.width / 2);
+  let arrowClass = "arrow-bottom";
+
+  if (rect.top - tooltipRect.height - 8 < 0) {
+    top = rect.bottom + window.scrollY + 8;
+    arrowClass = "arrow-top";
+  }
+
+  const margin = 12;
+  const screenWidth = window.innerWidth;
+  if (left + tooltipRect.width > screenWidth - margin) {
+    left = screenWidth - tooltipRect.width - margin;
+  }
+  if (left < margin) {
+    left = margin;
+  }
+
+  tooltip.style.top = `${top}px`;
+  tooltip.style.left = `${left}px`;
+  tooltip.className = `kanboard-tooltip ${arrowClass}`;
+}
+
+function hideTooltip() {
+  if (currentTooltipEl) {
+    trackActivationEvent("field_help_close", { fieldName: currentTooltipEl.dataset.anchor });
+    currentTooltipEl.remove();
+    currentTooltipEl = null;
+  }
+}
+
+// Checklist Panel & Drawer States
+let checklistToastTimer = null;
+
+function getChecklistState(projectId) {
+  const key = `kanboard:onboarding-checklist:${projectId}`;
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (e) {
+      localStorage.removeItem(key);
+    }
+  }
+  return null;
+}
+
+function saveChecklistState(projectId, checkState) {
+  const key = `kanboard:onboarding-checklist:${projectId}`;
+  checkState.updatedAt = new Date().toISOString();
+  localStorage.setItem(key, JSON.stringify(checkState));
+}
+
+function updateChecklistProgress(projectId, taskKey, value) {
+  const checkState = getChecklistState(projectId);
+  if (!checkState || checkState.dismissed) return;
+  if (checkState.completed[taskKey] === value) return;
+
+  checkState.completed[taskKey] = value;
+  saveChecklistState(projectId, checkState);
+
+  trackActivationEvent("activation_checklist_item_complete", { projectId, itemId: taskKey, value });
+
+  renderOnboardingChecklist();
+
+  const allDone = checkState.completed.editExampleCard && 
+                  checkState.completed.dragCardRight && 
+                  checkState.completed.createRealCard;
+  
+  if (allDone) {
+    trackActivationEvent("activation_checklist_all_complete", { projectId });
+  } else {
+    showChecklistToast(taskKey);
+  }
+}
+
+function showChecklistToast(taskKey) {
+  const container = document.querySelector(".onboarding-checklist-body");
+  if (!container) return;
+
+  const existingToast = container.querySelector(".onboarding-checklist-toast");
+  if (existingToast) existingToast.remove();
+  if (checklistToastTimer) clearTimeout(checklistToastTimer);
+
+  const toasts = {
+    editExampleCard: "✨ 极好！这就是你自己的真实任务了！",
+    dragCardRight: "🎉 动作利落！任务开始流转起来了！",
+    createRealCard: "🚀 太棒了！你的第一个真实卡片已就位！"
+  };
+
+  const toastDiv = document.createElement("div");
+  toastDiv.className = "onboarding-checklist-toast";
+  toastDiv.textContent = toasts[taskKey];
+  container.appendChild(toastDiv);
+
+  checklistToastTimer = setTimeout(() => {
+    toastDiv.remove();
+  }, 4000);
+}
+
+function closeMobileChecklistDrawer() {
+  const drawer = document.querySelector(".onboarding-checklist-drawer");
+  const backdrop = document.querySelector(".onboarding-checklist-drawer-backdrop");
+  if (drawer) drawer.classList.remove("open");
+  if (backdrop) backdrop.style.display = "none";
+}
+
+function openMobileChecklistDrawer() {
+  const drawer = document.querySelector(".onboarding-checklist-drawer");
+  const backdrop = document.querySelector(".onboarding-checklist-drawer-backdrop");
+  if (drawer) {
+    drawer.classList.add("open");
+    trackActivationEvent("activation_checklist_expand", { projectId: state.activeProjectId, isMobile: true });
+  }
+  if (backdrop) backdrop.style.display = "block";
+}
+
+function renderOnboardingChecklist() {
+  const projectId = state.activeProjectId;
+  const project = activeProject();
+  if (!project) return;
+
+  const oldPanel = document.querySelector(".onboarding-checklist-panel");
+  const oldBubble = document.querySelector(".onboarding-checklist-mobile-bubble");
+  const oldDrawer = document.querySelector(".onboarding-checklist-drawer");
+  const oldBackdrop = document.querySelector(".onboarding-checklist-drawer-backdrop");
+  if (oldPanel) oldPanel.remove();
+  if (oldBubble) oldBubble.remove();
+  if (oldDrawer) oldDrawer.remove();
+  if (oldBackdrop) oldBackdrop.remove();
+
+  const checkState = getChecklistState(projectId);
+  if (!checkState || checkState.dismissed) return;
+
+  let task1Text = "双击修改任意一张示例卡片";
+  const cards = allCards(project);
+  const hasExamples = cards.some(c => c.isExample);
+  if (!hasExamples && !checkState.completed.editExampleCard) {
+    task1Text = "在看板任意列双击创建一张新卡片";
+  }
+
+  const doneCount = (checkState.completed.editExampleCard ? 1 : 0) +
+                    (checkState.completed.dragCardRight ? 1 : 0) +
+                    (checkState.completed.createRealCard ? 1 : 0);
+  
+  const allDone = doneCount === 3;
+  const progressPercent = Math.round((doneCount / 3) * 100);
+
+  // Desktop Panel
+  const panel = document.createElement("div");
+  panel.className = `onboarding-checklist-panel ${checkState.collapsed ? "collapsed" : ""}`;
+  panel.id = "onboarding-checklist";
+
+  let bodyContent = "";
+  if (allDone) {
+    bodyContent = `
+      <div class="onboarding-checklist-success">
+        <p>🎉 新手热身通关！加油开启你的看板之旅！</p>
+        <div class="onboarding-checklist-success-buttons">
+          <button class="onboarding-checklist-btn-dismiss" type="button">永久隐藏</button>
+          <button class="onboarding-checklist-btn-ok" type="button">我知道了</button>
+        </div>
+      </div>
+    `;
+  } else {
+    bodyContent = `
+      <div class="onboarding-checklist-body">
+        <div class="onboarding-checklist-item ${checkState.completed.editExampleCard ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.editExampleCard ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">${escapeHtml(task1Text)}</span>
+        </div>
+        <div class="onboarding-checklist-item ${checkState.completed.dragCardRight ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.dragCardRight ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">拖拽任意任务卡片到右侧列</span>
+        </div>
+        <div class="onboarding-checklist-item ${checkState.completed.createRealCard ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.createRealCard ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">在首列点击“+”新增你今天要做的事</span>
+        </div>
+      </div>
+    `;
+  }
+
+  panel.innerHTML = `
+    <div class="onboarding-checklist-header" role="button" aria-expanded="${!checkState.collapsed}" tabindex="0">
+      <h4>新手破冰挑战 (${doneCount}/3)</h4>
+      <button class="onboarding-checklist-toggle" type="button" aria-label="${checkState.collapsed ? "展开" : "收起"}">
+        ${checkState.collapsed ? "▲" : "▼"}
+      </button>
+    </div>
+    <div class="onboarding-checklist-progress-bar-container">
+      <div class="onboarding-checklist-progress-bar" style="width: ${progressPercent}%;"></div>
+    </div>
+    ${bodyContent}
+  `;
+
+  const header = panel.querySelector(".onboarding-checklist-header");
+  header.addEventListener("click", () => {
+    checkState.collapsed = !checkState.collapsed;
+    saveChecklistState(projectId, checkState);
+    panel.classList.toggle("collapsed", checkState.collapsed);
+    header.setAttribute("aria-expanded", !checkState.collapsed);
+    trackActivationEvent("activation_checklist_expand", { projectId, collapsed: checkState.collapsed });
+  });
+
+  header.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      header.click();
+    }
+  });
+
+  if (allDone) {
+    panel.querySelector(".onboarding-checklist-btn-dismiss").addEventListener("click", dismissChecklist);
+    panel.querySelector(".onboarding-checklist-btn-ok").addEventListener("click", dismissChecklist);
+  }
+
+  document.body.appendChild(panel);
+
+  // Mobile Bubble
+  const bubble = document.createElement("button");
+  bubble.className = "onboarding-checklist-mobile-bubble";
+  bubble.textContent = `${doneCount}/3`;
+  bubble.setAttribute("aria-label", "打开新手破冰清单");
+  bubble.type = "button";
+  bubble.addEventListener("click", openMobileChecklistDrawer);
+  document.body.appendChild(bubble);
+
+  // Mobile Drawer Backdrop
+  const backdrop = document.createElement("div");
+  backdrop.className = "onboarding-checklist-drawer-backdrop";
+  backdrop.style.display = "none";
+  backdrop.addEventListener("click", closeMobileChecklistDrawer);
+  document.body.appendChild(backdrop);
+
+  // Mobile Bottom Drawer
+  const drawer = document.createElement("div");
+  drawer.className = "onboarding-checklist-drawer";
+  
+  let drawerBody = "";
+  if (allDone) {
+    drawerBody = `
+      <div class="onboarding-checklist-success">
+        <p>🎉 新手热身通关！加油开启你的看板之旅！</p>
+        <div class="onboarding-checklist-success-buttons">
+          <button class="onboarding-checklist-btn-dismiss" type="button">永久隐藏</button>
+        </div>
+      </div>
+    `;
+  } else {
+    drawerBody = `
+      <div class="onboarding-checklist-drawer-body">
+        <div class="onboarding-checklist-item ${checkState.completed.editExampleCard ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.editExampleCard ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">${escapeHtml(task1Text)}</span>
+        </div>
+        <div class="onboarding-checklist-item ${checkState.completed.dragCardRight ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.dragCardRight ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">拖拽任意任务卡片到右侧列</span>
+        </div>
+        <div class="onboarding-checklist-item ${checkState.completed.createRealCard ? "completed" : ""}">
+          <div class="onboarding-checklist-checkbox">${checkState.completed.createRealCard ? "✓" : ""}</div>
+          <span class="onboarding-checklist-text">在首列点击“+”新增你今天要做的事</span>
+        </div>
+      </div>
+    `;
+  }
+
+  drawer.innerHTML = `
+    <div class="onboarding-checklist-drawer-handle"></div>
+    <div class="onboarding-checklist-drawer-header">
+      <h4>新手破冰挑战 (${doneCount}/3)</h4>
+      <button class="onboarding-checklist-drawer-close" type="button" aria-label="关闭">×</button>
+    </div>
+    ${drawerBody}
+  `;
+
+  drawer.querySelector(".onboarding-checklist-drawer-close").addEventListener("click", closeMobileChecklistDrawer);
+  if (allDone) {
+    drawer.querySelector(".onboarding-checklist-btn-dismiss").addEventListener("click", () => {
+      dismissChecklist();
+      closeMobileChecklistDrawer();
+    });
+  }
+
+  document.body.appendChild(drawer);
+
+  function dismissChecklist() {
+    checkState.dismissed = true;
+    saveChecklistState(projectId, checkState);
+    trackActivationEvent("activation_checklist_dismiss", { projectId });
+    renderOnboardingChecklist();
+  }
+}
+
+/* PD-019C: 首次核心操作轻引导核心逻辑与全局函数 */
+
+function setCreateButtonLoading(loading) {
+  const btn = document.getElementById("saveProjectBtn");
+  if (!btn) return;
+  if (loading) {
+    btn.classList.add("loading");
+    btn.disabled = true;
+    btn.dataset.originalText = btn.textContent;
+    btn.textContent = "保存中...";
+  } else {
+    btn.classList.remove("loading");
+    btn.disabled = false;
+    if (btn.dataset.originalText) {
+      btn.textContent = btn.dataset.originalText;
+    }
+  }
+}
+window.setCreateButtonLoading = setCreateButtonLoading;
+
+function showToast(message) {
+  let container = document.getElementById("toastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `
+    <span class="toast-text">${escapeHtml(message)}</span>
+    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 4000);
+}
+window.showToast = showToast;
+
+function getGuidanceState(projectId) {
+  const key = `kanboard:first-action-guidance:${projectId}`;
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (e) {
+      localStorage.removeItem(key);
+    }
+  }
+  return {
+    dragCard: "not_seen",
+    editCard: "not_seen",
+    deleteCard: "not_seen",
+    taskMenu: "not_seen",
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function saveGuidanceState(projectId, guidanceState) {
+  const key = `kanboard:first-action-guidance:${projectId}`;
+  guidanceState.updatedAt = new Date().toISOString();
+  localStorage.setItem(key, JSON.stringify(guidanceState));
+}
+
+function shouldShowGuidance(projectId) {
+  const project = activeProject();
+  if (!project || project.id !== projectId) return false;
+  
+  const cards = allCards(project);
+  if (cards.length === 0) return false;
+  
+  return true;
+}
+
+function isGuidanceSuppressed() {
+  const panel = document.getElementById("onboarding-checklist");
+  if (panel && !panel.classList.contains("collapsed")) {
+    return true;
+  }
+  const drawer = document.querySelector(".onboarding-checklist-drawer");
+  if (drawer && drawer.classList.contains("open")) {
+    return true;
+  }
+  const activeDialogs = Array.from(document.querySelectorAll("dialog")).some(d => d.open && d.id !== "firstDeleteConfirmDialog");
+  if (activeDialogs) {
+    return true;
+  }
+  const tooltip = document.querySelector(".kanboard-tooltip");
+  if (tooltip) {
+    return true;
+  }
+  return false;
+}
+
+function showPopover(anchorEl, text, direction = "bottom", field = "", onDismiss = null) {
+  if (isGuidanceSuppressed()) return null;
+  destroyActivePopover();
+
+  const popover = document.createElement("div");
+  popover.className = `first-action-guidance-popover arrow-${direction}`;
+  popover.anchor = anchorEl;
+  popover.dataset.guidanceType = field;
+  
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "first-action-guidance-close";
+  closeBtn.type = "button";
+  closeBtn.innerHTML = "×";
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    destroyActivePopover();
+    if (onDismiss) onDismiss();
+  });
+  
+  const arrow = document.createElement("div");
+  arrow.className = "first-action-guidance-arrow";
+  
+  const contentSpan = document.createElement("span");
+  contentSpan.textContent = text;
+  
+  popover.appendChild(closeBtn);
+  popover.appendChild(contentSpan);
+  popover.appendChild(arrow);
+  
+  document.body.appendChild(popover);
+  activePopoverElement = popover;
+  
+  trackActivationEvent("first_action_guidance_shown", {
+    projectId: state.activeProjectId,
+    field: field,
+    text: text
+  });
+
+  positionPopover(anchorEl, popover, direction);
+  return popover;
+}
+
+function positionPopover(anchorEl, popover, direction) {
+  const rect = anchorEl.getBoundingClientRect();
+  const popoverRect = popover.getBoundingClientRect();
+  
+  let top = 0;
+  let left = 0;
+  
+  if (direction === "bottom") {
+    top = rect.bottom + window.scrollY + 8;
+    left = rect.left + window.scrollX + (rect.width / 2) - (popoverRect.width / 2);
+  } else if (direction === "top") {
+    top = rect.top + window.scrollY - popoverRect.height - 8;
+    left = rect.left + window.scrollX + (rect.width / 2) - (popoverRect.width / 2);
+  } else if (direction === "left") {
+    top = rect.top + window.scrollY + (rect.height / 2) - (popoverRect.height / 2);
+    left = rect.left + window.scrollX - popoverRect.width - 8;
+  } else if (direction === "right") {
+    top = rect.top + window.scrollY + (rect.height / 2) - (popoverRect.height / 2);
+    left = rect.right + window.scrollX + 8;
+  }
+  
+  const margin = 8;
+  const screenWidth = window.innerWidth;
+  if (left + popoverRect.width > screenWidth - margin) {
+    left = screenWidth - popoverRect.width - margin;
+  }
+  if (left < margin) {
+    left = margin;
+  }
+  
+  popover.style.top = `${top}px`;
+  popover.style.left = `${left}px`;
+}
+
+function destroyActivePopover(wasSuppressed = false) {
+  if (activePopoverElement) {
+    const field = activePopoverElement.dataset.guidanceType || "";
+    activePopoverElement.remove();
+    activePopoverElement = null;
+    if (wasSuppressed) {
+      let reason = "other";
+      if (document.getElementById("onboarding-checklist") && !document.getElementById("onboarding-checklist").classList.contains("collapsed")) {
+        reason = "checklist_panel_expanded";
+      } else if (document.querySelector(".onboarding-checklist-drawer") && document.querySelector(".onboarding-checklist-drawer").classList.contains("open")) {
+        reason = "mobile_drawer_open";
+      } else if (Array.from(document.querySelectorAll("dialog")).some(d => d.open && d.id !== "firstDeleteConfirmDialog")) {
+        reason = "active_dialog_open";
+      } else if (document.querySelector(".kanboard-tooltip")) {
+        reason = "tooltip_visible";
+      }
+      
+      trackActivationEvent("first_action_guidance_suppressed", {
+        projectId: state.activeProjectId,
+        field: field,
+        reason: reason
+      });
+    }
+  }
+}
+
+function showFirstDeleteConfirmDialog(onConfirm, onCancel) {
+  const dialog = document.getElementById("firstDeleteConfirmDialog");
+  if (!dialog) return;
+
+  const confirmBtn = document.getElementById("firstDeleteConfirmBtn");
+  const cancelBtn = document.getElementById("firstDeleteCancelBtn");
+
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+  newConfirmBtn.addEventListener("click", () => {
+    dialog.close();
+    if (onConfirm) onConfirm();
+  });
+
+  newCancelBtn.addEventListener("click", () => {
+    dialog.close();
+    if (onCancel) onCancel();
+  });
+
+  dialog.addEventListener("cancel", () => {
+    if (onCancel) onCancel();
+  }, { once: true });
+
+  trackActivationEvent("first_delete_confirm_viewed", {
+    projectId: state.activeProjectId,
+    cardId: editingCard?.cardId,
+    field: "deleteCard"
+  });
+
+  dialog.showModal();
+}
+
+function shouldInterceptFirstDelete() {
+  const project = activeProject();
+  if (!project) return false;
+  const guidanceState = getGuidanceState(project.id);
+  return guidanceState.deleteCard === "not_seen" || guidanceState.deleteCard === "shown";
+}
+
+function interceptFirstDelete() {
+  const project = activeProject();
+  const guidanceState = getGuidanceState(project.id);
+  
+  showFirstDeleteConfirmDialog(() => {
+    guidanceState.deleteCard = "completed";
+    saveGuidanceState(project.id, guidanceState);
+    trackActivationEvent("first_delete_confirmed", { projectId: project.id, cardId: editingCard.cardId, field: "deleteCard" });
+    trackActivationEvent("first_action_guidance_completed", { projectId: project.id, field: "deleteCard" });
+    performDeleteEditingCard();
+  }, () => {
+    guidanceState.deleteCard = "completed";
+    saveGuidanceState(project.id, guidanceState);
+    trackActivationEvent("first_delete_cancelled", { projectId: project.id, cardId: editingCard.cardId, field: "deleteCard" });
+    trackActivationEvent("first_action_guidance_completed", { projectId: project.id, field: "deleteCard" });
+  });
+}
+
+function completeTaskMenuGuidance() {
+  const projectId = state.activeProjectId;
+  if (projectId) {
+    const guidanceState = getGuidanceState(projectId);
+    if (guidanceState.taskMenu === "not_seen" || guidanceState.taskMenu === "shown") {
+      guidanceState.taskMenu = "completed";
+      saveGuidanceState(projectId, guidanceState);
+      trackActivationEvent("first_action_guidance_completed", { projectId, field: "taskMenu" });
+    }
+  }
+  destroyActivePopover();
+}
+
+function isFirstCardOfProject(project, cardId) {
+  if (!project) return false;
+  const cards = [];
+  project.columns.forEach(col => {
+    col.cards.forEach(c => {
+      cards.push(c);
+    });
+  });
+  if (cards.length === 0) return false;
+  const exampleCards = cards.filter(c => c.isExample);
+  if (exampleCards.length > 0) {
+    return exampleCards[0].id === cardId;
+  } else {
+    return cards[0].id === cardId;
+  }
+}
+
+function renderFirstActionGuidance() {
+  if (isGuidanceSuppressed()) {
+    destroyActivePopover(true);
+    return;
+  }
+  if (activePopoverElement && activePopoverElement.anchor && !document.body.contains(activePopoverElement.anchor)) {
+    destroyActivePopover();
+  }
+}
+
+function initFirstActionGuidanceObserver() {
+  const observer = new MutationObserver(() => {
+    if (isGuidanceSuppressed()) {
+      if (activePopoverElement) {
+        destroyActivePopover(true);
+      }
+    } else {
+      renderFirstActionGuidance();
+    }
+  });
+  observer.observe(document.body, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    attributeFilter: ["class", "open"]
+  });
+  document.querySelectorAll("dialog").forEach(dialog => {
+    observer.observe(dialog, {
+      attributes: true,
+      attributeFilter: ["open"]
+    });
+    dialog.addEventListener("close", () => {
+      renderFirstActionGuidance();
+    });
+  });
+}
+
+// 劫持 HTMLDialogElement 原型方法，确保对话框显示/关闭时即时响应避让与恢复
+const originalShowModal = HTMLDialogElement.prototype.showModal;
+HTMLDialogElement.prototype.showModal = function() {
+  originalShowModal.apply(this, arguments);
+  if (this.id !== "firstDeleteConfirmDialog") {
+    destroyActivePopover(true);
+  }
+};
+
+const originalClose = HTMLDialogElement.prototype.close;
+HTMLDialogElement.prototype.close = function() {
+  originalClose.apply(this, arguments);
+  renderFirstActionGuidance();
+};
+
+// 全局滚动、缩放和点击检测
+window.addEventListener("scroll", () => {
+  destroyActivePopover();
+});
+window.addEventListener("resize", () => {
+  destroyActivePopover();
+});
+document.addEventListener("click", (event) => {
+  const openMenus = document.querySelectorAll(".board-menu[open]");
+  if (openMenus.length > 0) {
+    let clickedInside = false;
+    openMenus.forEach(menu => {
+      if (menu.contains(event.target)) {
+        clickedInside = true;
+      }
+    });
+    if (!clickedInside) {
+      closeBoardMenus();
+    }
+  }
+});
+

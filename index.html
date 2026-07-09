@@ -2341,7 +2341,7 @@
         <input id="columnTitleInput" required maxlength="24">
       </label>
       <label>
-        <span>WIP 限制</span>
+        <span>WIP 限制<span class="help-icon-wrapper" data-help="wipLimit" tabindex="0"><span class="help-icon">?</span></span></span>
         <input id="columnWipInput" type="number" min="0" max="99" placeholder="0 表示不限制">
       </label>
       <div class="modal-actions between">
@@ -2391,19 +2391,19 @@
           <input id="cardTitleInput" required maxlength="80">
         </label>
         <label>
-          <span>负责人</span>
+          <span>负责人<span class="help-icon-wrapper" data-help="assignee" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardAssigneeInput" list="memberOptions" maxlength="24">
         </label>
         <label>
-          <span>泳道</span>
+          <span>泳道<span class="help-icon-wrapper" data-help="swimlane" tabindex="0"><span class="help-icon">?</span></span></span>
           <select id="cardSwimlaneInput"></select>
         </label>
         <label>
-          <span>分类</span>
+          <span>分类<span class="help-icon-wrapper" data-help="category" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardCategoryInput" list="categoryOptions" maxlength="24">
         </label>
         <label>
-          <span>优先级</span>
+          <span>优先级<span class="help-icon-wrapper" data-help="priority" tabindex="0"><span class="help-icon">?</span></span></span>
           <select id="cardPriorityInput">
             <option value="低">低</option>
             <option value="中">中</option>
@@ -2412,11 +2412,11 @@
           </select>
         </label>
         <label>
-          <span>截止日期</span>
+          <span>截止日期<span class="help-icon-wrapper" data-help="dueDate" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardDueInput" type="date">
         </label>
         <label>
-          <span>标签</span>
+          <span>标签<span class="help-icon-wrapper" data-help="tags" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardTagsInput" maxlength="80" placeholder="用逗号分隔">
         </label>
         <label>
@@ -2430,11 +2430,11 @@
           </select>
         </label>
         <label>
-          <span>预估工时</span>
+          <span>预估工时<span class="help-icon-wrapper" data-help="estimate" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardEstimateInput" type="number" min="0" max="999" step="0.5" placeholder="小时">
         </label>
         <label>
-          <span>实际工时</span>
+          <span>实际工时<span class="help-icon-wrapper" data-help="spent" tabindex="0"><span class="help-icon">?</span></span></span>
           <input id="cardActualInput" type="number" min="0" max="999" step="0.5" placeholder="小时">
         </label>
         <label>
@@ -2458,6 +2458,27 @@
           <textarea id="cardDescInput" rows="5" maxlength="600"></textarea>
         </label>
       </div>
+
+      <!-- 高质量示例卡新手指导面板 -->
+      <section class="detail-section" id="onboardingQualityHelper" style="display: none;">
+        <div class="detail-heading">
+          <h4>新手破冰任务说明与指导</h4>
+        </div>
+        <div class="onboarding-guide-container">
+          <div class="onboarding-guide-section" id="onboardingCriteriaBlock">
+            <strong class="onboarding-guide-label">可检验完成标准</strong>
+            <div class="onboarding-guide-content" id="onboardingCriteriaText"></div>
+          </div>
+          <div class="onboarding-guide-section onboarding-guide-warning" id="onboardingPitfallBlock">
+            <strong class="onboarding-guide-label">避坑提醒</strong>
+            <div class="onboarding-guide-content" id="onboardingPitfallText"></div>
+          </div>
+          <div class="onboarding-guide-section onboarding-guide-info" id="onboardingSuggestionBlock">
+            <strong class="onboarding-guide-label">可修改建议</strong>
+            <div class="onboarding-guide-content" id="onboardingSuggestionText"></div>
+          </div>
+        </div>
+      </section>
 
       <section class="detail-section">
         <div class="detail-heading">
@@ -2537,7 +2558,7 @@
 
       <section class="detail-section" id="cardLinksSection">
         <div class="detail-heading">
-          <h4>内部任务链接</h4>
+          <h4>内部任务链接<span class="help-icon-wrapper" data-help="blockRisk" tabindex="0"><span class="help-icon">?</span></span></h4>
         </div>
         <div class="link-add">
           <select id="linkTypeInput">
@@ -2584,6 +2605,23 @@
       </div>
     </form>
   </dialog>
+
+  <dialog id="firstDeleteConfirmDialog" class="modal first-delete-confirm-dialog">
+    <div class="modal-content first-delete-confirm-content">
+      <div class="first-delete-confirm-header">
+        <h3>确定要删除任务吗？</h3>
+      </div>
+      <div class="first-delete-confirm-body">
+        <p>删除会彻底移除此卡片，本地数据不可恢复。</p>
+      </div>
+      <div class="modal-actions">
+        <button id="firstDeleteCancelBtn" class="secondary-button" value="cancel">取消删除</button>
+        <button id="firstDeleteConfirmBtn" class="danger-button" value="confirm">确认删除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>
