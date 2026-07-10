@@ -383,6 +383,96 @@ function overview() {
 </html>`;
 }
 
+function manifest() {
+  return JSON.stringify({
+    project: "Kanboard 新手项目创建与任务拆解优化",
+    deliverable: "PD-019B First Core Action Guidance",
+    targetFigmaFile: "https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz",
+    recommendedFigmaPage: "PD-019B First Core Action Guidance",
+    sourceOfTruth: "Project-local SVG/PNG assets. Online Figma node write requires a connected Figma MCP tool or API token.",
+    importMode: {
+      preferred: "Import each SVG as an editable vector frame, then name the Figma frames from this manifest.",
+      fallback: "Import pd-019b-contact-sheet.svg as a visual reference contact sheet."
+    },
+    frames: frames.map((frame, index) => {
+      const width = Number(frame.svg.match(/width="(\d+)"/)?.[1] || 1440);
+      const height = Number(frame.svg.match(/height="(\d+)"/)?.[1] || 900);
+      return {
+        order: index + 1,
+        figmaFrameName: frame.title.replace(/^\d+\s+/, ""),
+        viewport: `${width}x${height}`,
+        svg: `${frame.file}.svg`,
+        png: `${frame.file}.png`
+      };
+    })
+  }, null, 2);
+}
+
+function contactSheet() {
+  const scale = 0.22;
+  const cardW = 360;
+  const cardH = 292;
+  const gap = 32;
+  const cols = 3;
+  const rows = Math.ceil(frames.length / cols);
+  const width = cols * cardW + (cols + 1) * gap;
+  const height = 120 + rows * cardH + (rows + 1) * gap;
+  const thumbs = frames.map((frame, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    const x = gap + col * (cardW + gap);
+    const y = 120 + gap + row * (cardH + gap);
+    const originalW = Number(frame.svg.match(/width="(\d+)"/)?.[1] || 1440);
+    const originalH = Number(frame.svg.match(/height="(\d+)"/)?.[1] || 900);
+    const thumbW = originalW * scale;
+    const thumbH = originalH * scale;
+    const encoded = Buffer.from(frame.svg, "utf8").toString("base64");
+    return `
+      ${rect(x, y, cardW, cardH, "#ffffff", colors.line, 8, `filter="url(#shadow)"`)}
+      ${text(frame.title, x + 16, y + 30, 14, colors.text, 700)}
+      ${text(`${originalW}x${originalH} · ${frame.file}.svg`, x + 16, y + 54, 11, colors.muted)}
+      <image href="data:image/svg+xml;base64,${encoded}" x="${x + 16}" y="${y + 76}" width="${thumbW}" height="${thumbH}" preserveAspectRatio="xMinYMin meet"/>
+    `;
+  }).join("");
+  return shell(`
+    ${text("PD-019B Figma Import Contact Sheet", 40, 50, 26, colors.text, 800)}
+    ${text("Use this as a visual reference. Import individual SVG files for editable frame-level handoff.", 40, 82, 14, colors.muted, 500)}
+    ${thumbs}
+  `, "PD-019B Figma Import Contact Sheet", width, height);
+}
+
+function figmaImportGuide() {
+  return `# PD-019B Figma 导入说明
+
+本文件用于把 \`设计图/PD-019B/\` 的本地图稿同步到线上 Figma 文件：
+
+- Figma 文件：https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz
+- 建议页面名：\`PD-019B First Core Action Guidance\`
+- 导入清单：\`figma-import-manifest.json\`
+- 总览参考：\`pd-019b-contact-sheet.svg\` / \`pd-019b-contact-sheet.png\`
+
+## 当前真实状态
+
+当前 Codex 会话没有暴露 \`use_figma\` / \`generate_figma_design\` / \`create_new_file\` 等 Figma 写入工具，也没有可用的 Figma API token。因此本仓库不宣称 PD-019B 已经物理写入线上 Figma node。
+
+## 推荐导入方式
+
+1. 在 Figma 文件中创建页面 \`PD-019B First Core Action Guidance\`。
+2. 按 \`figma-import-manifest.json\` 的顺序导入 12 个 \`.svg\` 文件。
+3. 将每个导入对象重命名为 manifest 中的 \`figmaFrameName\`。
+4. 将 1440x900 桌面图按 3 列排布，将 390x844 移动端图放在右侧或独立 section，将 1200x800 specs 图放在底部。
+5. 可额外导入 \`pd-019b-contact-sheet.svg\` 作为总览参考，但它应作为 reference，不替代 12 个可编辑 SVG frame。
+6. 完成后，把真实 Figma node id 回填到 \`docs/03-ux-design/首次核心操作轻引导高保真设计-PD-019B.md\`。
+
+## 验收标准
+
+- Figma 页面中能看到 12 个 PD-019B Frame。
+- Frame 名称与 \`figma-import-manifest.json\` 一致。
+- 至少包含 desktop drag/edit/delete/menu/suppressed、mobile inline/bottom-sheet、state machine、local analytics trigger 这些状态。
+- 文档中仍保留真实边界：若未通过 MCP/API 自动写入，不写“Codex 已物理写入线上 node”。
+`;
+}
+
 function readme() {
   const rows = frames
     .map((frame, index) => `| ${String(index + 1).padStart(2, "0")} | ${frame.title} | \`${frame.file}.svg\` / \`${frame.file}.png\` |`)
@@ -404,6 +494,9 @@ ${rows}
 辅助文件：
 
 - \`overview.html\`：12 张图稿总览页。
+- \`figma-import-manifest.json\`：线上 Figma 页面复刻/导入清单。
+- \`FIGMA_IMPORT.md\`：手动导入或有权限环境下同步 Figma 的操作说明。
+- \`pd-019b-contact-sheet.svg/png\`：12 张图稿的总览式导入参考图。
 - \`generate-pd019b-assets.js\`：可复现生成脚本。
 
 边界声明：
@@ -415,9 +508,12 @@ ${rows}
 
 async function main() {
   let browser = null;
-  if (!sharp && chromium) {
-    browser = await chromium.launch({ headless: true });
-  }
+  const getBrowser = async () => {
+    if (!browser && chromium) {
+      browser = await chromium.launch({ headless: true });
+    }
+    return browser;
+  };
   for (const frame of frames) {
     const svgPath = path.join(outDir, `${frame.file}.svg`);
     const pngPath = path.join(outDir, `${frame.file}.png`);
@@ -429,20 +525,41 @@ async function main() {
         sharp = null;
       }
     }
-    if (!sharp && browser) {
+    if (!sharp && chromium) {
+      const renderBrowser = await getBrowser();
       const width = Number(frame.svg.match(/width="(\d+)"/)?.[1] || 1440);
       const height = Number(frame.svg.match(/height="(\d+)"/)?.[1] || 900);
-      const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+      const page = await renderBrowser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
       await page.setContent(`<style>html,body{margin:0;padding:0;background:white;}</style>${frame.svg}`);
       await page.screenshot({ path: pngPath, clip: { x: 0, y: 0, width, height } });
       await page.close();
     }
   }
+  fs.writeFileSync(path.join(outDir, "overview.html"), overview(), "utf8");
+  fs.writeFileSync(path.join(outDir, "figma-import-manifest.json"), manifest(), "utf8");
+  fs.writeFileSync(path.join(outDir, "FIGMA_IMPORT.md"), figmaImportGuide(), "utf8");
+  const sheet = contactSheet();
+  fs.writeFileSync(path.join(outDir, "pd-019b-contact-sheet.svg"), sheet, "utf8");
+  if (sharp) {
+    try {
+      await sharp(Buffer.from(sheet)).png().toFile(path.join(outDir, "pd-019b-contact-sheet.png"));
+    } catch {
+      sharp = null;
+    }
+  }
+  if (!sharp && chromium) {
+    const renderBrowser = await getBrowser();
+    const width = Number(sheet.match(/width="(\d+)"/)?.[1] || 1200);
+    const height = Number(sheet.match(/height="(\d+)"/)?.[1] || 900);
+    const page = await renderBrowser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+    await page.setContent(`<style>html,body{margin:0;padding:0;background:white;}</style>${sheet}`);
+    await page.screenshot({ path: path.join(outDir, "pd-019b-contact-sheet.png"), clip: { x: 0, y: 0, width, height } });
+    await page.close();
+  }
+  fs.writeFileSync(path.join(outDir, "README.md"), readme(), "utf8");
   if (browser) {
     await browser.close();
   }
-  fs.writeFileSync(path.join(outDir, "overview.html"), overview(), "utf8");
-  fs.writeFileSync(path.join(outDir, "README.md"), readme(), "utf8");
 }
 
 main().catch((error) => {

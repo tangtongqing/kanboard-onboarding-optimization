@@ -1,0 +1,97 @@
+{
+  "project": "Kanboard 新手项目创建与任务拆解优化",
+  "deliverable": "PD-019B First Core Action Guidance",
+  "targetFigmaFile": "https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz",
+  "recommendedFigmaPage": "PD-019B First Core Action Guidance",
+  "sourceOfTruth": "Project-local SVG/PNG assets. Online Figma node write requires a connected Figma MCP tool or API token.",
+  "importMode": {
+    "preferred": "Import each SVG as an editable vector frame, then name the Figma frames from this manifest.",
+    "fallback": "Import pd-019b-contact-sheet.svg as a visual reference contact sheet."
+  },
+  "frames": [
+    {
+      "order": 1,
+      "figmaFrameName": "Desktop - 1st Drag Popover",
+      "viewport": "1440x900",
+      "svg": "01-desktop-1st-drag-popover.svg",
+      "png": "01-desktop-1st-drag-popover.png"
+    },
+    {
+      "order": 2,
+      "figmaFrameName": "Desktop - 1st Edit Dot & Popover",
+      "viewport": "1440x900",
+      "svg": "02-desktop-1st-edit-dot-popover.svg",
+      "png": "02-desktop-1st-edit-dot-popover.png"
+    },
+    {
+      "order": 3,
+      "figmaFrameName": "Desktop - 1st Delete Modal",
+      "viewport": "1440x900",
+      "svg": "03-desktop-1st-delete-modal.svg",
+      "png": "03-desktop-1st-delete-modal.png"
+    },
+    {
+      "order": 4,
+      "figmaFrameName": "Desktop - Task Menu Guidance",
+      "viewport": "1440x900",
+      "svg": "04-desktop-task-menu-guidance.svg",
+      "png": "04-desktop-task-menu-guidance.png"
+    },
+    {
+      "order": 5,
+      "figmaFrameName": "Desktop - Checklist Suppressed",
+      "viewport": "1440x900",
+      "svg": "05-desktop-checklist-suppressed.svg",
+      "png": "05-desktop-checklist-suppressed.png"
+    },
+    {
+      "order": 6,
+      "figmaFrameName": "Desktop - Tooltip Active Suppressed",
+      "viewport": "1440x900",
+      "svg": "06-desktop-tooltip-active-suppressed.svg",
+      "png": "06-desktop-tooltip-active-suppressed.png"
+    },
+    {
+      "order": 7,
+      "figmaFrameName": "Desktop - Blank Project Novice",
+      "viewport": "1440x900",
+      "svg": "07-desktop-blank-project-novice.svg",
+      "png": "07-desktop-blank-project-novice.png"
+    },
+    {
+      "order": 8,
+      "figmaFrameName": "Desktop - Senior User Zero Disturbance",
+      "viewport": "1440x900",
+      "svg": "08-desktop-senior-user-zero-disturbance.svg",
+      "png": "08-desktop-senior-user-zero-disturbance.png"
+    },
+    {
+      "order": 9,
+      "figmaFrameName": "Mobile 390px - Inline Tap Popover",
+      "viewport": "390x844",
+      "svg": "09-mobile-390-inline-tap-popover.svg",
+      "png": "09-mobile-390-inline-tap-popover.png"
+    },
+    {
+      "order": 10,
+      "figmaFrameName": "Mobile 390px - Delete Bottom Sheet",
+      "viewport": "390x844",
+      "svg": "10-mobile-390-delete-bottom-sheet.svg",
+      "png": "10-mobile-390-delete-bottom-sheet.png"
+    },
+    {
+      "order": 11,
+      "figmaFrameName": "Specs - State Machine Matrix",
+      "viewport": "1200x800",
+      "svg": "11-specs-state-machine-matrix.svg",
+      "png": "11-specs-state-machine-matrix.png"
+    },
+    {
+      "order": 12,
+      "figmaFrameName": "Specs - Local Analytics Triggers",
+      "viewport": "1200x800",
+      "svg": "12-specs-local-analytics-triggers.svg",
+      "png": "12-specs-local-analytics-triggers.png"
+    }
+  ]
+}
