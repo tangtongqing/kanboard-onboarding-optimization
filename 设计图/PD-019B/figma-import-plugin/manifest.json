@@ -1,0 +1,9 @@
+{
+  "name": "PD-019B First Core Action Guidance Importer",
+  "id": "pd-019b-first-core-action-guidance-importer",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma"
+  ]
+}

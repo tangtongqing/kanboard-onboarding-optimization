@@ -13,6 +13,20 @@
 
 ## 推荐导入方式
 
+### 方式 A：运行本地 Figma Development Plugin（推荐）
+
+这是当前没有 Codex Figma 写入工具/token 时最接近“真实写入线上 Figma node”的方案。
+
+1. 打开 Figma 目标文件：`https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz`。
+2. 进入 `Plugins > Development > Import plugin from manifest...`。
+3. 选择 `设计图/PD-019B/figma-import-plugin/manifest.json`。
+4. 运行插件 `PD-019B First Core Action Guidance Importer`。
+5. 插件会创建/切换到页面 `PD-019B First Core Action Guidance`，清空该页已有内容，并导入 12 个可编辑 SVG Frame。
+
+运行成功后，才可以把文档状态更新为“线上 Figma node 已物理写入”。
+
+### 方式 B：手动导入 SVG
+
 1. 在 Figma 文件中创建页面 `PD-019B First Core Action Guidance`。
 2. 按 `figma-import-manifest.json` 的顺序导入 12 个 `.svg` 文件。
 3. 将每个导入对象重命名为 manifest 中的 `figmaFrameName`。

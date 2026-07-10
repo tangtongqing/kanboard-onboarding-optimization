@@ -28,6 +28,7 @@
 - `overview.html`：12 张图稿总览页。
 - `figma-import-manifest.json`：线上 Figma 页面复刻/导入清单。
 - `FIGMA_IMPORT.md`：手动导入或有权限环境下同步 Figma 的操作说明。
+- `figma-import-plugin/`：一次性 Figma Development Plugin，可在 Figma 内真实创建 `PD-019B First Core Action Guidance` 页面和 12 个可编辑 SVG Frame。
 - `pd-019b-contact-sheet.svg/png`：12 张图稿的总览式导入参考图。
 - `generate-pd019b-assets.js`：可复现生成脚本。
 
