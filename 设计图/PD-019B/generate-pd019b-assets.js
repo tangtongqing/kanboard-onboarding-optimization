@@ -83,9 +83,10 @@ function card(x, y, title, subtitle = "示例任务 · 今天", opts = {}) {
     ? `<circle cx="${x + 196}" cy="${y + 42}" r="4" fill="${colors.orange}"/>
        <circle cx="${x + 196}" cy="${y + 42}" r="10" fill="${colors.orange}" opacity=".14"/>`
     : "";
-  const hover = opts.hover ? `stroke="${colors.blue}" stroke-width="1.5"` : `stroke="${colors.line}"`;
+  const border = opts.hover ? colors.blue : colors.line;
+  const borderWidth = opts.hover ? `stroke-width="1.5"` : "";
   return `
-    ${rect(x, y, 240, 112, "#fff", "none", 6, `${hover} filter="url(#shadow)"`)}
+    ${rect(x, y, 240, 112, "#fff", border, 6, `${borderWidth} filter="url(#shadow)"`)}
     ${text(title, x + 16, y + 32, 14, colors.text, 650)}
     ${dot}
     ${text(subtitle, x + 16, y + 58, 12, colors.muted)}
@@ -435,7 +436,6 @@ function contactSheet() {
     `;
   }).join("");
   return shell(`
-    ${text("PD-019B Figma Import Contact Sheet", 40, 50, 26, colors.text, 800)}
     ${text("Use this as a visual reference. Import individual SVG files for editable frame-level handoff.", 40, 82, 14, colors.muted, 500)}
     ${thumbs}
   `, "PD-019B Figma Import Contact Sheet", width, height);

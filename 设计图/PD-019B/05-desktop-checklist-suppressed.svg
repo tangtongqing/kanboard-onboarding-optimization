@@ -33,7 +33,7 @@
         <text x="1064" y="218" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="700" >2</text>
       
     
-    <rect x="282" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#2f5fbb" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="282" y="244" width="240" height="112" rx="6" fill="#fff" stroke="#2f5fbb" stroke-width="1.5" filter="url(#shadow)"/>
     <text x="298" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >把示例任务改成真实任务</text>
     
     <text x="298" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >可拖动 · 可双击编辑</text>
@@ -42,7 +42,7 @@
     <circle cx="488" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="495" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="502" cy="332" r="2.2" fill="#5f6b7a"/>
   
     
-    <rect x="282" y="376" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <rect x="282" y="376" width="240" height="112" rx="6" fill="#fff" stroke="#d8dde6" filter="url(#shadow)"/>
     <text x="298" y="408" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >拆成第一个小步骤</text>
     
     <text x="298" y="434" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >建议 10 分钟内完成</text>
@@ -51,7 +51,7 @@
     <circle cx="488" cy="464" r="2.2" fill="#5f6b7a"/><circle cx="495" cy="464" r="2.2" fill="#5f6b7a"/><circle cx="502" cy="464" r="2.2" fill="#5f6b7a"/>
   
     
-    <rect x="566" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <rect x="566" y="244" width="240" height="112" rx="6" fill="#fff" stroke="#d8dde6" filter="url(#shadow)"/>
     <text x="582" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >补充任务验收标准</text>
     
     <text x="582" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >进行中 · 1 条检查项</text>
@@ -60,7 +60,7 @@
     <circle cx="772" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="779" cy="332" r="2.2" fill="#5f6b7a"/><circle cx="786" cy="332" r="2.2" fill="#5f6b7a"/>
   
     
-    <rect x="850" y="244" width="240" height="112" rx="6" fill="#fff" stroke="none" stroke="#d8dde6" filter="url(#shadow)"/>
+    <rect x="850" y="244" width="240" height="112" rx="6" fill="#fff" stroke="#d8dde6" filter="url(#shadow)"/>
     <text x="866" y="276" font-family="Inter, Arial, sans-serif" font-size="14" fill="#1f2937" font-weight="650" >项目创建完成</text>
     
     <text x="866" y="302" font-family="Inter, Arial, sans-serif" font-size="12" fill="#5f6b7a" font-weight="400" >已完成 · 自动保存</text>

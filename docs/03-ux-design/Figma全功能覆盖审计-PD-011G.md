@@ -6,7 +6,7 @@
 |---|---|
 | 日期 | 2026-06-25 |
 | 状态 | 已完成；F01-F47 已写入用户 Figma 文件并复查通过 |
-| 账号 | `tongqtang@gmail.com` |
+| 账号 | 已验证账号（已脱敏） |
 | Figma 文件 | https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz |
 | 复查口径 | 按当前静态原型所有主要可见功能入口与关键状态覆盖，而不只按 D02 创建向导 |
 
@@ -14,7 +14,7 @@
 
 本次在用户确认 Figma 账号升级后重新测试并完成补图：
 
-- Figma `whoami` 返回账号为 `tongqtang@gmail.com`，handle 为“汤同庆”。
+- Figma `whoami` 返回已验证账号；账号标识与 handle 已脱敏。
 - 当前 plan 为 `student`，seat / seat_type 为 `Full` / `expert`。
 - `use_figma` 已可正常读取和写入目标文件，Starter plan MCP 额度阻塞已解除。
 - `PD-011E Full High Fidelity` 已重建 F01-F08，共 8 个 Frame。

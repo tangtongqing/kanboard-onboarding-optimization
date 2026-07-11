@@ -2,13 +2,13 @@
 
 > **版本性质：Figma 扩展高保真覆盖 / 非 Figma Library / 非代码实现 / 非最终研究验证结论**
 
-> **2026-06-25 复查更新**：此前 2026-06-24 发现该页为空；本次已在用户账号 `tongqtang@gmail.com` 下重建 `PD-011F Extended High Fidelity Coverage`，当前有效节点如下。总体验收状态以 `docs/03-ux-design/Figma全功能覆盖审计-PD-011G.md` 为准。
+> **2026-06-25 复查更新**：此前 2026-06-24 发现该页为空；本次已在已验证的用户账号下重建 `PD-011F Extended High Fidelity Coverage`，当前有效节点如下。总体验收状态以 `docs/03-ux-design/Figma全功能覆盖审计-PD-011G.md` 为准。
 
 | 项 | 内容 |
 |---|---|
 | 日期 | 2026-06-23 |
 | 状态 | 已补齐 |
-| 账号 | `tongqtang@gmail.com` |
+| 账号 | 已验证账号（已脱敏） |
 | Figma 文件 | https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz |
 | Figma Page | `PD-011F Extended High Fidelity Coverage` |
 | 前置页 | `PD-011E Full High Fidelity` |

@@ -9,7 +9,7 @@
 
 ## 当前真实状态
 
-当前 Codex 会话没有暴露 `use_figma` / `generate_figma_design` / `create_new_file` 等 Figma 写入工具，也没有可用的 Figma API token。因此本仓库不宣称 PD-019B 已经物理写入线上 Figma node。
+2026-07-11，用户已运行本地插件，将 12 个 PD-019B Frame 写入线上 Figma 页面并完成正式 PNG 导出。导出归档位于 `设计图/Figma线上归档/2026-07-10/PD-019B-First-Core-Action-Guidance/`。
 
 ## 推荐导入方式
 
@@ -21,9 +21,9 @@
 2. 进入 `Plugins > Development > Import plugin from manifest...`。
 3. 选择 `设计图/PD-019B/figma-import-plugin/manifest.json`。
 4. 运行插件 `PD-019B First Core Action Guidance Importer`。
-5. 插件会创建/切换到页面 `PD-019B First Core Action Guidance`，清空该页已有内容，并导入 12 个可编辑 SVG Frame。
+5. 插件会新建页面 `PD-019B First Core Action Guidance`；若同名页面已存在，则自动创建带 `Imported 2` 等后缀的新页面，并导入 12 个可编辑 SVG Frame。它不会修改或清空任何既有页面。
 
-运行成功后，才可以把文档状态更新为“线上 Figma node 已物理写入”。
+若未来需要重建或追加页面，可再次运行该插件；它不会修改或清空任何既有页面。
 
 ### 方式 B：手动导入 SVG
 
@@ -39,4 +39,4 @@
 - Figma 页面中能看到 12 个 PD-019B Frame。
 - Frame 名称与 `figma-import-manifest.json` 一致。
 - 至少包含 desktop drag/edit/delete/menu/suppressed、mobile inline/bottom-sheet、state machine、local analytics trigger 这些状态。
-- 文档中仍保留真实边界：若未通过 MCP/API 自动写入，不写“Codex 已物理写入线上 node”。
+- 文档中应如实记录：本次由用户运行本地插件完成物理写入；不是由 Codex MCP/API 直接写入。

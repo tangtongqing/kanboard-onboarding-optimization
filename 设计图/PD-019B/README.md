@@ -1,12 +1,12 @@
 # PD-019B 首次核心操作轻引导高保真图稿归档
 
-本目录补齐 PD-019B 后续增量的项目内图稿证据。由于当前 Codex 会话没有暴露可调用的 Figma 写入 MCP 工具，也没有可用的 Figma API token，本次不能直接向线上 Figma 文件 `Uye3u4Uva5cwVt4eQnvxvz` 物理追加 Frame。
+本目录保存 PD-019B 的可复现设计源。2026-07-11，用户已通过本目录的本地 Figma Development Plugin 将 12 个 Frame 写入线上 Figma 文件 `Uye3u4Uva5cwVt4eQnvxvz`，并完成正式 PNG 导出归档。
 
 交付策略：
 
 - 线上 Figma 文件继续作为主设计源链接保存，不把专有源文件硬塞进仓库。
 - 项目目录保存可审阅、可版本管理的 SVG 源图与 PNG 导出图。
-- 这些图稿覆盖 PD-019B 定义的 12 个 Frame，可作为后续在 Figma 页面 `PD-019B First Core Action Guidance` 中复刻或导入的依据。
+- 这些图稿覆盖 PD-019B 定义的 12 个 Frame，可作为 Figma 页面 `PD-019B First Core Action Guidance` 的可复现源与后续维护依据。
 
 | 编号 | Frame | 本地文件 |
 | --- | --- | --- |
@@ -34,5 +34,5 @@
 
 边界声明：
 
-- 本目录不是正式 Figma Library，也不是线上 Figma node 导出。
-- 若后续接入 Figma 写入权限，应以本目录图稿为参考，在 Figma 中创建同名 12 个 Frame，并回填真实 node ID。
+- 本目录不是正式 Figma Library；线上页面仍应以 Figma 文件为可编辑设计源。
+- 正式 Figma PNG 导出存放于 `设计图/Figma线上归档/2026-07-10/PD-019B-First-Core-Action-Guidance/`；本目录中的 SVG/PNG 用于版本管理与复现。
