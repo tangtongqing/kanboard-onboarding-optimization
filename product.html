@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kanboard 新手增强体验。选择个人学习、求职准备、小团队迭代或 Bug 跟踪模板，快速创建第一张可用看板。">
+  <title>Kanboard｜让每个目标都有清楚的下一步</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="product.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+  <script src="product.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <div class="announcement">
+    <p>Pro 与团队计划开放内测申请，现有体验版继续免费使用。</p>
+    <a href="pricing.html">查看价格 <span aria-hidden="true">→</span></a>
+  </div>
+
+  <header class="global-header">
+    <nav class="global-nav" aria-label="主导航">
+      <a class="brand" href="#top" aria-label="Kanboard 首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kanboard</span>
+      </a>
+
+      <div class="desktop-nav">
+        <a href="#product" data-nav-section="product">产品</a>
+        <a href="#templates" data-nav-section="templates">场景</a>
+        <a href="pricing.html">价格</a>
+        <a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a>
+        <a href="contact.html">联系我们</a>
+      </div>
+
+      <div class="nav-actions">
+        <a class="case-link" href="#tour">观看演示</a>
+        <a class="button button-primary button-small" href="index.html">免费开始</a>
+      </div>
+
+      <details class="mobile-menu">
+        <summary aria-label="打开导航菜单">
+          <span class="sr-only">打开导航菜单</span>
+          <i></i><i></i>
+        </summary>
+        <div class="mobile-menu-panel">
+          <a href="#product">产品</a>
+          <a href="#templates">场景</a>
+          <a href="pricing.html">价格</a>
+          <a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a>
+          <a href="contact.html">联系我们</a>
+          <a href="#tour">观看演示</a>
+          <a class="button button-primary" href="index.html">免费开始</a>
+        </div>
+      </details>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy" data-reveal>
+        <p class="product-note">适合个人与小团队的轻量任务看板</p>
+        <h1>让每个目标，<br>都有清楚的下一步。</h1>
+        <p>选择与你相近的项目场景，自动生成列、泳道和示例任务。你无需先学项目管理，只要把第一张卡片改成自己的计划。</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="index.html">免费创建第一张看板</a>
+          <a class="button button-secondary" href="#how-it-works">看看如何使用</a>
+        </div>
+        <div class="hero-assurance" aria-label="体验说明">
+          <span>体验版无需注册</span>
+          <span>数据保存在当前浏览器</span>
+          <span>随时可从空白项目开始</span>
+        </div>
+      </div>
+
+      <figure class="hero-product" data-reveal>
+        <div class="browser-bar" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <p>Kanboard · 个人学习项目</p>
+        </div>
+        <img src="设计图/PD-018D/01-desktop-template-checklist-0of3.png" alt="Kanboard 个人学习项目看板，包含待学、学习中和已学完三列，以及新手挑战清单" decoding="async">
+      </figure>
+    </section>
+
+    <section class="benefit-rail" id="product" aria-label="产品核心价值">
+      <p><strong>从场景开始</strong><span>不再面对空白项目</span></p>
+      <p><strong>边做边理解</strong><span>提示出现在操作现场</span></p>
+      <p><strong>三步完成上手</strong><span>编辑、拖动、新建任务</span></p>
+      <p><strong>帮助可以退出</strong><span>熟练用户保持原速</span></p>
+    </section>
+
+    <div class="motion-marquee" aria-label="产品能力">
+      <div class="motion-marquee-track">
+        <span>场景模板</span><span>任务看板</span><span>列表视图</span><span>日历规划</span><span>甘特排期</span><span>移动跟进</span>
+        <span aria-hidden="true">场景模板</span><span aria-hidden="true">任务看板</span><span aria-hidden="true">列表视图</span><span aria-hidden="true">日历规划</span><span aria-hidden="true">甘特排期</span><span aria-hidden="true">移动跟进</span>
+      </div>
+    </div>
+
+    <section class="template-showcase section" id="templates">
+      <div class="section-heading centered-heading" data-reveal>
+        <p>四种场景，一个清楚的起点</p>
+        <h2>选一个与你相近的项目，<br>看板会替你准备好第一步。</h2>
+      </div>
+
+      <div class="scenario-picker" aria-label="选择项目场景">
+        <button class="active" id="scenario-learning" type="button" data-scenario="learning" aria-pressed="true">个人学习</button>
+        <button id="scenario-career" type="button" data-scenario="career" aria-pressed="false">求职准备</button>
+        <button id="scenario-team" type="button" data-scenario="team" aria-pressed="false">小团队迭代</button>
+        <button id="scenario-bugs" type="button" data-scenario="bugs" aria-pressed="false">Bug 跟踪</button>
+      </div>
+
+      <div class="scenario-product">
+        <div class="scenario-copy">
+          <p class="scenario-tag" id="scenarioTag">适合学生与产品学习者</p>
+          <h3 id="scenarioTitle">个人学习项目</h3>
+          <p id="scenarioDescription">把课程、阅读和练习拆成一条能够持续推进的学习路径。</p>
+          <ul id="scenarioBenefits">
+            <li>预置待学、学习中、已学完三列</li>
+            <li>示例任务包含完成标准与常见误区</li>
+            <li>用三个真实动作完成第一次上手</li>
+          </ul>
+          <a class="inline-link" href="index.html">使用这个模板 <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="scenario-board" aria-live="polite">
+          <div class="scenario-board-head">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <strong id="scenarioBoardTitle">个人学习项目</strong>
+            <span id="scenarioBoardMeta">3 列 · 3 个示例任务</span>
+          </div>
+          <div class="scenario-columns" id="scenarioColumns"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tour-section" id="tour">
+      <header class="tour-heading" data-reveal>
+        <p>真实产品演示</p>
+        <h2>从选择模板，到切换视图，<br>用一段短片<span class="inline-product-thumb"><img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" alt=""></span>看清整个过程。</h2>
+        <p class="motion-copy">不是概念动画。视频直接录制自当前可交互产品，展示项目切换、模板入口以及看板、列表、日历之间的真实操作。</p>
+      </header>
+
+      <div class="tour-layout">
+        <div class="tour-media" data-reveal>
+          <div class="browser-bar" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <p>Kanboard · Product tour</p>
+          </div>
+          <video id="productTour" muted loop playsinline preload="metadata" poster="设计图/PD-016/kanboard-v0.8.29-clarity-desktop.png">
+            <source src="assets/kanboard-product-tour.webm" type="video/webm">
+            你的浏览器暂不支持视频播放。
+          </video>
+          <button class="tour-toggle" type="button" aria-controls="productTour" aria-pressed="false">
+            <span class="tour-toggle-icon" aria-hidden="true">▶</span>
+            <span class="tour-toggle-label">播放演示</span>
+          </button>
+        </div>
+
+        <div class="tour-chapters">
+          <article class="tour-chapter is-active">
+            <span>01</span>
+            <h3>从熟悉的项目开始</h3>
+            <p>直接进入个人学习或产品流程示例，不用先配置一张空白看板。</p>
+          </article>
+          <article class="tour-chapter">
+            <span>02</span>
+            <h3>先预览，再创建</h3>
+            <p>创建前看见列、泳道和示例任务，确认结构合适后再开始。</p>
+          </article>
+          <article class="tour-chapter">
+            <span>03</span>
+            <h3>用不同视图检查工作</h3>
+            <p>在看板、列表和日历之间切换，同一批任务无需复制。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-stage dark-stage" id="features" data-reveal>
+      <div class="feature-copy">
+        <p>创建之前</p>
+        <h2>先看清项目会长什么样，<br>再决定是否创建。</h2>
+        <p>模板会展示即将生成的列、泳道和示例任务。所有内容都能修改或删除，模板只是起点，不是强制答案。</p>
+        <a class="button button-light" href="index.html">预览场景模板</a>
+      </div>
+      <figure class="feature-screen">
+        <img src="设计图/PD-010/pd-010-desktop-p005-template-preview.png" alt="新建项目时展示列、泳道和示例任务的结构预览" decoding="async">
+      </figure>
+    </section>
+
+    <section class="activation section" id="how-it-works" data-reveal>
+      <div class="activation-visual">
+        <img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" alt="完成三项新手挑战后的 Kanboard 看板" decoding="async">
+      </div>
+      <div class="activation-copy">
+        <p>创建之后</p>
+        <h2>三个动作，真正开始使用。</h2>
+        <p>新手清单不会让你先读教程。它只邀请你完成最关键的三个动作，每做完一步，进度立即更新。</p>
+        <ol>
+          <li><span>1</span><div><strong>编辑一张示例卡</strong><p>把示例内容改成你的真实任务。</p></div></li>
+          <li><span>2</span><div><strong>拖动任务到下一列</strong><p>理解任务如何在流程中推进。</p></div></li>
+          <li><span>3</span><div><strong>新建今天要做的事</strong><p>让看板从示例变成你的工作空间。</p></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="workflow-story section" id="workflow">
+      <div class="section-heading" data-reveal>
+        <p>一条任务，四个动作</p>
+        <h2>从想到一件事，<br>到真正把它做完。</h2>
+      </div>
+      <div class="horizontal-accordion" aria-label="任务工作流程">
+        <article class="workflow-panel workflow-panel-capture" tabindex="0">
+          <span>收集</span><div><h3>记下要做的事</h3><p>先把想法、需求和问题放进同一个入口。</p></div>
+        </article>
+        <article class="workflow-panel workflow-panel-plan" tabindex="0">
+          <span>安排</span><div><h3>补齐负责人和时间</h3><p>把模糊的待办变成可以开始的任务。</p></div>
+        </article>
+        <article class="workflow-panel workflow-panel-move" tabindex="0">
+          <span>推进</span><div><h3>拖到下一个状态</h3><p>每次移动都让进度对自己和团队可见。</p></div>
+        </article>
+        <article class="workflow-panel workflow-panel-review" tabindex="0">
+          <span>回顾</span><div><h3>换个视图检查节奏</h3><p>用日历、列表或甘特图发现遗漏和风险。</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="guidance-section section">
+      <div class="section-heading">
+        <p>帮助只在需要时出现</p>
+        <h2>不用记住术语，<br>也不用担心第一次操作。</h2>
+      </div>
+      <div class="guidance-layout">
+        <article class="guidance-feature guidance-feature-large">
+          <div>
+            <h3>在操作现场理解看板</h3>
+            <p>WIP、泳道、优先级等概念都有就地解释。桌面端悬停查看，移动端轻触打开。</p>
+          </div>
+          <img src="设计图/PD-018D/08-desktop-tooltip-wip.png" alt="WIP 字段旁显示通俗解释的提示框" decoding="async">
+        </article>
+        <article class="guidance-feature guidance-feature-compact">
+          <div>
+            <h3>第一次拖动，会有人提醒</h3>
+            <p>轻量提示告诉你任务可以移动，完成后不再重复打扰。</p>
+          </div>
+          <img src="设计图/PD-019D/03-desktop-drag-guidance-popover.png" alt="第一次拖动任务时出现操作提示" decoding="async">
+        </article>
+      </div>
+    </section>
+
+    <section class="views-stage" id="views" data-reveal>
+      <div class="views-copy">
+        <p>看板只是开始</p>
+        <h2>换一种视角，<br>仍然是同一份工作。</h2>
+        <p>在看板、列表、日历、甘特图和概览之间切换。规划时间、检查进度或回到日常执行，不需要复制任务。</p>
+        <div class="view-pills" aria-label="可用视图">
+          <span>看板</span><span>列表</span><span>日历</span><span>甘特</span><span>概览</span>
+        </div>
+      </div>
+      <figure>
+        <img src="设计图/PD-016/kanboard-v0.8.29-clarity-desktop.png" alt="Kanboard 桌面端产品界面，顶部提供看板、日历、列表、甘特和概览视图" decoding="async">
+      </figure>
+    </section>
+
+    <section class="mobile-stage section" id="mobile" data-reveal>
+      <div class="mobile-copy">
+        <p>桌面规划，手机跟进</p>
+        <h2>小屏幕上，任务依然清楚。</h2>
+        <p>移动端使用单列布局、底部抽屉与就地提示。查看任务、完成新手清单和确认删除，都不需要缩放桌面页面。</p>
+        <ul>
+          <li>单手查看、创建和更新任务</li>
+          <li>从底部打开清单，不遮住当前任务</li>
+          <li>删除前再次确认，减少误操作</li>
+          <li>任务状态变化会同步显示文字说明</li>
+        </ul>
+        <a class="button button-primary" href="index.html">在浏览器中体验</a>
+      </div>
+      <div class="mobile-devices" aria-label="Kanboard 移动端界面">
+        <figure class="device device-primary">
+          <img src="设计图/PD-018D/11-mobile-checklist-drawer-390.png" alt="移动端新手清单底部抽屉" decoding="async">
+        </figure>
+        <figure class="device device-secondary">
+          <img src="设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png" alt="移动端任务删除确认底部面板" decoding="async">
+        </figure>
+      </div>
+    </section>
+
+    <section class="confidence-stage" id="data" data-reveal>
+      <div class="confidence-heading">
+        <p>轻量，不代表缺少保护</p>
+        <h2>你可以试错，<br>也可以随时退出引导。</h2>
+      </div>
+      <dl>
+        <div><dt>模板内容可以改吗？</dt><dd>每张示例卡、每一列和每条说明都能修改或删除。</dd></div>
+        <div><dt>必须使用模板吗？</dt><dd>不需要。空白项目入口始终保留，不增加额外步骤。</dd></div>
+        <div><dt>引导会一直出现吗？</dt><dd>不会。完成、关闭或进入已有项目后，帮助会安静退出。</dd></div>
+        <div><dt>误删任务怎么办？</dt><dd>第一次删除会显示明确的确认面板，说明影响后再执行。</dd></div>
+      </dl>
+    </section>
+
+    <section class="faq section" id="faq" data-reveal>
+      <div class="section-heading faq-heading">
+        <p>常见问题</p>
+        <h2>开始之前，你可能还想知道。</h2>
+      </div>
+      <div class="faq-list">
+        <details id="faq-audience">
+          <summary>这个版本适合哪些人？<span aria-hidden="true">＋</span></summary>
+          <p>适合第一次用看板管理个人学习、求职准备、个人开发或小团队任务的人。熟悉 Kanboard 的用户也可以直接创建空白项目。</p>
+        </details>
+        <details>
+          <summary>场景模板会限制我的工作方式吗？<span aria-hidden="true">＋</span></summary>
+          <p>不会。模板只生成一个可修改的初始结构。列、泳道、任务和示例说明都可以编辑或删除。</p>
+        </details>
+        <details id="faq-data">
+          <summary>体验版的数据保存在哪里？<span aria-hidden="true">＋</span></summary>
+          <p>当前体验版把数据保存在浏览器的 localStorage 中。清除浏览器数据会移除本地项目，请不要把它用于正式生产数据。</p>
+        </details>
+        <details>
+          <summary>这是 Kanboard 官方版本吗？<span aria-hidden="true">＋</span></summary>
+          <p>不是。这是基于开源 Kanboard 构建的独立体验版本，不代表官方发布。它适合快速了解看板、模板和首次操作流程。</p>
+        </details>
+        <details>
+          <summary>在哪里可以了解更多 Kanboard 用法？<span aria-hidden="true">＋</span></summary>
+          <p>如果你想继续了解用户、项目、看板和插件等完整能力，可以前往 Kanboard 官方文档。</p>
+          <a class="inline-link" href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">打开官方文档 <span aria-hidden="true">→</span></a>
+        </details>
+      </div>
+    </section>
+
+    <section class="final-cta" data-reveal>
+      <div>
+        <p>不用先成为看板专家</p>
+        <h2>你的下一张看板，<br>不必从空白开始。</h2>
+      </div>
+      <div>
+        <a class="button button-light" href="pricing.html">选择适合的计划</a>
+        <a class="final-cta-link" href="contact.html">联系我们 →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Kanboard</span>
+        </a>
+        <p>从一个目标，走到第一张可用看板。</p>
+        <a class="button button-primary button-small" href="index.html">免费开始</a>
+      </div>
+
+      <div class="footer-column">
+        <h2>产品</h2>
+        <a href="#product">产品概览</a>
+        <a href="#tour">产品演示</a>
+        <a href="#templates">场景模板</a>
+        <a href="pricing.html">价格计划</a>
+      </div>
+
+      <div class="footer-column">
+        <h2>资源</h2>
+        <a href="#how-it-works">快速上手</a>
+        <a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">官方文档</a>
+        <a href="https://github.com/kanboard/kanboard" target="_blank" rel="noreferrer">GitHub 仓库</a>
+        <a href="https://github.com/kanboard/kanboard/blob/master/LICENSE" target="_blank" rel="noreferrer">开源许可</a>
+      </div>
+
+      <div class="footer-column">
+        <h2>联系</h2>
+        <a href="contact.html">产品咨询</a>
+        <a href="contact.html#deployment">团队部署</a>
+        <a href="#faq">常见问题</a>
+        <a href="#faq-data">数据存储说明</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>基于开源 Kanboard 构建的独立体验版本。</p>
+      <div>
+        <a href="https://kanboard.org/" target="_blank" rel="noreferrer">Kanboard 官网</a>
+        <a href="pricing.html">价格</a>
+        <a href="contact.html">联系我们</a>
+        <a href="#top">返回顶部 ↑</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

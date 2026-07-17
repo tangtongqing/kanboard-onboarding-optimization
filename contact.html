@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="联系 Kanboard 产品体验团队，咨询 Pro 计划、团队部署、产品演示或提交使用反馈。">
+  <title>联系我们｜Kanboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="product.css"><link rel="stylesheet" href="marketing-pages.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script><script src="marketing-pages.js" defer></script>
+</head>
+<body class="subpage contact-page">
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="announcement"><p>需要先了解计划差异？价格页已经整理好完整比较。</p><a href="pricing.html">查看价格 <span aria-hidden="true">→</span></a></div>
+  <header class="global-header">
+    <nav class="global-nav" aria-label="主导航">
+      <a class="brand" href="product.html" aria-label="Kanboard 首页"><span class="brand-mark" aria-hidden="true"></span><span>Kanboard</span></a>
+      <div class="desktop-nav"><a href="product.html#product">产品</a><a href="product.html#templates">场景</a><a href="pricing.html">价格</a><a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a><a class="current" href="contact.html" aria-current="page">联系我们</a></div>
+      <div class="nav-actions"><a class="case-link" href="product.html#tour">观看演示</a><a class="button button-primary button-small" href="index.html">免费开始</a></div>
+      <details class="mobile-menu"><summary aria-label="打开导航菜单"><span class="sr-only">打开导航菜单</span><i></i><i></i></summary><div class="mobile-menu-panel"><a href="product.html#product">产品</a><a href="product.html#templates">场景</a><a href="pricing.html">价格</a><a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a><a href="contact.html" aria-current="page">联系我们</a><a class="button button-primary" href="index.html">免费开始</a></div></details>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="contact-hero" data-page-reveal>
+      <div class="contact-intro">
+        <p>联系我们</p>
+        <h1>告诉我们，<br>你想解决什么问题。</h1>
+        <p>咨询 Pro 计划、团队部署、产品演示或反馈使用问题。选择一个主题，我们会先帮你整理成清楚的咨询摘要。</p>
+        <div class="contact-routes">
+          <a href="#contact-form"><strong>产品与价格</strong><span>了解计划差异和内测安排 →</span></a>
+          <a href="#deployment"><strong>团队部署</strong><span>讨论自托管、迁移和培训 →</span></a>
+          <a href="https://github.com/kanboard/kanboard/discussions" target="_blank" rel="noreferrer"><strong>社区支持</strong><span>前往 GitHub Discussions →</span></a>
+        </div>
+      </div>
+
+      <div class="contact-form-shell" id="contact-form">
+        <form class="contact-form" novalidate>
+          <div class="form-heading"><p>咨询表单</p><h2>先从基本情况开始。</h2><span>本地体验不会自动向外发送信息。提交后可复制摘要，再通过社区或你的联系渠道发送。</span></div>
+          <label><span>咨询主题</span><select name="topic" required><option value="">请选择</option><option>Pro 计划内测</option><option>团队版与价格</option><option>自托管部署</option><option>产品演示</option><option>使用反馈</option></select><small class="field-error"></small></label>
+          <div class="form-row">
+            <label><span>称呼</span><input name="name" autocomplete="name" required><small class="field-error"></small></label>
+            <label><span>工作邮箱</span><input name="email" type="email" autocomplete="email" required><small class="field-error"></small></label>
+          </div>
+          <div class="form-row">
+            <label><span>组织或项目</span><input name="organization" autocomplete="organization"><small class="field-error"></small></label>
+            <label><span>预计使用人数</span><select name="teamSize"><option>个人</option><option>2–5 人</option><option>6–20 人</option><option>21 人以上</option></select><small class="field-error"></small></label>
+          </div>
+          <label><span>你希望解决的问题</span><textarea name="message" rows="5" required minlength="12" placeholder="例如：希望把当前 Excel 项目跟进迁移到看板，并保留负责人和截止时间。"></textarea><small class="field-error"></small></label>
+          <button class="button button-primary" type="submit">生成咨询摘要</button>
+        </form>
+
+        <section class="contact-result" hidden aria-live="polite">
+          <p>咨询摘要已生成</p><h2 tabindex="-1">内容已经整理好。</h2><p>复制下面的摘要，通过 GitHub Discussions 或你选择的沟通渠道发送。体验版不会自动上传表单内容。</p>
+          <pre id="contactSummary"></pre>
+          <div><button class="button button-primary" id="copySummary" type="button">复制摘要</button><a class="button button-secondary" href="https://github.com/kanboard/kanboard/discussions" target="_blank" rel="noreferrer">打开社区讨论</a></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="contact-options page-section" id="deployment" data-page-reveal>
+      <header class="page-section-heading"><p>不同问题，不同入口</p><h2>先找到最直接的下一步。</h2></header>
+      <div class="contact-option-grid">
+        <article><span>销售与计划</span><h3>Pro 或团队版</h3><p>讨论使用人数、功能边界、价格方案和内测时间。</p><a href="pricing.html">先比较价格 →</a></article>
+        <article><span>部署与迁移</span><h3>自托管 Kanboard</h3><p>查看官方安装文档，评估服务器、数据库、备份和升级工作。</p><a href="https://docs.kanboard.org/v1/admin/installation/" target="_blank" rel="noreferrer">查看部署文档 →</a></article>
+        <article><span>问题与反馈</span><h3>产品使用支持</h3><p>遇到问题时先查文档，再通过开源社区报告可复现的问题。</p><a href="https://github.com/kanboard/kanboard/issues" target="_blank" rel="noreferrer">查看 GitHub Issues →</a></article>
+      </div>
+    </section>
+
+    <section class="contact-assurance" data-page-reveal>
+      <div><p>提交前你应该知道</p><h2>不收集不必要的信息。</h2></div>
+      <dl><div><dt>表单会发送到哪里？</dt><dd>当前静态体验只在浏览器中生成摘要，不会向服务器上传。</dd></div><div><dt>可以直接寻求官方支持吗？</dt><dd>可以。官方文档、GitHub Issues 和 Discussions 是最直接的开源社区入口。</dd></div><div><dt>团队计划何时开放？</dt><dd>目前没有承诺上线日期，价格页中的商业计划属于产品方案预览。</dd></div></dl>
+    </section>
+
+    <section class="final-cta contact-final" data-page-reveal><div><p>还没准备好咨询？</p><h2>先打开产品，<br>完成第一张看板。</h2></div><div><a class="button button-light" href="index.html">免费体验产品</a><a class="final-cta-link" href="product.html#tour">观看产品演示 →</a></div></section>
+  </main>
+
+  <footer class="site-footer"><div class="footer-main"><div class="footer-brand"><a class="brand" href="product.html"><span class="brand-mark" aria-hidden="true"></span><span>Kanboard</span></a><p>从一个目标，走到第一张可用看板。</p><a class="button button-primary button-small" href="index.html">免费开始</a></div><div class="footer-column"><h2>产品</h2><a href="product.html#product">产品概览</a><a href="product.html#tour">产品演示</a><a href="product.html#templates">场景模板</a><a href="pricing.html">价格计划</a></div><div class="footer-column"><h2>资源</h2><a href="product.html#how-it-works">快速上手</a><a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">官方文档</a><a href="https://github.com/kanboard/kanboard" target="_blank" rel="noreferrer">GitHub 仓库</a><a href="https://github.com/kanboard/kanboard/blob/master/LICENSE" target="_blank" rel="noreferrer">开源许可</a></div><div class="footer-column"><h2>联系</h2><a href="contact.html">产品咨询</a><a href="#deployment">团队部署</a><a href="product.html#faq">常见问题</a><a href="product.html#faq-data">数据存储说明</a></div></div><div class="footer-bottom"><p>基于开源 Kanboard 构建的独立体验版本。</p><div><a href="https://kanboard.org/" target="_blank" rel="noreferrer">Kanboard 官网</a><a href="product.html">产品首页</a><a href="pricing.html">价格</a><a href="#main">返回顶部 ↑</a></div></div></footer>
+</body>
+</html>

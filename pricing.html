@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kanboard 体验版、Pro 与团队计划。比较适合个人、小团队和自托管用户的功能与价格。">
+  <title>价格计划｜Kanboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="product.css">
+  <link rel="stylesheet" href="marketing-pages.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
+  <script src="marketing-pages.js" defer></script>
+</head>
+<body class="subpage pricing-page">
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <div class="announcement">
+    <p>商业计划为方案预览，当前体验版继续免费使用。</p>
+    <a href="contact.html">申请内测 <span aria-hidden="true">→</span></a>
+  </div>
+
+  <header class="global-header">
+    <nav class="global-nav" aria-label="主导航">
+      <a class="brand" href="product.html" aria-label="Kanboard 首页"><span class="brand-mark" aria-hidden="true"></span><span>Kanboard</span></a>
+      <div class="desktop-nav">
+        <a href="product.html#product">产品</a>
+        <a href="product.html#templates">场景</a>
+        <a class="current" href="pricing.html" aria-current="page">价格</a>
+        <a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a>
+        <a href="contact.html">联系我们</a>
+      </div>
+      <div class="nav-actions">
+        <a class="case-link" href="product.html#tour">观看演示</a>
+        <a class="button button-primary button-small" href="index.html">免费开始</a>
+      </div>
+      <details class="mobile-menu">
+        <summary aria-label="打开导航菜单"><span class="sr-only">打开导航菜单</span><i></i><i></i></summary>
+        <div class="mobile-menu-panel">
+          <a href="product.html#product">产品</a><a href="product.html#templates">场景</a><a href="pricing.html" aria-current="page">价格</a>
+          <a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">文档</a><a href="contact.html">联系我们</a>
+          <a class="button button-primary" href="index.html">免费开始</a>
+        </div>
+      </details>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="subpage-hero pricing-hero" data-page-reveal>
+      <p>简单、透明、按需要升级</p>
+      <h1>从免费开始，<br>需要协作时再升级。</h1>
+      <p>个人体验不设时间限制。需要云端同步、更多项目或团队权限时，再选择 Pro 或团队计划。</p>
+      <div class="billing-switch" role="group" aria-label="计费周期">
+        <button class="active" type="button" data-billing="monthly" aria-pressed="true">按月</button>
+        <button type="button" data-billing="annual" aria-pressed="false">按年，节省 20%</button>
+      </div>
+    </section>
+
+    <section class="plan-explorer page-section" id="plans" data-page-reveal>
+      <div class="plan-selector" aria-label="选择价格计划">
+        <button class="active" type="button" data-plan="free" aria-pressed="true"><span>体验版</span><strong>免费</strong><small>现在即可使用</small></button>
+        <button type="button" data-plan="pro" aria-pressed="false"><span>Pro</span><strong>个人进阶</strong><small>内测申请</small></button>
+        <button type="button" data-plan="team" aria-pressed="false"><span>团队</span><strong>协作与权限</strong><small>联系咨询</small></button>
+      </div>
+
+      <article class="plan-detail" aria-live="polite">
+        <div class="plan-detail-heading">
+          <div><p id="planEyebrow">体验版</p><h2 id="planName">从第一张看板开始</h2></div>
+          <p class="plan-price"><strong id="planPrice">¥0</strong><span id="planSuffix">永久免费</span></p>
+        </div>
+        <p class="plan-description" id="planDescription">适合第一次使用看板管理个人学习、求职准备或轻量任务的人。</p>
+        <ul class="plan-features" id="planFeatures">
+          <li>四种场景模板</li><li>看板、列表、日历、甘特与概览视图</li><li>浏览器本地保存</li><li>无需注册，立即开始</li>
+        </ul>
+        <div class="plan-actions">
+          <a class="button button-primary" id="planCta" href="index.html">免费开始</a>
+          <a class="inline-link" href="#compare">比较全部功能 <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+    </section>
+
+    <section class="pricing-note" data-page-reveal>
+      <strong>当前可用范围</strong>
+      <p>体验版已经可以直接使用。Pro 与团队计划用于展示后续商业化方向，尚未开放在线购买；提交内测申请不会产生费用。</p>
+      <a href="contact.html">申请 Pro 或团队内测 →</a>
+    </section>
+
+    <section class="comparison page-section" id="compare" data-page-reveal>
+      <header class="page-section-heading"><p>功能比较</p><h2>不是功能越多越好，<br>而是刚好适合你的工作方式。</h2></header>
+      <div class="comparison-table" role="table" aria-label="价格计划功能比较">
+        <div class="comparison-row comparison-head" role="row"><strong role="columnheader">能力</strong><span role="columnheader">体验版</span><span role="columnheader">Pro</span><span role="columnheader">团队</span></div>
+        <div class="comparison-row" role="row"><strong role="rowheader">项目数量</strong><span>5 个本地项目</span><span>不限</span><span>不限</span></div>
+        <div class="comparison-row" role="row"><strong role="rowheader">场景模板</strong><span>4 个</span><span>完整模板库</span><span>团队模板</span></div>
+        <div class="comparison-row" role="row"><strong role="rowheader">数据存储</strong><span>当前浏览器</span><span>云端同步</span><span>团队空间</span></div>
+        <div class="comparison-row" role="row"><strong role="rowheader">协作权限</strong><span>—</span><span>访客分享</span><span>角色与权限</span></div>
+        <div class="comparison-row" role="row"><strong role="rowheader">支持方式</strong><span>官方文档</span><span>邮件支持</span><span>部署与培训</span></div>
+      </div>
+    </section>
+
+    <section class="self-hosted page-section" id="self-hosted" data-page-reveal>
+      <div><p>保留开源选择</p><h2>想自己部署？<br>Kanboard 仍然可以免费自托管。</h2></div>
+      <div><p>开源版本适合能够自行维护服务器、数据库、升级和备份的个人或团队。营销站中的 Pro 与团队计划不改变 Kanboard 的开源许可。</p>
+        <div class="self-hosted-actions"><a class="button button-light" href="https://docs.kanboard.org/v1/admin/installation/" target="_blank" rel="noreferrer">查看部署文档</a><a href="contact.html#deployment">咨询部署方案 →</a></div>
+      </div>
+    </section>
+
+    <section class="pricing-faq page-section" data-page-reveal>
+      <header class="page-section-heading"><p>价格问题</p><h2>升级之前，先把边界说清楚。</h2></header>
+      <div class="faq-list">
+        <details><summary>体验版会突然收费吗？<span aria-hidden="true">＋</span></summary><p>不会。当前本地体验版保持免费，不要求绑定付款方式。</p></details>
+        <details><summary>Pro 和团队计划现在可以购买吗？<span aria-hidden="true">＋</span></summary><p>暂时不能在线购买。两个计划处于方案预览与内测登记阶段。</p></details>
+        <details><summary>自托管版本需要支付许可费用吗？<span aria-hidden="true">＋</span></summary><p>Kanboard 开源项目本身仍遵循 MIT License。服务器、维护和定制服务可能产生额外成本。</p></details>
+      </div>
+    </section>
+
+    <section class="final-cta pricing-final" data-page-reveal>
+      <div><p>先体验，再决定</p><h2>免费开始，<br>需要更多时再联系。</h2></div>
+      <div><a class="button button-light" href="index.html">打开免费体验版</a><a class="final-cta-link" href="contact.html">联系产品团队 →</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand"><a class="brand" href="product.html"><span class="brand-mark" aria-hidden="true"></span><span>Kanboard</span></a><p>从一个目标，走到第一张可用看板。</p><a class="button button-primary button-small" href="index.html">免费开始</a></div>
+      <div class="footer-column"><h2>产品</h2><a href="product.html#product">产品概览</a><a href="product.html#tour">产品演示</a><a href="product.html#templates">场景模板</a><a href="pricing.html">价格计划</a></div>
+      <div class="footer-column"><h2>资源</h2><a href="product.html#how-it-works">快速上手</a><a href="https://docs.kanboard.org/" target="_blank" rel="noreferrer">官方文档</a><a href="https://github.com/kanboard/kanboard" target="_blank" rel="noreferrer">GitHub 仓库</a><a href="https://github.com/kanboard/kanboard/blob/master/LICENSE" target="_blank" rel="noreferrer">开源许可</a></div>
+      <div class="footer-column"><h2>联系</h2><a href="contact.html">产品咨询</a><a href="contact.html#deployment">团队部署</a><a href="product.html#faq">常见问题</a><a href="product.html#faq-data">数据存储说明</a></div>
+    </div>
+    <div class="footer-bottom"><p>基于开源 Kanboard 构建的独立体验版本。</p><div><a href="https://kanboard.org/" target="_blank" rel="noreferrer">Kanboard 官网</a><a href="product.html">产品首页</a><a href="contact.html">联系我们</a><a href="#main">返回顶部 ↑</a></div></div>
+  </footer>
+</body>
+</html>
