@@ -10,6 +10,7 @@ desktop.ini
 *.tmp
 __pycache__/
 node_modules/
+dist-pages/
 
 # Local tool workspaces and generated diagram QA artifacts
 .agent-ops/
