@@ -2,6 +2,8 @@
 
 本目录保存项目说明、产品设计产物、版本迭代记录和验收资料。根目录只保留运行入口、源码、测试、设计图和总览 README。
 
+在线交付入口：[营销首页](https://tangtongqing.github.io/kanboard-onboarding-optimization/) · [产品体验](https://tangtongqing.github.io/kanboard-onboarding-optimization/app.html) · [设计案例](https://tangtongqing.github.io/kanboard-onboarding-optimization/landing.html)
+
 ## 目录结构
 
 | 目录 | 内容 | 适用场景 |
@@ -10,7 +12,7 @@
 | `01-research-discovery/` | 竞品分析、用户假设、产品机会、用户研究计划 | 查看问题定义、目标用户、研究输入 |
 | `02-requirements/` | PRD 骨架、用户故事、验收标准 | 查看需求范围、故事拆分、验收口径 |
 | `03-ux-design/` | 流程图、信息架构、交互状态、设计原则、页面 Brief 与设计系统 | 查看 UX 结构、状态、页面和视觉约束 |
-| `04-implementation-log/` | V0.3~V0.8.29 静态原型、功能复现、视觉对齐与精修说明 | 查看历史实现迭代、静态能力补齐和视觉改造记录 |
+| `04-implementation-log/` | V0.3~V0.8.30 静态原型、功能复现、视觉精修与线上发布说明 | 查看历史实现迭代、静态能力补齐、视觉改造和部署记录 |
 | `05-validation/` | 静态功能验收、研究证据、设计 QA 与浏览器检查报告 | 查看测试与验收结论 |
 | `05-testing/` | 新手激活体验回归测试与截图验收报告 | 查看 PD-018D 真实交互回归、截图与 localStorage 证据 |
 | `06-portfolio/` | 作品集叙事、复盘与最终展示包 | 查看项目如何讲成作品集案例及展示大纲 (PD-014) |
@@ -22,7 +24,7 @@
 2. 再读 `01-research-discovery/产品机会说明与问题定义-PD-001.md` 和 `01-research-discovery/用户研究计划与访谈脚本-PD-002.md`。
 3. 继续读 `02-requirements/功能优化PRD骨架-PD-003.md`、`02-requirements/用户故事与验收标准-PD-004.md`、`02-requirements/新手激活体验优化PRD增量-PD-018A.md` 与 [`首次核心操作轻引导PRD-PD-019A.md`](02-requirements/首次核心操作轻引导PRD-PD-019A.md)。
 4. 进入 `03-ux-design/` 查看 PD-005~PD-010 的设计系统与低保真线框，以及高保真设计规格 `新手激活体验高保真增量设计-PD-018B.md` 与 [`首次核心操作轻引导高保真设计-PD-019B.md`](03-ux-design/首次核心操作轻引导高保真设计-PD-019B.md)。
-5. 如需追溯已实现静态能力、新手激活体验前端实现与回归测试及审计修复记录，再看 `04-implementation-log/`、`05-validation/`、[`新手激活体验回归测试-PD-018D.md`](05-testing/新手激活体验回归测试-PD-018D.md)、[`新手激活体验前端实现-PD-018C.md`](04-prototype/新手激活体验前端实现-PD-018C.md)，以及首次核心操作轻引导回归测试报告 [`首次核心操作轻引导回归测试-PD-019D.md`](05-testing/首次核心操作轻引导回归测试-PD-019D.md)。
+5. 如需追溯已实现静态能力、新手激活体验前端实现、回归测试与线上发布记录，再看 `04-implementation-log/`、`05-validation/`、[`新手激活体验回归测试-PD-018D.md`](05-testing/新手激活体验回归测试-PD-018D.md)、[`新手激活体验前端实现-PD-018C.md`](04-prototype/新手激活体验前端实现-PD-018C.md)、[`GitHub Pages 营销站与可交互原型上线-V0.8.30.md`](04-implementation-log/00-foundation/GitHub-Pages营销站与可交互原型上线-V0.8.30.md)，以及首次核心操作轻引导回归测试报告 [`首次核心操作轻引导回归测试-PD-019D.md`](05-testing/首次核心操作轻引导回归测试-PD-019D.md)。
 6. 如需整理作品集表达或获取全部交付物入口，再看 `06-portfolio/` 目录下的叙事、展示包 (PD-014) 及最终交付包索引 [`最终交付包索引-PD-015.md`](06-portfolio/最终交付包索引-PD-015.md)。
 7. 如需了解核心优化的极致化演进思考与路线图，请看 `07-roadmap/产品功能极致化机会评审与下一轮路线图-PD-017.md`。
 
@@ -70,6 +72,7 @@
 - `PD-025`：项目最终收尾索引与归档已完成并通过 Codex 终验；汇总项目全部核心交付链接与验证证据，明确标注交付物非二进制文件与无真人验证边界，宣告项目正式进入归档完成阶段。
 - `V0.8.28`：已完成 Clarity 风格前端视觉对齐首轮，覆盖侧栏、顶栏、统计卡、筛选区、看板列、任务卡、弹窗和移动端命令条。
 - `V0.8.29`：已完成 Clarity 第二轮页面级精修与 CSS 技术债务清理，全量静态断言 403 checks passed，!important 清零。
+- `V0.8.30`：已完成营销站、价格页、联系页、设计案例页与可交互产品原型的 GitHub Pages 发布；标准 HTTPS 地址已启用，`main` 更新后自动重新部署。
 - 仍需继续的前端工作：第二轮页面级精修已完成；后续前端工作仅限发现新功能或新设计变更时增量补齐。
 - 仍需标注限制：未执行招募式真人测试；真实物理设备未接入，移动端检查以 Chromium 390px 视口替代。
 

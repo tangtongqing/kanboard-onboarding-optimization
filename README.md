@@ -4,9 +4,9 @@
 
 本项目从公开案例研究、问题定义和 PRD 出发，完成了低保真与 Figma 高保真设计、可运行静态原型、自动化回归验证和作品集交付。核心方案不是增加更多功能，而是帮助新手更快建立第一张可用看板，同时保持熟练用户原有的操作效率。
 
-| 项目状态 | 交付形态 | 核心验证 |
-| --- | --- | --- |
-| 已完成并归档 | 产品文档、Figma、静态原型、测试与作品集材料 | 449 项自动化检查通过，74 张 Figma 导出归档 |
+| 项目状态 | 交付形态 | 核心验证 | 在线入口 |
+| --- | --- | --- | --- |
+| 已完成、归档并上线静态演示 | 产品文档、Figma、营销站、可交互原型、测试与作品集材料 | 449 项自动化检查通过，74 张 Figma 导出归档 | [营销首页](https://tangtongqing.github.io/kanboard-onboarding-optimization/) · [产品体验](https://tangtongqing.github.io/kanboard-onboarding-optimization/app.html) |
 
 ![Kanboard 新手激活体验](设计图/PD-018D/01-desktop-template-checklist-0of3.png)
 
@@ -52,7 +52,17 @@ flowchart LR
 
 ## 可运行原型
 
-项目是一个无需构建步骤的本地静态原型，数据保存在浏览器 `localStorage` 中。
+项目已经通过 GitHub Pages 对外发布。营销首页负责介绍产品价值，产品体验页提供可操作的 Kanboard 静态原型；体验数据保存在访问者当前浏览器的 `localStorage` 中，不会上传到服务器。
+
+| 页面 | 用途 |
+| --- | --- |
+| [营销首页](https://tangtongqing.github.io/kanboard-onboarding-optimization/) | 面向用户说明产品价值、使用场景与核心能力 |
+| [产品体验](https://tangtongqing.github.io/kanboard-onboarding-optimization/app.html) | 创建项目、操作看板并体验新手引导 |
+| [价格计划](https://tangtongqing.github.io/kanboard-onboarding-optimization/pricing.html) | 展示免费版、Pro 与团队版方案 |
+| [联系我们](https://tangtongqing.github.io/kanboard-onboarding-optimization/contact.html) | 承接产品咨询与团队部署意向 |
+| [设计案例](https://tangtongqing.github.io/kanboard-onboarding-optimization/landing.html) | 面向面试官呈现项目设计过程与证据 |
+
+本地仍可直接运行，无需安装依赖：
 
 1. 直接用浏览器打开 [`index.html`](index.html)。
 2. 选择“个人学习项目”模板创建项目。
@@ -64,6 +74,9 @@ flowchart LR
 - [`index.html`](index.html)：页面结构与各类 Dialog、Drawer。
 - [`styles.css`](styles.css)：Clarity 风格视觉系统与桌面/移动端布局。
 - [`app.js`](app.js)：项目数据、交互状态、localStorage、Checklist、Tooltip 与轻引导状态机。
+- [`product.html`](product.html)：营销首页源文件；`pricing.html`、`contact.html` 与 `landing.html` 分别承载价格、联系和设计案例内容。
+- [`scripts/build-pages.mjs`](scripts/build-pages.mjs)：生成 GitHub Pages 发布包，并把产品原型映射为线上 `app.html`。
+- [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)：在 `main` 更新后自动构建并发布网站。
 
 ## 产品设计过程
 
@@ -116,6 +129,12 @@ node tests/static-feature-audit-v08.js
 ├── index.html                  # 可运行原型入口
 ├── styles.css                 # 视觉系统与响应式布局
 ├── app.js                     # 交互、数据与状态机
+├── product.html               # 营销首页源文件
+├── pricing.html               # 价格计划
+├── contact.html               # 联系页面
+├── landing.html               # 面试作品集设计案例页
+├── scripts/build-pages.mjs    # GitHub Pages 构建脚本
+├── .github/workflows/         # 自动发布工作流
 ├── PRODUCT.md                 # 产品定位与设计原则
 ├── docs/                      # 研究、PRD、设计、实现、测试与作品集文档
 ├── tests/                     # 自动化静态功能审计
