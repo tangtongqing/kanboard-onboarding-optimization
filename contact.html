@@ -7,8 +7,10 @@
   <title>联系我们｜Kanboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="product.css"><link rel="stylesheet" href="marketing-pages.css">
+  <script>window.__KANBOARD_CONTACT_ENDPOINT__ = window.__KANBOARD_CONTACT_ENDPOINT__ || "CONTACT_ENDPOINT_PLACEHOLDER";</script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script><script src="marketing-pages.js" defer></script>
 </head>
 <body class="subpage contact-page">
@@ -28,7 +30,7 @@
       <div class="contact-intro">
         <p>联系我们</p>
         <h1>告诉我们，<br>你想解决什么问题。</h1>
-        <p>咨询 Pro 计划、团队部署、产品演示或反馈使用问题。选择一个主题，我们会先帮你整理成清楚的咨询摘要。</p>
+        <p id="contactIntroDescription">咨询 Pro 计划、团队部署、产品演示或反馈使用问题。选择一个主题，我们会整理咨询摘要，并带你进入项目的公开接收渠道。</p>
         <div class="contact-routes">
           <a href="#contact-form"><strong>产品与价格</strong><span>了解计划差异和内测安排 →</span></a>
           <a href="#deployment"><strong>团队部署</strong><span>讨论自托管、迁移和培训 →</span></a>
@@ -38,24 +40,28 @@
 
       <div class="contact-form-shell" id="contact-form">
         <form class="contact-form" novalidate>
-          <div class="form-heading"><p>咨询表单</p><h2>先从基本情况开始。</h2><span>本地体验不会自动向外发送信息。提交后可复制摘要，再通过社区或你的联系渠道发送。</span></div>
+          <div class="form-heading"><p>咨询内容</p><h2>先从基本情况开始。</h2><span id="contactFormGuidance">本页不会在后台上传信息。内容整理完成后，你可以前往本项目的公开 GitHub Issue 提交；请勿填写密码、内部链接、邮箱或其他敏感信息。</span></div>
           <label><span>咨询主题</span><select name="topic" required><option value="">请选择</option><option>Pro 计划内测</option><option>团队版与价格</option><option>自托管部署</option><option>产品演示</option><option>使用反馈</option></select><small class="field-error"></small></label>
           <div class="form-row">
             <label><span>称呼</span><input name="name" autocomplete="name" required><small class="field-error"></small></label>
-            <label><span>工作邮箱</span><input name="email" type="email" autocomplete="email" required><small class="field-error"></small></label>
+            <label><span>GitHub 用户名（可选）</span><input name="github" autocomplete="username" maxlength="39"><small class="field-error"></small></label>
           </div>
+          <label data-private-contact-field hidden><span>联系邮箱</span><input name="email" type="email" autocomplete="email"><small class="field-error"></small></label>
           <div class="form-row">
             <label><span>组织或项目</span><input name="organization" autocomplete="organization"><small class="field-error"></small></label>
             <label><span>预计使用人数</span><select name="teamSize"><option>个人</option><option>2–5 人</option><option>6–20 人</option><option>21 人以上</option></select><small class="field-error"></small></label>
           </div>
           <label><span>你希望解决的问题</span><textarea name="message" rows="5" required minlength="12" placeholder="例如：希望把当前 Excel 项目跟进迁移到看板，并保留负责人和截止时间。"></textarea><small class="field-error"></small></label>
-          <button class="button button-primary" type="submit">生成咨询摘要</button>
+          <label class="contact-honeypot" hidden aria-hidden="true"><span>请留空</span><input name="_gotcha" tabindex="-1" autocomplete="off"></label>
+          <p class="form-status" id="contactFormStatus" role="status" aria-live="polite"></p>
+          <a class="inline-link" id="publicContactFallback" href="https://github.com/tangtongqing/kanboard-onboarding-optimization/issues/new" target="_blank" rel="noreferrer" hidden>改用公开项目 Issue（请先移除敏感信息） →</a>
+          <button class="button button-primary" id="contactSubmitButton" type="submit">整理内容并继续</button>
         </form>
 
         <section class="contact-result" hidden aria-live="polite">
-          <p>咨询摘要已生成</p><h2 tabindex="-1">内容已经整理好。</h2><p>复制下面的摘要，通过 GitHub Discussions 或你选择的沟通渠道发送。体验版不会自动上传表单内容。</p>
+          <p id="contactResultEyebrow">咨询内容已整理</p><h2 id="contactResultTitle" tabindex="-1">下一步，确认并提交。</h2><p id="contactResultDescription">点击“提交到项目 Issue”会打开本项目的公开接收渠道，并预填下面的内容。请在 GitHub 页面再次检查，确认不含敏感信息后再提交。</p>
           <pre id="contactSummary"></pre>
-          <div><button class="button button-primary" id="copySummary" type="button">复制摘要</button><a class="button button-secondary" href="https://github.com/kanboard/kanboard/discussions" target="_blank" rel="noreferrer">打开社区讨论</a></div>
+          <div><a class="button button-primary" id="submitProjectIssue" href="https://github.com/tangtongqing/kanboard-onboarding-optimization/issues/new" target="_blank" rel="noreferrer">提交到项目 Issue</a><button class="button button-secondary" id="copySummary" type="button">复制摘要</button></div>
         </section>
       </div>
     </section>
@@ -71,7 +77,7 @@
 
     <section class="contact-assurance" data-page-reveal>
       <div><p>提交前你应该知道</p><h2>不收集不必要的信息。</h2></div>
-      <dl><div><dt>表单会发送到哪里？</dt><dd>当前静态体验只在浏览器中生成摘要，不会向服务器上传。</dd></div><div><dt>可以直接寻求官方支持吗？</dt><dd>可以。官方文档、GitHub Issues 和 Discussions 是最直接的开源社区入口。</dd></div><div><dt>团队计划何时开放？</dt><dd>目前没有承诺上线日期，价格页中的商业计划属于产品方案预览。</dd></div></dl>
+      <dl><div><dt>表单会发送到哪里？</dt><dd id="contactDestinationAnswer">本页先在浏览器内整理内容；只有你点击并确认提交项目 Issue 后，信息才会交给 GitHub，并会公开显示。</dd></div><div><dt>可以直接寻求官方支持吗？</dt><dd>可以。官方文档、GitHub Issues 和 Discussions 是 Kanboard 开源产品的社区入口；本体验项目的问题请提交到当前项目仓库。</dd></div><div><dt>可以提交私密商务信息吗？</dt><dd id="privateContactAnswer">暂时不可以。安全的私密咨询后端尚未接入，请勿在公开 Issue 中填写敏感信息。</dd></div></dl>
     </section>
 
     <section class="final-cta contact-final" data-page-reveal><div><p>还没准备好咨询？</p><h2>先打开产品，<br>完成第一张看板。</h2></div><div><a class="button button-light" href="index.html">免费体验产品</a><a class="final-cta-link" href="product.html#tour">观看产品演示 →</a></div></section>

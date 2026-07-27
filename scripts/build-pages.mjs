@@ -3,6 +3,14 @@ import { dirname, join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const output = join(root, "dist-pages");
+const contactEndpoint = (process.env.KANBOARD_CONTACT_ENDPOINT || "").trim();
+
+if (contactEndpoint) {
+  const parsedContactEndpoint = new URL(contactEndpoint);
+  if (parsedContactEndpoint.protocol !== "https:") {
+    throw new Error("KANBOARD_CONTACT_ENDPOINT must use HTTPS");
+  }
+}
 
 const directFiles = [
   "product.css",
@@ -44,6 +52,22 @@ function rewriteProductEntry(content) {
   return content.replaceAll("index.html", "app.html");
 }
 
+function serializeInlineScriptValue(value) {
+  return JSON.stringify(value)
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("&", "\\u0026");
+}
+
+function rewriteMarketingPage(relativePath, content) {
+  const rewritten = rewriteProductEntry(content);
+  if (relativePath !== "contact.html") return rewritten;
+  return rewritten.replace(
+    '"CONTACT_ENDPOINT_PLACEHOLDER"',
+    serializeInlineScriptValue(contactEndpoint)
+  );
+}
+
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 
@@ -53,7 +77,7 @@ for (const relativePath of [...directFiles, ...designFiles]) {
 
 for (const relativePath of marketingFiles) {
   const content = await readFile(join(root, relativePath), "utf8");
-  await writeFile(join(output, relativePath), rewriteProductEntry(content), "utf8");
+  await writeFile(join(output, relativePath), rewriteMarketingPage(relativePath, content), "utf8");
 }
 
 const marketingHome = await readFile(join(output, "product.html"), "utf8");

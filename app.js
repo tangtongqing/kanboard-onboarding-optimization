@@ -3987,7 +3987,7 @@ function renderViewControls() {
   els.viewButtons.forEach((button) => {
     const isActive = button.dataset.view === state.ui.viewMode;
     button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", isActive ? "true" : "false");
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
   els.cardModeSelect.value = state.ui.cardMode;
   els.showClosedInput.checked = state.ui.showClosed;

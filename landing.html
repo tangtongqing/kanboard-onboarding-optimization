@@ -8,7 +8,8 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Chivo:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="landing.css">
   <script src="landing.js" defer></script>
 </head>
@@ -17,7 +18,7 @@
 
   <header class="hero" id="top">
     <nav class="site-nav" aria-label="主导航">
-      <a class="wordmark" href="#top" aria-label="返回页面顶部">
+      <a class="wordmark" href="#top">
         <span class="wordmark-mark" aria-hidden="true"></span>
         <span>Kanboard / Case 01</span>
       </a>
@@ -150,7 +151,7 @@
         <p class="turning-detail">方案没有把 Kanboard 变成模板市场或课程系统，而是在原有创建入口里加入四层渐进式帮助。用户可以修改、删除、关闭或完全跳过。</p>
       </div>
       <figure class="full-bleed-shot">
-        <img src="设计图/PD-018D/01-desktop-template-checklist-0of3.png" alt="Kanboard 个人学习项目看板，右侧显示新手破冰挑战清单" decoding="async">
+        <img src="设计图/PD-018D/01-desktop-template-checklist-0of3.png" width="1280" height="800" alt="Kanboard 个人学习项目看板，右侧显示新手破冰挑战清单" loading="lazy" decoding="async">
         <figcaption>场景模板生成列与示例任务，创建后的 0/3 Checklist 引导第一次编辑、拖动和新建。</figcaption>
       </figure>
     </section>
@@ -169,7 +170,7 @@
             <p>用个人学习、求职准备、小团队迭代等真实场景组织选择，创建前就能看见将生成的列和示例任务。</p>
           </div>
           <figure>
-            <img src="设计图/PD-010/pd-010-desktop-p005-template-preview.png" alt="新建项目时的模板结构预览设计" decoding="async">
+            <img src="设计图/PD-010/pd-010-desktop-p005-template-preview.png" width="760" height="2562" alt="新建项目时的模板结构预览设计" loading="lazy" decoding="async">
           </figure>
         </article>
 
@@ -180,7 +181,7 @@
             <p>把首次学习压缩成三个真实动作：编辑示例、拖动卡片、新建任务。完成一个动作，界面立即更新进度。</p>
           </div>
           <figure>
-            <img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" alt="完成三项新手挑战后的看板状态" decoding="async">
+            <img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" width="1280" height="800" alt="完成三项新手挑战后的看板状态" loading="lazy" decoding="async">
           </figure>
         </article>
 
@@ -191,7 +192,7 @@
             <p>提示只保护第一次拖动、编辑和删除。Dialog 或 Tooltip 打开时自动避让，避免多个指导层同时争夺注意力。</p>
           </div>
           <figure>
-            <img src="设计图/PD-019D/03-desktop-drag-guidance-popover.png" alt="第一次拖动任务时出现的轻量提示气泡" decoding="async">
+            <img src="设计图/PD-019D/03-desktop-drag-guidance-popover.png" width="1280" height="900" alt="第一次拖动任务时出现的轻量提示气泡" loading="lazy" decoding="async">
           </figure>
         </article>
 
@@ -202,7 +203,7 @@
             <p>空白项目和已有项目不挂载 Checklist，也不显示首次操作提示。帮助不是必须经过的流程。</p>
           </div>
           <figure>
-            <img src="设计图/PD-019D/01-desktop-blank-project-no-guidance.png" alt="没有新手引导的空白项目看板" decoding="async">
+            <img src="设计图/PD-019D/01-desktop-blank-project-no-guidance.png" width="1280" height="900" alt="没有新手引导的空白项目看板" loading="lazy" decoding="async">
           </figure>
         </article>
       </div>
@@ -221,10 +222,10 @@
       </div>
       <div class="phone-pair" aria-label="移动端关键界面">
         <figure class="phone phone-front">
-          <img src="设计图/PD-018D/11-mobile-checklist-drawer-390.png" alt="移动端新手清单抽屉" decoding="async">
+          <img src="设计图/PD-018D/11-mobile-checklist-drawer-390.png" width="390" height="844" alt="移动端新手清单抽屉" loading="lazy" decoding="async">
         </figure>
         <figure class="phone phone-back">
-          <img src="设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png" alt="移动端删除确认底部面板" decoding="async">
+          <img src="设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png" width="390" height="844" alt="移动端删除确认底部面板" loading="lazy" decoding="async">
         </figure>
       </div>
     </section>
@@ -258,13 +259,13 @@
       <div class="final-actions">
         <a class="button button-dark" href="index.html">体验可运行原型 <span aria-hidden="true">↗</span></a>
         <a href="product.html">查看产品营销页 <span aria-hidden="true">↗</span></a>
-        <a href="https://www.figma.com/design/Uye3u4Uva5cwVt4eQnvxvz" target="_blank" rel="noreferrer">查看 Figma 交付 <span aria-hidden="true">↗</span></a>
+        <a id="designHandoffLink" href="https://github.com/tangtongqing/kanboard-onboarding-optimization/tree/main/%E8%AE%BE%E8%AE%A1%E5%9B%BE/Figma%E7%BA%BF%E4%B8%8A%E5%BD%92%E6%A1%A3/2026-07-10" target="_blank" rel="noreferrer">查看设计交付归档 <span aria-hidden="true">↗</span></a>
       </div>
     </section>
   </main>
 
   <footer>
-    <a class="wordmark footer-wordmark" href="#top">
+    <a class="wordmark footer-wordmark" href="#top" aria-label="Kanboard / Case 01，返回页面顶部">
       <span class="wordmark-mark" aria-hidden="true"></span>
       <span>Kanboard / Case 01</span>
     </a>

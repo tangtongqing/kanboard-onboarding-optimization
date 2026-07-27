@@ -8,7 +8,8 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%235848e8' stroke-width='11'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="product.css">
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" defer></script>
@@ -62,7 +63,7 @@
 
   <main id="main">
     <section class="hero" id="top">
-      <div class="hero-copy" data-reveal>
+      <div class="hero-copy">
         <p class="product-note">适合个人与小团队的轻量任务看板</p>
         <h1>让每个目标，<br>都有清楚的下一步。</h1>
         <p>选择与你相近的项目场景，自动生成列、泳道和示例任务。你无需先学项目管理，只要把第一张卡片改成自己的计划。</p>
@@ -77,12 +78,12 @@
         </div>
       </div>
 
-      <figure class="hero-product" data-reveal>
+      <figure class="hero-product">
         <div class="browser-bar" aria-hidden="true">
           <span></span><span></span><span></span>
           <p>Kanboard · 个人学习项目</p>
         </div>
-        <img src="设计图/PD-018D/01-desktop-template-checklist-0of3.png" alt="Kanboard 个人学习项目看板，包含待学、学习中和已学完三列，以及新手挑战清单" decoding="async">
+        <img src="设计图/PD-018D/01-desktop-template-checklist-0of3.png" width="1280" height="800" alt="Kanboard 个人学习项目看板，包含待学、学习中和已学完三列，以及新手挑战清单" decoding="async" fetchpriority="high">
       </figure>
     </section>
 
@@ -116,7 +117,7 @@
       <div class="scenario-product">
         <div class="scenario-copy">
           <p class="scenario-tag" id="scenarioTag">适合学生与产品学习者</p>
-          <h3 id="scenarioTitle">个人学习项目</h3>
+          <h2 id="scenarioTitle">个人学习项目</h2>
           <p id="scenarioDescription">把课程、阅读和练习拆成一条能够持续推进的学习路径。</p>
           <ul id="scenarioBenefits">
             <li>预置待学、学习中、已学完三列</li>
@@ -140,7 +141,7 @@
     <section class="tour-section" id="tour">
       <header class="tour-heading" data-reveal>
         <p>真实产品演示</p>
-        <h2>从选择模板，到切换视图，<br>用一段短片<span class="inline-product-thumb"><img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" alt=""></span>看清整个过程。</h2>
+        <h2>从选择模板，到切换视图，<br>用一段短片<span class="inline-product-thumb"><img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" width="1280" height="800" alt="" loading="lazy" decoding="async"></span>看清整个过程。</h2>
         <p class="motion-copy">不是概念动画。视频直接录制自当前可交互产品，展示项目切换、模板入口以及看板、列表、日历之间的真实操作。</p>
       </header>
 
@@ -188,13 +189,13 @@
         <a class="button button-light" href="index.html">预览场景模板</a>
       </div>
       <figure class="feature-screen">
-        <img src="设计图/PD-010/pd-010-desktop-p005-template-preview.png" alt="新建项目时展示列、泳道和示例任务的结构预览" decoding="async">
+        <img src="设计图/PD-010/pd-010-desktop-p005-template-preview.png" width="760" height="2562" alt="新建项目时展示列、泳道和示例任务的结构预览" loading="lazy" decoding="async">
       </figure>
     </section>
 
     <section class="activation section" id="how-it-works" data-reveal>
       <div class="activation-visual">
-        <img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" alt="完成三项新手挑战后的 Kanboard 看板" decoding="async">
+        <img src="设计图/PD-018D/05-desktop-checklist-3of3-complete.png" width="1280" height="800" alt="完成三项新手挑战后的 Kanboard 看板" loading="lazy" decoding="async">
       </div>
       <div class="activation-copy">
         <p>创建之后</p>
@@ -240,14 +241,14 @@
             <h3>在操作现场理解看板</h3>
             <p>WIP、泳道、优先级等概念都有就地解释。桌面端悬停查看，移动端轻触打开。</p>
           </div>
-          <img src="设计图/PD-018D/08-desktop-tooltip-wip.png" alt="WIP 字段旁显示通俗解释的提示框" decoding="async">
+          <img src="设计图/PD-018D/08-desktop-tooltip-wip.png" width="1280" height="800" alt="WIP 字段旁显示通俗解释的提示框" loading="lazy" decoding="async">
         </article>
         <article class="guidance-feature guidance-feature-compact">
           <div>
             <h3>第一次拖动，会有人提醒</h3>
             <p>轻量提示告诉你任务可以移动，完成后不再重复打扰。</p>
           </div>
-          <img src="设计图/PD-019D/03-desktop-drag-guidance-popover.png" alt="第一次拖动任务时出现操作提示" decoding="async">
+          <img src="设计图/PD-019D/03-desktop-drag-guidance-popover.png" width="1280" height="900" alt="第一次拖动任务时出现操作提示" loading="lazy" decoding="async">
         </article>
       </div>
     </section>
@@ -262,7 +263,7 @@
         </div>
       </div>
       <figure>
-        <img src="设计图/PD-016/kanboard-v0.8.29-clarity-desktop.png" alt="Kanboard 桌面端产品界面，顶部提供看板、日历、列表、甘特和概览视图" decoding="async">
+        <img src="设计图/PD-016/kanboard-v0.8.29-clarity-desktop.png" width="1440" height="900" alt="Kanboard 桌面端产品界面，顶部提供看板、日历、列表、甘特和概览视图" loading="lazy" decoding="async">
       </figure>
     </section>
 
@@ -281,10 +282,10 @@
       </div>
       <div class="mobile-devices" aria-label="Kanboard 移动端界面">
         <figure class="device device-primary">
-          <img src="设计图/PD-018D/11-mobile-checklist-drawer-390.png" alt="移动端新手清单底部抽屉" decoding="async">
+          <img src="设计图/PD-018D/11-mobile-checklist-drawer-390.png" width="390" height="844" alt="移动端新手清单底部抽屉" loading="lazy" decoding="async">
         </figure>
         <figure class="device device-secondary">
-          <img src="设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png" alt="移动端任务删除确认底部面板" decoding="async">
+          <img src="设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png" width="390" height="844" alt="移动端任务删除确认底部面板" loading="lazy" decoding="async">
         </figure>
       </div>
     </section>

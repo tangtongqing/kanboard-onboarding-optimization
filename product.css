@@ -58,6 +58,7 @@ a {
 img {
   display: block;
   max-width: 100%;
+  height: auto;
 }
 
 h1,
@@ -621,7 +622,7 @@ dd {
 .tour-chapter {
   min-height: 52vh;
   padding: 28px 0 52px;
-  color: #777681;
+  color: #8f8e99;
   border-top: 1px solid #46454f;
   transition: color 220ms ease-out;
 }
@@ -843,7 +844,7 @@ dd {
   font-weight: 800;
 }
 
-.scenario-copy h3 {
+.scenario-copy h2 {
   margin-top: 15px;
   font-size: clamp(2rem, 3.5vw, 3.6rem);
 }
@@ -1825,7 +1826,7 @@ dd {
     font-size: 2.35rem;
   }
 
-  .scenario-copy h3 {
+  .scenario-copy h2 {
     font-size: 2.3rem;
   }
 

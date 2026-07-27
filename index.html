@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kanboard V0.8.24 插件扩展能力补齐</title>
+  <meta name="description" content="Kanboard 新手增强交互原型：使用场景模板创建项目，编辑、拖动和新增任务，并在当前浏览器保存体验数据。">
+  <title>Kanboard V0.8.30 新手项目创建与任务拆解体验</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,7 +13,7 @@
       <div class="brand">
         <div>
           <h1>Kanboard</h1>
-          <p>V0.8.24 插件扩展能力补齐版</p>
+          <p>V0.8.30 新手体验交付版</p>
         </div>
       </div>
 
@@ -102,12 +103,12 @@
       </section>
 
       <section class="view-controls" aria-label="视图和显示控制">
-        <div class="segmented-control" id="viewSwitcher" role="tablist" aria-label="视图切换">
-          <button class="active" type="button" data-view="board">看板</button>
-          <button type="button" data-view="calendar">日历</button>
-          <button type="button" data-view="list">列表</button>
-          <button type="button" data-view="gantt">甘特</button>
-          <button type="button" data-view="overview">概览</button>
+        <div class="segmented-control" id="viewSwitcher" role="group" aria-label="视图切换">
+          <button class="active" type="button" data-view="board" aria-pressed="true">看板</button>
+          <button type="button" data-view="calendar" aria-pressed="false">日历</button>
+          <button type="button" data-view="list" aria-pressed="false">列表</button>
+          <button type="button" data-view="gantt" aria-pressed="false">甘特</button>
+          <button type="button" data-view="overview" aria-pressed="false">概览</button>
         </div>
         <label>
           <span>卡片显示</span>
@@ -413,7 +414,7 @@
       <section class="detail-section">
         <div class="detail-heading">
           <h4>新增规则</h4>
-          <span>静态模拟 V0.8.24</span>
+          <span>静态交互原型 V0.8.30</span>
         </div>
         <div class="settings-add-row automation-row">
           <select id="automationTriggerInput">

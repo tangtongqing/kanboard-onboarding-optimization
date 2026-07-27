@@ -28,6 +28,8 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Build static site
+        env:
+          KANBOARD_CONTACT_ENDPOINT: ${{ vars.KANBOARD_CONTACT_ENDPOINT }}
         run: node scripts/build-pages.mjs
 
       - name: Upload Pages artifact

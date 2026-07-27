@@ -346,7 +346,7 @@ textarea:focus-visible {
 
 .segmented-control button {
   min-height: 32px;
-  color: var(--muted);
+  color: #6b6a77;
   background: transparent;
   border: 0;
   border-radius: 4px;
@@ -2786,7 +2786,7 @@ kbd {
   --border: #e2e4ec;
   --border-soft: #eceef4;
   --text: #181820;
-  --muted: #747384;
+  --muted: #6f6e7b;
   --primary: #5848e8;
   --primary-dark: #4534c8;
   --primary-soft: #f0edff;
@@ -3001,7 +3001,7 @@ textarea:focus-visible {
 }
 
 .metric p {
-  color: #8a8997;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 780;
   letter-spacing: 0.08em;
@@ -3025,7 +3025,7 @@ textarea:focus-visible {
 }
 
 label {
-  color: #858493;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 720;
 }
@@ -3135,7 +3135,7 @@ textarea:focus {
 }
 
 .column-title span {
-  color: #8a8997;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -3482,6 +3482,7 @@ textarea:focus {
   .project-list {
     display: flex;
     gap: 6px;
+    min-height: 44px;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 4px;
@@ -3778,6 +3779,29 @@ textarea:focus {
   .toolbar label,
   .view-controls label {
     font-size: 11px;
+  }
+
+  .view-controls {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .view-controls > * {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .view-controls .checkbox-control {
+    min-height: 44px;
+  }
+
+  .view-controls .segmented-control {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .view-controls .segmented-control button {
+    min-width: 0;
+    min-height: 44px;
   }
 
   .toolbar input,

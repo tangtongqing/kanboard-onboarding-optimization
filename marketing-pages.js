@@ -104,7 +104,37 @@ function validateField(field) {
 
 const contactForm = document.querySelector(".contact-form");
 if (contactForm) {
-  const fields = [...contactForm.querySelectorAll("input, select, textarea")];
+  const configuredEndpoint = (() => {
+    const value = String(window.__KANBOARD_CONTACT_ENDPOINT__ || "").trim();
+    if (!value) return "";
+    try {
+      const endpoint = new URL(value);
+      return endpoint.protocol === "https:" ? endpoint.toString() : "";
+    } catch {
+      return "";
+    }
+  })();
+  const privateField = contactForm.querySelector("[data-private-contact-field]");
+  const emailField = contactForm.querySelector('[name="email"]');
+  const submitButton = contactForm.querySelector("#contactSubmitButton");
+  const formStatus = contactForm.querySelector("#contactFormStatus");
+  const publicFallback = contactForm.querySelector("#publicContactFallback");
+  const result = document.querySelector(".contact-result");
+  const issueLink = document.querySelector("#submitProjectIssue");
+  const copyButton = document.querySelector("#copySummary");
+
+  if (configuredEndpoint) {
+    privateField.hidden = false;
+    emailField.required = true;
+    submitButton.textContent = "安全提交咨询";
+    document.querySelector("#contactIntroDescription").textContent = "咨询 Pro 计划、团队部署、产品演示或反馈使用问题。提交后，内容会通过已配置的私密接收端安全发送。";
+    document.querySelector("#contactFormGuidance").textContent = "表单将通过 HTTPS 提交到已配置的私密接收端。请只填写完成咨询所需的信息，不要提交密码或访问令牌。";
+    document.querySelector("#contactDestinationAnswer").textContent = "提交后，内容会通过 HTTPS 发送到站点配置的私密表单接收端，不会公开显示。";
+    document.querySelector("#privateContactAnswer").textContent = "可以。当前页面已启用私密咨询接收端；提交失败时不会丢失表单内容，并会提供不含邮箱的公开降级路径。";
+  }
+
+  const fields = [...contactForm.querySelectorAll("input, select, textarea")]
+    .filter((field) => field.name !== "_gotcha");
   fields.forEach((field) => {
     field.addEventListener("blur", () => validateField(field));
     field.addEventListener("input", () => {
@@ -112,7 +142,50 @@ if (contactForm) {
     });
   });
 
-  contactForm.addEventListener("submit", (event) => {
+  const createPublicSummary = (values) => [
+    "Kanboard 产品咨询",
+    `咨询主题：${values.topic}`,
+    `称呼：${values.name}`,
+    `GitHub 用户名：${values.github || "未填写"}`,
+    `组织或项目：${values.organization || "未填写"}`,
+    `预计使用人数：${values.teamSize}`,
+    "希望解决的问题：",
+    values.message
+  ].join("\n");
+
+  const createIssueUrl = (values, summary) => {
+    const issueUrl = new URL("https://github.com/tangtongqing/kanboard-onboarding-optimization/issues/new");
+    issueUrl.searchParams.set("title", `[产品咨询] ${values.topic}`);
+    issueUrl.searchParams.set("body", summary);
+    return issueUrl.toString();
+  };
+
+  const showPublicResult = (values, summary) => {
+    document.querySelector("#contactSummary").textContent = summary;
+    issueLink.href = createIssueUrl(values, summary);
+    issueLink.hidden = false;
+    copyButton.hidden = false;
+    document.querySelector("#contactResultEyebrow").textContent = "咨询内容已整理";
+    document.querySelector("#contactResultTitle").textContent = "下一步，确认并提交。";
+    document.querySelector("#contactResultDescription").textContent = "点击“提交到项目 Issue”会打开本项目的公开接收渠道，并预填下面的内容。请在 GitHub 页面再次检查，确认不含敏感信息后再提交。";
+    contactForm.hidden = true;
+    result.hidden = false;
+    document.querySelector("#contactResultTitle").focus();
+  };
+
+  const showPrivateSuccess = (summary) => {
+    document.querySelector("#contactSummary").textContent = summary;
+    issueLink.hidden = true;
+    copyButton.hidden = false;
+    document.querySelector("#contactResultEyebrow").textContent = "咨询已安全提交";
+    document.querySelector("#contactResultTitle").textContent = "我们已经收到。";
+    document.querySelector("#contactResultDescription").textContent = "私密接收端已经确认提交。下面的副本只保留在当前页面，方便你核对本次咨询内容。";
+    contactForm.hidden = true;
+    result.hidden = false;
+    document.querySelector("#contactResultTitle").focus();
+  };
+
+  contactForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const valid = fields.map(validateField).every(Boolean);
     if (!valid) {
@@ -121,22 +194,55 @@ if (contactForm) {
     }
 
     const values = Object.fromEntries(new FormData(contactForm).entries());
-    const summary = [
-      "Kanboard 产品咨询",
-      `咨询主题：${values.topic}`,
-      `称呼：${values.name}`,
-      `工作邮箱：${values.email}`,
-      `组织或项目：${values.organization || "未填写"}`,
-      `预计使用人数：${values.teamSize}`,
-      "希望解决的问题：",
-      values.message
-    ].join("\n");
+    const publicSummary = createPublicSummary(values);
+    if (!configuredEndpoint) {
+      showPublicResult(values, publicSummary);
+      return;
+    }
 
-    document.querySelector("#contactSummary").textContent = summary;
-    contactForm.hidden = true;
-    const result = document.querySelector(".contact-result");
-    result.hidden = false;
-    result.querySelector("h2").focus?.();
+    if (values._gotcha) return;
+    submitButton.disabled = true;
+    submitButton.textContent = "正在安全提交…";
+    formStatus.dataset.state = "";
+    formStatus.textContent = "正在连接私密接收端，请稍候。";
+    publicFallback.hidden = true;
+
+    try {
+      const response = await fetch(configuredEndpoint, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        credentials: "omit",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: JSON.stringify({
+          topic: values.topic,
+          name: values.name,
+          email: values.email,
+          github: values.github || "",
+          organization: values.organization || "",
+          teamSize: values.teamSize,
+          message: values.message,
+          source: "kanboard-onboarding-contact",
+          submittedAt: new Date().toISOString(),
+          _gotcha: values._gotcha || ""
+        })
+      });
+      if (!response.ok) throw new Error(`Contact endpoint returned ${response.status}`);
+      formStatus.dataset.state = "success";
+      formStatus.textContent = "提交成功。";
+      const privateSummary = `${publicSummary}\n联系邮箱：${values.email}`;
+      showPrivateSuccess(privateSummary);
+    } catch (error) {
+      console.error("Private contact submission failed:", error);
+      formStatus.dataset.state = "error";
+      formStatus.textContent = "私密提交失败，表单内容仍然保留。你可以稍后重试，或使用不包含邮箱和敏感信息的公开 Issue。";
+      publicFallback.href = createIssueUrl(values, publicSummary);
+      publicFallback.hidden = false;
+      submitButton.disabled = false;
+      submitButton.textContent = "重新安全提交";
+    }
   });
 }
 

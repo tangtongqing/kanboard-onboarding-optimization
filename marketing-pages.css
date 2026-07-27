@@ -383,6 +383,11 @@
   gap: 25px;
 }
 
+.contact-form [hidden],
+.contact-result [hidden] {
+  display: none !important;
+}
+
 .form-heading {
   padding-bottom: 34px;
   border-bottom: 1px solid var(--line);
@@ -460,6 +465,22 @@
   color: #922331;
   font-size: 12px;
   font-weight: 650;
+}
+
+.form-status {
+  min-height: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.form-status[data-state="error"] {
+  color: #922331;
+}
+
+.form-status[data-state="success"] {
+  color: #176b4f;
 }
 
 .contact-form .button {
