@@ -39,7 +39,8 @@ const designFiles = [
   "设计图/PD-018D/11-mobile-checklist-drawer-390.png",
   "设计图/PD-019D/01-desktop-blank-project-no-guidance.png",
   "设计图/PD-019D/03-desktop-drag-guidance-popover.png",
-  "设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png"
+  "设计图/PD-019D/11-mobile-390-delete-bottom-sheet.png",
+  "设计图/PD-019B/11-specs-state-machine-matrix.png"
 ];
 
 async function copyFile(relativePath) {

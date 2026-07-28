@@ -264,8 +264,17 @@ async function testCaseStudy(browser) {
     check(await page.locator("header .wordmark").getAttribute("aria-label") === null, "header wordmark uses its visible accessible name");
     check(Boolean(await page.locator("footer .footer-wordmark").getAttribute("aria-label")), "mobile footer wordmark keeps an accessible name");
 
-    const footnoteContrast = await contrastRatio(page, ".hero-footnote span", ".hero");
-    check(footnoteContrast >= 4.5, `case-study footnote contrast is ${footnoteContrast.toFixed(2)}:1`);
+    const boundaryContrast = await contrastRatio(page, ".hero-boundary p", ".hero-boundary");
+    check(boundaryContrast >= 4.5, `case-study evidence boundary contrast is ${boundaryContrast.toFixed(2)}:1`);
+    check(await page.locator(".evidence-tag").count() >= 12, "case-study labels evidence levels beside conclusions");
+    check(await page.locator("#research").count() === 1, "case-study exposes research and evidence section");
+    check(await page.locator("#needs").count() === 1, "case-study exposes evidence-to-needs mapping");
+    check(await page.locator("#scope").count() === 1, "case-study exposes explicit product scope");
+    check(await page.locator("#outcome").count() === 1, "case-study separates proved and unproved outcomes");
+    check(
+      (await page.locator(".hero-boundary").textContent()).includes("不是招募式真人访谈"),
+      "case-study states the non-interview research boundary near the hero"
+    );
     await page.locator('[data-stage-button="3"]').click();
     check(await page.locator("#stageTitle").textContent() === "完成第一次有效操作", "case-study stage control updates the demonstration");
     await checkNoPageOverflow(page, "case-study page");
