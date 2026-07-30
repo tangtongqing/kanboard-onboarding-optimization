@@ -132,6 +132,11 @@ async function testMarketingHome(browser) {
     check(await page.locator('[data-scenario="career"]').getAttribute("aria-pressed") === "true", "scenario selector updates pressed state");
     await page.locator(".mobile-menu summary").click();
     check(await page.locator(".mobile-menu").getAttribute("open") !== null, "mobile navigation opens");
+    check(
+      await page.locator('.desktop-nav a[href="landing.html"]').count() === 1
+        && await page.locator('.mobile-menu-panel a[href="landing.html"]').isVisible(),
+      "marketing home exposes the case-study entry across desktop and mobile navigation"
+    );
     await checkNoPageOverflow(page, "marketing home");
     check(errors.length === 0, `marketing home has no page errors: ${errors.join("; ")}`);
   } finally {
