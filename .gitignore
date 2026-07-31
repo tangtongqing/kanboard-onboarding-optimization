@@ -11,6 +11,8 @@ desktop.ini
 __pycache__/
 node_modules/
 dist-pages/
+/.playwright-cli/
+/output/
 
 # Local tool workspaces and generated diagram QA artifacts
 .agent-ops/
