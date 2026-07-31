@@ -82,14 +82,14 @@ flowchart LR
 
 | 阶段 | 核心产物 |
 | --- | --- |
-| 问题与研究 | [产品机会说明](docs/01-research-discovery/产品机会说明与问题定义-PD-001.md)、[用户研究计划](docs/01-research-discovery/用户研究计划与访谈脚本-PD-002.md)、公开案例证据研究 |
-| 需求定义 | [功能优化 PRD](docs/02-requirements/功能优化PRD骨架-PD-003.md)、[新手激活 PRD](docs/02-requirements/新手激活体验优化PRD增量-PD-018A.md)、[首次操作轻引导 PRD](docs/02-requirements/首次核心操作轻引导PRD-PD-019A.md) |
+| 问题与研究 | [正式 MRD](docs/01-research-discovery/MRD-Kanboard新手项目创建与任务拆解优化.md)、[用户研究计划](docs/01-research-discovery/用户研究计划与访谈脚本-PD-002.md)、公开案例证据研究 |
+| 需求定义 | [正式 PRD](docs/02-requirements/PRD-Kanboard新手项目创建与任务拆解优化.md) |
 | UX 结构 | [流程与信息架构](docs/03-ux-design/流程图与信息架构-PD-005.md)、[交互状态规格](docs/03-ux-design/交互状态规格-PD-006.md)、[设计原则与非目标](docs/03-ux-design/设计原则与非目标-PD-007.md) |
 | 原型与视觉 | [低保真线框](docs/03-ux-design/低保真线框与关键状态-PD-010.md)、[高保真视觉规格](docs/03-ux-design/高保真视觉规格-PD-011B.md)、[首次操作高保真设计](docs/03-ux-design/首次核心操作轻引导高保真设计-PD-019B.md) |
 | 实现与验证 | 可运行静态原型、[激活体验回归报告](docs/05-testing/新手激活体验回归测试-PD-018D.md)、[轻引导回归报告](docs/05-testing/首次核心操作轻引导回归测试-PD-019D.md) |
-| 作品集交付 | [作品集叙事](docs/06-portfolio/作品集叙事-PD-013.md)、[打印就绪导出源](docs/06-portfolio/作品集打印版导出源-PD-023.html)、[最终收尾索引](docs/06-portfolio/项目最终收尾索引-PD-025.md) |
+| 作品集交付 | [作品集叙事](docs/06-portfolio/作品集叙事-PD-013.md)、[最终作品集展示包](docs/06-portfolio/最终作品集展示包-PD-014.md)、[打印就绪导出源](docs/06-portfolio/作品集打印版导出源-PD-023.html) |
 
-完整文档导航见 [docs/README.md](docs/README.md)，产品设计工作流覆盖情况见 [最终工作流审计](docs/06-portfolio/产品设计工作流完整性审计-最终归档.md)。
+完整文档导航见 [docs/README.md](docs/README.md)。MRD 是市场与用户判断的主入口，PRD 是产品需求的唯一事实源。
 
 ## Figma 与设计资产
 
@@ -136,12 +136,12 @@ node tests/static-feature-audit-v08.js
 ├── scripts/build-pages.mjs    # GitHub Pages 构建脚本
 ├── .github/workflows/         # 自动发布工作流
 ├── PRODUCT.md                 # 产品定位与设计原则
-├── docs/                      # 研究、PRD、设计、实现、测试与作品集文档
+├── docs/                      # MRD、PRD、设计、验证与作品集文档
 ├── tests/                     # 自动化静态功能审计
 └── 设计图/                    # 线框、高保真、回归截图与 Figma 导出
 ```
 
-详细版本演进不在 README 展开，可查看 [版本记录](docs/00-project-governance/版本记录.md)；项目最终交付入口统一收录在 [项目最终收尾索引](docs/06-portfolio/项目最终收尾索引-PD-025.md)。
+详细版本演进不在 README 展开，可查看 [版本记录](docs/00-project-governance/版本记录.md)；全部文档入口统一收录在 [文档中心](docs/README.md)。
 
 ## 证据边界
 
